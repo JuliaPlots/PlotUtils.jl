@@ -1,5 +1,8 @@
 module PlotUtils
 
-# package code goes here
+export
+    optimize_ticks
+
+include("ticks.jl")
 
 end # module
