@@ -1,4 +1,5 @@
 
+# NOTE: This file was moved from Gadfly.jl, and the original author is Daniel Jones (@dcjones)
 
 # Find the smallest order of magnitude that is larger than xspan This is a
 # little opaque because I want to avoid assuming the log function is defined
@@ -57,16 +58,16 @@ function optimize_ticks{T}(x_min::T, x_max::T; extend_ticks::Bool=false,
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
                            granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
-                           strict_span=false)
+                           strict_span=true)
 
-    Qv = [((@compat Float64(q[1])), (@compat Float64(q[2]))) for q in Q]
+    Qv = [(Float64(q[1]), Float64(q[2])) for q in Q]
     optimize_ticks_typed(x_min, x_max, extend_ticks, Qv, k_min, k_max, k_ideal,
                          granularity_weight, simplicity_weight,
                          coverage_weight, niceness_weight, strict_span)
 end
 
 function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
-                           Q::Vector{(@compat Tuple{Float64,Float64})}, k_min,
+                           Q::Vector{Tuple{Float64,Float64}}, k_min,
                            k_max, k_ideal,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
@@ -145,7 +146,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
 
     span = q_best * 10.0^z_best * one_t
     if extend_ticks
-        S = Array(typeof(1.0 * one_t), (@compat Int(3 * k_best)))
+        S = Array(typeof(1.0 * one_t), Int(3 * k_best))
         for i in 0:(3*k_best - 1)
             S[i+1] = (r_best + i - k_best) * span
         end
@@ -161,6 +162,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
     if strict_span
         viewmin = max(viewmin, x_min)
         viewmax = min(viewmax, x_max)
+        S = filter(si -> viewmin <= si <= viewmax, S)
     end
 
     return S, viewmin, viewmax
@@ -171,7 +173,7 @@ function optimize_ticks(x_min::Date, x_max::Date; extend_ticks::Bool=false,
                         k_min=nothing, k_max=nothing, scale=:auto,
                         granularity_weight=nothing, simplicity_weight=nothing,
                         coverage_weight=nothing, niceness_weight=nothing,
-                        strict_span=false)
+                        strict_span=true)
     return optimize_ticks(convert(DateTime, x_min), convert(DateTime, x_max),
                           extend_ticks=extend_ticks, scale=scale)
 end
@@ -181,7 +183,7 @@ function optimize_ticks(x_min::DateTime, x_max::DateTime; extend_ticks::Bool=fal
                         k_min=nothing, k_max=nothing, scale=:auto,
                         granularity_weight=nothing, simplicity_weight=nothing,
                         coverage_weight=nothing, niceness_weight=nothing,
-                        strict_span=false)
+                        strict_span=true)
     if x_min == x_max
         x_max += Second(1)
     end
@@ -289,9 +291,9 @@ function multilevel_ticks{T}(viewmin::T, viewmax::T;
     ticks = Dict()
     for scale in scales
         ticks[scale] = optimize_ticks(viewmin, viewmax,
-                                      k_min=max(1, (@compat round(Int, 2*scale))),
-                                      k_max=max(3, (@compat round(Int, 10*scale))),
-                                      k_ideal=max(2, (@compat round(Int, 15*scale))))[1]
+                                      k_min=max(1, round(Int, 2*scale)),
+                                      k_max=max(3, round(Int, 10*scale)),
+                                      k_ideal=max(2, round(Int, 15*scale)))[1]
     end
 
     return ticks
