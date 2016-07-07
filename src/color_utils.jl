@@ -31,8 +31,8 @@ function adjust_lch(color, l, c)
 end
 
 function lightness_from_background(bgcolor)
-  bglight = convert(LCHab, bgcolor).l
-  bglight < 50.0 ? _lightness_darkbg[1] : _lightness_lightbg[1]
+	bglight = convert(LCHab, bgcolor).l
+	bglight < 50.0 ? _lightness_darkbg[1] : _lightness_lightbg[1]
 end
 
 function gradient_from_list(cs)
@@ -48,30 +48,29 @@ function generate_colorgradient(bgcolor = colorant"white";
                                lightness = lightness_from_background(bgcolor),
                                chroma = _lch_c_const[1],
                                n = 17)
-  seed_colors = vcat(bgcolor, map(c -> adjust_lch(c, lightness, chroma), color_bases))
-  colors = distinguishable_colors(n,
-      seed_colors,
-      lchoices=Float64[lightness],
-      cchoices=Float64[chroma],
-      hchoices=linspace(0, 340, 20)
-    )[2:end]
-  gradient_from_list(colors)
+	seed_colors = convert(Vector{RGB}, vcat(bgcolor, map(c -> adjust_lch(c, lightness, chroma), color_bases)))
+	colors = distinguishable_colors(
+		n,
+		seed_colors,
+		lchoices=Float64[lightness],
+		cchoices=Float64[chroma],
+		hchoices=linspace(0, 340, 20)
+	)[2:end]
+	gradient_from_list(colors)
 end
 
-function get_color_palette(palette, bgcolor::Union{Colorant,ColorWrapper}, numcolors::Integer)
-  grad = if palette == :auto
-    generate_colorgradient(bgcolor)
-  else
-    ColorGradient(palette)
-  end
-  zrng = get_zvalues(numcolors)
-  RGBA[getColorZ(grad, z) for z in zrng]
+function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
+	grad = if palette == :auto
+		generate_colorgradient(bgcolor)
+	else
+		cgrad(palette)
+	end
+	zrng = get_zvalues(numcolors)
+	RGBA[grad[z] for z in zrng]
 end
 
-function get_color_palette{C<:Colorant}(palette::Vector{C},
-            bgcolor::Union{Colorant,ColorWrapper}, numcolors::Integer)
-  palette
-end
+get_color_palette{C<:Colorant}(palette::Vector{C}, bgcolor::Colorant, numcolors::Integer) = palette
+
 
 # ----------------------------------------------------------------------------------
 
@@ -166,12 +165,17 @@ end
 
 make255(x) = round(Int, 255 * x)
 
-function webcolor(c::Color)
-    @sprintf("rgb(%d, %d, %d)", [make255(f(c)) for f in [red,green,blue]]...)
+function rgba_string(c::Colorant)
+	@sprintf("rgba(%d, %d, %d, %1.3f)", make255(red(c)), make255(green(c)), make255(blue(c)), alpha(c))
 end
-function webcolor(c::TransparentColor)
-    @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
-end
-webcolor(cs::ColorScheme) = webcolor(getColor(cs))
-webcolor(c) = webcolor(convertColor(c))
-webcolor(c, α) = webcolor(convertColor(getColor(c), α))
+
+# function webcolor(c::Color)
+#     @sprintf("rgb(%d, %d, %d)", [make255(f(c)) for f in [red,green,blue]]...)
+# end
+# function webcolor(c::TransparentColor)
+#     @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
+# end
+# # webcolor(cs::ColorScheme) = webcolor(getColor(cs))
+# # webcolor(c) = webcolor(convertColor(c))
+# webcolor(c) = webcolor(plot_color(c))
+# webcolor(c, α) = webcolor(convertColor(getColor(c), α))

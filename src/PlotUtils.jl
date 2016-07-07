@@ -14,10 +14,13 @@ export
     # getColor,
     # getColorZ,
     cgrad,
+    rgba_string,
+    get_color_palette,
+    isdark,
     plot_color
 
-include("color_gradients.jl")
 include("color_utils.jl")
+include("color_gradients.jl")
 include("colors.jl")
 
 export

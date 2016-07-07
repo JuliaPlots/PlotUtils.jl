@@ -3,7 +3,7 @@ const _rainbowColors = [colorant"purple", colorant"blue", colorant"green", color
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
-const _gradients = KW(
+const _gradients = Dict{Symbol,Vector{Colorant}}(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
@@ -18,7 +18,7 @@ const _gradients = KW(
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
   )
 
-function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AVec{C})
+function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AbstractVector{C})
     _gradients[name] = colors
 end
 
@@ -31,7 +31,7 @@ immutable ColorGradient
   colors::Vector{RGBA}
   values::Vector{Float64}
 
-  # function ColorGradient{S<:Real}(cs::AVec, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing)
+  # function ColorGradient{S<:Real}(cs::AbstractVector, vals::AbstractVector{S} = linspace(0, 1, length(cs)); alpha = nothing)
   #   if length(cs) == length(vals)
   #       return new(plot_color(cs, alpha), Float64[v for v in vals])
   #   end
@@ -54,7 +54,7 @@ ColorGradient(colors; kw...) = cgrad(colors; kw...)
 
 
 # # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
-# function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:0; kw...)
+# function ColorGradient{T<:Real}(s::Symbol, vals::AbstractVector{T} = 0:0; kw...)
 #   haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
 #   cs = _gradients[s]
 #   if vals == 0:0
@@ -155,7 +155,7 @@ cgrad() = ColorGradient(:inferno)
     # You should have received a copy of the CC0 legalcode along with this
     # work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-function sample_evenly(v::AVec, n::Integer = length(v))
+function sample_evenly(v::AbstractVector, n::Integer = length(v))
     idx = Int[round(Int, x) for x in linspace(1, length(v), n)]
     v[idx]
 end
