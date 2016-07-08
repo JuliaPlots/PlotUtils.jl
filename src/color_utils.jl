@@ -146,37 +146,13 @@ function Base.convert(::Type{RGB}, h::Unsigned)
   RGB([(x & mask) / 0xFF for x in  (h >> 16, h >> 8, h)]...)
 end
 
-
-# # note: I found this list of hex values in a comment by Tatarize here: http://stackoverflow.com/a/12224359
-# const _masterColorList = [
-#     0xFFFFFF, 0x000000, 0x0000FF, 0x00FF00, 0xFF0000, 0x01FFFE, 0xFFA6FE, 0xFFDB66, 0x006401, 0x010067,
-#     0x95003A, 0x007DB5, 0xFF00F6, 0xFFEEE8, 0x774D00, 0x90FB92, 0x0076FF, 0xD5FF00, 0xFF937E, 0x6A826C,
-#     0xFF029D, 0xFE8900, 0x7A4782, 0x7E2DD2, 0x85A900, 0xFF0056, 0xA42400, 0x00AE7E, 0x683D3B, 0xBDC6FF,
-#     0x263400, 0xBDD393, 0x00B917, 0x9E008E, 0x001544, 0xC28C9F, 0xFF74A3, 0x01D0FF, 0x004754, 0xE56FFE,
-#     0x788231, 0x0E4CA1, 0x91D0CB, 0xBE9970, 0x968AE8, 0xBB8800, 0x43002C, 0xDEFF74, 0x00FFC6, 0xFFE502,
-#     0x620E00, 0x008F9C, 0x98FF52, 0x7544B1, 0xB500FF, 0x00FF78, 0xFF6E41, 0x005F39, 0x6B6882, 0x5FAD4E,
-#     0xA75740, 0xA5FFD2, 0xFFB167, 0x009BFF, 0xE85EBE
-#   ]
-# const _allColors = map(RGB, _masterColorList)
-# const _darkColors = filter(isdark, _allColors)
-# const _lightColors = filter(islight, _allColors)
-# const _sortedColorsForDarkBackground = vcat(_lightColors, reverse(_darkColors[2:end]))
-# const _sortedColorsForLightBackground = vcat(_darkColors, reverse(_lightColors[2:end]))
-
-
 make255(x) = round(Int, 255 * x)
+
+function rgb_string(c::Colorant)
+  @sprintf("rgb(%d, %d, %d)", make255(red(c)), make255(green(c)), make255(blue(c)))
+end
 
 function rgba_string(c::Colorant)
 	@sprintf("rgba(%d, %d, %d, %1.3f)", make255(red(c)), make255(green(c)), make255(blue(c)), alpha(c))
 end
 
-# function webcolor(c::Color)
-#     @sprintf("rgb(%d, %d, %d)", [make255(f(c)) for f in [red,green,blue]]...)
-# end
-# function webcolor(c::TransparentColor)
-#     @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
-# end
-# # webcolor(cs::ColorScheme) = webcolor(getColor(cs))
-# # webcolor(c) = webcolor(convertColor(c))
-# webcolor(c) = webcolor(plot_color(c))
-# webcolor(c, α) = webcolor(convertColor(getColor(c), α))

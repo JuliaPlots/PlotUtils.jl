@@ -14,6 +14,7 @@ export
     # getColor,
     # getColorZ,
     cgrad,
+    rgb_string,
     rgba_string,
     get_color_palette,
     isdark,
