@@ -1,6 +1,6 @@
 The PlotUtils.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2016: Thomas Breloff.
+> Copyright (c) 2016: Thomas Breloff*.
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the
@@ -20,3 +20,6 @@ The PlotUtils.jl package is licensed under the MIT "Expat" License:
 > CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 > TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 > SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+* Note: Some code was moved from existing packages.  Attribution is placed
+		at the top of relevant source files.

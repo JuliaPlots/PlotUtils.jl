@@ -4,15 +4,7 @@ using Reexport
 @reexport using Colors
 
 export
-    # colorscheme,
-    # ColorScheme,
     ColorGradient,
-    # ColorVector,
-    # ColorWrapper,
-    # ColorFunction,
-    # ColorZFunction,
-    # getColor,
-    # getColorZ,
     cgrad,
     rgb_string,
     rgba_string,
