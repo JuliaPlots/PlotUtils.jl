@@ -11,7 +11,7 @@ colors can be single RGBA colors, or lists of colors (Vector{RGBA}), or gradient
 # plot_color(x) = x  # pass through
 plot_color(s::AbstractString) = parse(RGBA{Float64}, s)
 plot_color(s::Symbol) = haskey(_gradients,s) ? cgrad(s) : parse(RGBA{Float64}, s)
-plot_color(b::Bool) = b ? RGBA{Float64}(0,0,0,1) : RGBA{Float64}(0,0,0,0)
+plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : RGBA{Float64}(0,0,0,0)
 plot_color(::Void) = RGBA{Float64}(0,0,0,0)
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
 plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
