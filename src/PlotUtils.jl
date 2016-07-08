@@ -6,6 +6,7 @@ using Reexport
 export
     ColorGradient,
     cgrad,
+    cvec,
     rgb_string,
     rgba_string,
     get_color_palette,

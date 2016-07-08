@@ -107,6 +107,10 @@ const _default_gradient = Ref(:inferno)
 # the default gradient
 cgrad(; kw...) = cgrad(_default_gradient[]; kw...)
 
+
+cvec(s::Symbol, n::Integer = 10; kw...) = cvec(cgrad(s; kw...), n)
+cvec(grad::ColorGradient, n::Integer = 10; kw...) = RGBA{Float64}[grad[z] for z in linspace(0,1,n)]
+
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
 # The following gradients were taken from https://github.com/BIDS/colormap/blob/master/colormaps.py
