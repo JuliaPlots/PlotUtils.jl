@@ -27,7 +27,7 @@ const _lch_c_const = [60]
 
 function adjust_lch(color, l, c)
     lch = convert(LCHab, color)
-    convert(RGB, LCHab(l, c, lch.h))
+    convert(RGBA{Float64}, LCHab(l, c, lch.h))
 end
 
 function lightness_from_background(bgcolor)
@@ -43,12 +43,13 @@ function gradient_from_list(cs)
     ColorGradient(sorted_colors, sorted_zvalues)
 end
 
-function generate_colorgradient(bgcolor = colorant"white";
-                               color_bases = color_bases=[colorant"steelblue",colorant"orangered"],
+function generate_colorgradient(bgcolor = plot_color(:white);
+                               color_bases = plot_color([colorant"steelblue",colorant"orangered"]),
                                lightness = lightness_from_background(bgcolor),
                                chroma = _lch_c_const[1],
                                n = 17)
-	seed_colors = convert(Vector{RGB}, vcat(bgcolor, map(c -> adjust_lch(c, lightness, chroma), color_bases)))
+    seed_colors = vcat(bgcolor, map(c -> adjust_lch(c, lightness, chroma), color_bases))
+	seed_colors = convert(Vector{RGB{Float64}}, seed_colors)
 	colors = distinguishable_colors(
 		n,
 		seed_colors,
@@ -66,7 +67,7 @@ function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
 		cgrad(palette)
 	end
 	zrng = get_zvalues(numcolors)
-	RGBA[grad[z] for z in zrng]
+	RGBA{Float64}[grad[z] for z in zrng]
 end
 
 get_color_palette{C<:Colorant}(palette::Vector{C}, bgcolor::Colorant, numcolors::Integer) = palette

@@ -3,7 +3,7 @@ const _rainbowColors = [colorant"purple", colorant"blue", colorant"green", color
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
-const _gradients = Dict{Symbol,Vector{Colorant}}(
+const _gradients = Dict{Symbol,Vector{RGBA{Float64}}}(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
@@ -28,7 +28,7 @@ end
 
 "Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
 immutable ColorGradient
-  colors::Vector{RGBA}
+  colors::Vector{RGBA{Float64}}
   values::Vector{Float64}
 
   # function ColorGradient{S<:Real}(cs::AbstractVector, vals::AbstractVector{S} = linspace(0, 1, length(cs)); alpha = nothing)
@@ -99,12 +99,15 @@ end
 
 # --------------------------------------------------------------------------
 
+cgrad_colors(s::Symbol) = _gradients[s]
+cgrad_colors(grad::ColorGradient) = grad.colors
+cgrad_colors(cs::AbstractVector) = cs
 
 function cgrad(arg, values = nothing; alpha = nothing, scale = :identity)
     # colors = ColorGradient(arg, alpha=alpha).colors
 
     # get a list of colors
-    colors = plot_color(get(_gradients, arg, arg), alpha)
+    colors = plot_color(cgrad_colors(arg), alpha)
 
     values = if values != nothing
         if length(colors) == length(values) && values[1] == 0 && values[end] == 1
@@ -125,6 +128,8 @@ function cgrad(arg, values = nothing; alpha = nothing, scale = :identity)
         log(linspace(1,pi,30))
     elseif scale in (:exp, :exp10)
         (exp10(linspace(0,1,30)) - 1) / 9
+    elseif isa(arg, ColorGradient)
+        arg.values
     else
         linspace(0, 1, length(colors))
     end
@@ -133,8 +138,10 @@ function cgrad(arg, values = nothing; alpha = nothing, scale = :identity)
     ColorGradient(colors, values)
 end
 
+const _default_gradient = Ref(:inferno)
+
 # the default gradient
-cgrad() = ColorGradient(:inferno)
+cgrad() = ColorGradient(_default_gradient[])
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
