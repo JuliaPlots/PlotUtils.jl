@@ -30,47 +30,11 @@ end
 immutable ColorGradient
   colors::Vector{RGBA{Float64}}
   values::Vector{Float64}
-
-  # function ColorGradient{S<:Real}(cs::AbstractVector, vals::AbstractVector{S} = linspace(0, 1, length(cs)); alpha = nothing)
-  #   if length(cs) == length(vals)
-  #       return new(plot_color(cs, alpha), Float64[v for v in vals])
-  #   end
-
-  #   # interpolate the colors for each value
-  #   vals = merge(linspace(0, 1, length(cs)), vals)
-  #   grad = ColorGradient(cs)
-  #   cs = [getColorZ(grad, z) for z in linspace(0, 1, length(vals))]
-  #   new(convertColor(cs, alpha), vals)
-  # end
 end
 
 # if the values aren't passed in, pass to the cgrad method for processing
 ColorGradient(colors; kw...) = cgrad(colors; kw...)
 
-
-
-# Base.getindex(cs::ColorGradient, i::Integer) = getColor(cs, i)
-# Base.getindex(cs::ColorGradient, z::Number) = getColorZ(cs, z)
-
-
-# # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
-# function ColorGradient{T<:Real}(s::Symbol, vals::AbstractVector{T} = 0:0; kw...)
-#   haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
-#   cs = _gradients[s]
-#   if vals == 0:0
-#     vals = linspace(0, 1, length(cs))
-#   end
-#   ColorGradient(cs, vals; kw...)
-# end
-
-# function ColorGradient(grad::ColorGradient; alpha = nothing)
-#   ColorGradient(convertColor(grad.colors, alpha), grad.values)
-# end
-
-# # anything else just gets the default gradient
-# function ColorGradient(cw; alpha=nothing)
-#     ColorGradient(default_gradient(), alpha=alpha)
-# end
 
 Base.getindex(gradient::ColorGradient, idx::Integer) = gradient.colors[mod1(idx, length(gradient.colors))]
 
@@ -141,7 +105,7 @@ end
 const _default_gradient = Ref(:inferno)
 
 # the default gradient
-cgrad() = ColorGradient(_default_gradient[])
+cgrad(; kw...) = cgrad(_default_gradient[]; kw...)
 
 # --------------------------------------------------------------------------
 # --------------------------------------------------------------------------
