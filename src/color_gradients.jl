@@ -65,26 +65,39 @@ end
 
 cgrad_colors(s::Symbol) = _gradients[s]
 cgrad_colors(grad::ColorGradient) = grad.colors
-cgrad_colors(cs::AbstractVector) = cs
+cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
+
+function _color_list(arg, ::Void)
+    cgrad_colors(arg)
+end
+function _color_list(arg, alpha)
+    colors = cgrad_colors(arg)
+    for i in eachindex(colors)
+        colors[i] = RGBA{Float64}(convert(RGB{Float64}, colors[i]), alpha)
+    end
+    colors
+end
+
+function cgrad(arg, values; alpha = nothing, scale = :identity)
+    colors = _color_list(arg, alpha)
+    values = if length(colors) == length(values) && values[1] == 0 && values[end] == 1
+        values
+    else
+        # merge values into the default range, then recompute color list and return vals
+        vals = merge(linspace(0, 1, length(colors)), vals)
+        grad = ColorGradient(colors)
+        colors = RGBA[grad[z] for z in linspace(0, 1, length(vals))]
+        # new(convertColor(colors, alpha), vals)
+        vals
+    end
+
+    # construct and return the gradient
+    ColorGradient(colors, values)
+end
 
 function cgrad(arg, values = nothing; alpha = nothing, scale = :identity)
-    # colors = ColorGradient(arg, alpha=alpha).colors
-
-    # get a list of colors
-    colors = plot_color(cgrad_colors(arg), alpha)
-
-    values = if values != nothing
-        if length(colors) == length(values) && values[1] == 0 && values[end] == 1
-            values
-        else
-            # merge values into the default range, then recompute color list and return vals
-            vals = merge(linspace(0, 1, length(colors)), vals)
-            grad = ColorGradient(colors)
-            colors = RGBA[grad[z] for z in linspace(0, 1, length(vals))]
-            # new(convertColor(colors, alpha), vals)
-            vals
-        end
-    elseif scale in (:log, :log10)
+    colors = _color_list(arg, alpha)
+    values = if scale in (:log, :log10)
         log10(linspace(1,10,30))
     elseif scale == :log2
         log2(linspace(1,2,30))
