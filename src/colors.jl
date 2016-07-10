@@ -19,3 +19,36 @@ plot_color(s::Symbol, α::Number) = (haskey(_gradients,s) ? cgrad(s, alpha=α) :
 plot_color(cs::AbstractVector, α::Number) = RGBA{Float64}[plot_color(c,α) for c in cs]
 plot_color(cs::AbstractArray, α::Number) = (a = Array(RGBA{Float64}, size(cs)); map!(c -> plot_color(c,α), a, cs))
 plot_color(grad::ColorGradient, α::Number) = cgrad(grad, alpha=α)
+
+
+
+# convenience conversions from numeric arrays to gradient values
+# note: we need the first version because of dispatch
+function plot_color{T<:Number}(zs::AbstractVector{T})
+    grad = cgrad()
+    zmin, zmax = extrema(zs)
+    RGBA{Float64}[grad[(z-zmin)/(zmax-zmin)] for z in zs]
+end
+function plot_color{T<:Number}(zs::AbstractArray{T})
+    grad = cgrad()
+    zmin, zmax = extrema(zs)
+    a = Array(RGBA{Float64}, size(zs))
+    for i in eachindex(zs)
+        a[i] = grad[(zs[i]-zmin)/(zmax-zmin)]
+    end
+    a
+end
+
+function plot_color{T<:Number}(zs::AbstractVector{T}, α::Number)
+    cs = plot_color(zs)
+    RGBA{Float64}[RGBA{Float64}(convert(RGB, c), α) for c in cs]
+end
+function plot_color{T<:Number}(zs::AbstractArray{T}, α::Number)
+    cs = plot_color(zs)
+    a = Array(RGBA{Float64}, size(zs))
+    for i in eachindex(zs)
+        a[i] = RGBA{Float64}(convert(RGB, cs[i]), α)
+    end
+    a
+end
+
