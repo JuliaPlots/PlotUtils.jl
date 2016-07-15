@@ -63,8 +63,8 @@ end
 
 # --------------------------------------------------------------------------
 
-cgrad_colors(s::Symbol) = _gradients[s]
-cgrad_colors(grad::ColorGradient) = grad.colors
+cgrad_colors(s::Symbol) = copy(_gradients[s])
+cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 
 function _color_list(arg, ::Void)
