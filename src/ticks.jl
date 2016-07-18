@@ -58,12 +58,12 @@ function optimize_ticks{T}(x_min::T, x_max::T; extend_ticks::Bool=false,
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
                            granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
-                           strict_span=true)
+                           strict_span=true, span_buffer = nothing)
 
     Qv = [(Float64(q[1]), Float64(q[2])) for q in Q]
     optimize_ticks_typed(x_min, x_max, extend_ticks, Qv, k_min, k_max, k_ideal,
                          granularity_weight, simplicity_weight,
-                         coverage_weight, niceness_weight, strict_span)
+                         coverage_weight, niceness_weight, strict_span, span_buffer)
 end
 
 function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
@@ -71,7 +71,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                            k_max, k_ideal,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
-                           strict_span)
+                           strict_span, span_buffer)
     one_t = convert(T, one(T))
     if x_max - x_min < eps()*one_t
         R = typeof(1.0 * one_t)
@@ -159,11 +159,19 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
         viewmin, viewmax = S[1], S[end]
     end
 
+    # @show "before" S viewmin viewmax
     if strict_span
         viewmin = max(viewmin, x_min)
         viewmax = min(viewmax, x_max)
-        S = filter(si -> viewmin <= si <= viewmax, S)
+        if span_buffer == nothing
+            S = filter(si -> viewmin <= si <= viewmax, S)
+        else
+            buf = span_buffer * (viewmax - viewmin)
+            # @show buf
+            S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
+        end
     end
+    # @show "after" S viewmin viewmax
 
     return S, viewmin, viewmax
 end
@@ -173,7 +181,7 @@ function optimize_ticks(x_min::Date, x_max::Date; extend_ticks::Bool=false,
                         k_min=nothing, k_max=nothing, scale=:auto,
                         granularity_weight=nothing, simplicity_weight=nothing,
                         coverage_weight=nothing, niceness_weight=nothing,
-                        strict_span=true)
+                        strict_span=true, span_buffer = nothing)
     return optimize_ticks(convert(DateTime, x_min), convert(DateTime, x_max),
                           extend_ticks=extend_ticks, scale=scale)
 end
@@ -183,7 +191,7 @@ function optimize_ticks(x_min::DateTime, x_max::DateTime; extend_ticks::Bool=fal
                         k_min=nothing, k_max=nothing, scale=:auto,
                         granularity_weight=nothing, simplicity_weight=nothing,
                         coverage_weight=nothing, niceness_weight=nothing,
-                        strict_span=true)
+                        strict_span=true, span_buffer = nothing)
     if x_min == x_max
         x_max += Second(1)
     end
