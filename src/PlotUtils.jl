@@ -12,6 +12,7 @@ export
     cvec,
     rgb_string,
     rgba_string,
+    invisible,
     get_color_palette,
     isdark,
     plot_color

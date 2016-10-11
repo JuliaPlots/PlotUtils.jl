@@ -39,6 +39,7 @@ ColorGradient(colors; kw...) = cgrad(colors; kw...)
 Base.getindex(gradient::ColorGradient, idx::Integer) = gradient.colors[mod1(idx, length(gradient.colors))]
 
 function Base.getindex(gradient::ColorGradient, z::Number)
+    isnan(z) && return invisible()
     cs = gradient.colors
     vs = gradient.values
     n = length(cs)
@@ -89,7 +90,7 @@ function cgrad(arg, values; alpha = nothing)
         # vals = merge(collect(linspace(0, 1, length(colors))), collect(values))
         vals = sort(unique(vcat(linspace(0, 1, length(colors)), values)))
         grad = ColorGradient(colors)
-        colors = RGBA[grad[z] for z in linspace(0, 1, length(vals))]
+        colors = RGBA{Float64}[grad[z] for z in linspace(0, 1, length(vals))]
         vals
     end
 

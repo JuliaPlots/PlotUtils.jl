@@ -1,9 +1,11 @@
 
+invisible() = RGBA{Float64}(0.,0.,0.,0.)
+
 # the one-arg cases, meant for single colors
 plot_color(s::AbstractString) = parse(RGBA{Float64}, s)
 plot_color(s::Symbol) = haskey(_gradients,s) ? cgrad(s) : parse(RGBA{Float64}, s)
-plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : RGBA{Float64}(0,0,0,0)
-plot_color(::Void) = RGBA{Float64}(0,0,0,0)
+plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : invisible()
+plot_color(::Void) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
 # plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 # plot_color(cs::AbstractArray) = map(plot_color, cs)
@@ -66,4 +68,3 @@ function plot_color{T<:Number}(zs::AbstractArray{T}, α::Number)
     end
     a
 end
-
