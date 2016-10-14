@@ -11,7 +11,7 @@ function build_grad_string(fn::AbstractString)
     colors = [begin
         "    RGB($(join(split(strip(l)), ", "))),\n"
     end for l in eachline(open(fn))]
-    "\nregister_gradient_colors(:$(name), sample_evenly([\n$(join(colors))])\n"
+    "\nregister_gradient_colors(:$(name), sample_evenly([\n$(join(colors))], 30))\n"
 end
 
 function build_grad_file(dir::AbstractString, outname::AbstractString)

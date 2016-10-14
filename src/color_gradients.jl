@@ -134,3 +134,4 @@ function sample_evenly(v::AbstractVector, n::Integer = length(v))
 end
 
 include("gradients/matplotlib.jl")
+include("gradients/cmocean.jl")
