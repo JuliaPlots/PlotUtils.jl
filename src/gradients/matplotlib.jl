@@ -278,7 +278,7 @@ register_gradient_colors(:magma, sample_evenly([
     RGB(0.987691, 0.977154, 0.734536),
     RGB(0.987387, 0.984288, 0.742002),
     RGB(0.987053, 0.991438, 0.749504)
-], 30))
+], 30), :default)
 
 register_gradient_colors(:inferno, sample_evenly([
     RGB(0.001462, 0.000466, 0.013866),
@@ -537,7 +537,7 @@ register_gradient_colors(:inferno, sample_evenly([
     RGB(0.976511, 0.989753, 0.616760),
     RGB(0.982257, 0.994109, 0.631017),
     RGB(0.988362, 0.998364, 0.644924)
-], 30))
+], 30), :default)
 
 register_gradient_colors(:plasma, sample_evenly([
     RGB(0.050383, 0.029803, 0.527975),
@@ -796,7 +796,7 @@ register_gradient_colors(:plasma, sample_evenly([
     RGB(0.944152, 0.961916, 0.146861),
     RGB(0.941896, 0.968590, 0.140956),
     RGB(0.940015, 0.975158, 0.131326)
-], 30))
+], 30), :default)
 
 register_gradient_colors(:viridis, sample_evenly([
     RGB(0.267004, 0.004874, 0.329415),
@@ -1055,7 +1055,7 @@ register_gradient_colors(:viridis, sample_evenly([
     RGB(0.974417, 0.903590, 0.130215),
     RGB(0.983868, 0.904867, 0.136897),
     RGB(0.993248, 0.906157, 0.143936)
-], 30))
+], 30), :default)
 
 
 # end of matplotlib colormaps
