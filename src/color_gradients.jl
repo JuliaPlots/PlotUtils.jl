@@ -1,6 +1,5 @@
 
 typealias ColorLibrary Dict{Symbol, Vector{RGBA{Float64}}}
-
 const color_libraries = Dict{Symbol, ColorLibrary}()
 
 function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AbstractVector{C}, color_library::Symbol = :default)
