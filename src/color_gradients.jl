@@ -41,6 +41,9 @@ register_color_library(:default, default)
 const _gradients = [:default]
 
 
+available_color_libraries() = keys(color_libraries)
+available_gradients(color_library::Symbol = :default) = keys(color_libraries[color_library])
+
 
 # --------------------------------------------------------------------------
 

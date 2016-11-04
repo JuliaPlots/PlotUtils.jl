@@ -16,7 +16,9 @@ export
     get_color_palette,
     isdark,
     plot_color,
-    set_color_library!
+    set_color_library!,
+    available_color_libraries,
+    available_gradients
 
 include("color_utils.jl")
 include("color_gradients.jl")
