@@ -3,7 +3,7 @@ invisible() = RGBA{Float64}(0.,0.,0.,0.)
 
 # the one-arg cases, meant for single colors
 plot_color(s::AbstractString) = parse(RGBA{Float64}, s)
-plot_color(s::Symbol; color_library::Symbol = _gradients[1]) = haskey(color_libraries[color_library,s) ? cgrad(s, color_library = color_library) : parse(RGBA{Float64}, s)
+plot_color(s::Symbol; color_library::Symbol = _gradients[1]) = haskey(color_libraries[color_library],s) ? cgrad(s, color_library = color_library) : parse(RGBA{Float64}, s)
 plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : invisible()
 plot_color(::Void) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
