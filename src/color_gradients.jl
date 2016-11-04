@@ -84,7 +84,7 @@ end
 
 # --------------------------------------------------------------------------
 
-cgrad_colors(s::Symbol) = copy(color_libraries[_gradients[1]][s])
+cgrad_colors(s::Symbol; color_library::Symbol = _gradients[1]) = copy(color_libraries[color_library][s])
 cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
