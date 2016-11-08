@@ -81,9 +81,9 @@ end
 function cgrad_colors(s::Symbol)
     rev, s = cgrad_reverse(s)
     if rev
-        _gradients[s]
-    else
         reverse(_gradients[s])
+    else
+        _gradients[s]
     end
 end
 cgrad_colors(grad::ColorGradient) = copy(grad.colors)
