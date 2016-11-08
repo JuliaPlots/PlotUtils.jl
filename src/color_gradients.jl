@@ -64,7 +64,28 @@ end
 
 # --------------------------------------------------------------------------
 
-cgrad_colors(s::Symbol) = copy(_gradients[s])
+function cgrad_reverse(s::Symbol)
+    str = string(s)
+    rev, s = if length(str) > 2 && str[end-1:end] == "_r"
+        (true, Symbol(str[1:end-2]))
+    else
+        (false, s)
+    end
+end
+
+function iscgrad_symbol(s::Symbol)
+    rev, s = cgrad_reverse(s)
+    haskey(_gradients, s)
+end
+
+function cgrad_colors(s::Symbol)
+    rev, s = cgrad_reverse(s)
+    if rev
+        _gradients[s]
+    else
+        reverse(_gradients[s])
+    end
+end
 cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
