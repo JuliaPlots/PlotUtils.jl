@@ -29,7 +29,7 @@ const default = ColorLibrary(
     :redsblues    => [colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
     :bluesreds    => [colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
     :heat         => [colorant"lightyellow", colorant"orange", colorant"darkred"],
-    :grays        => [RGB(.95,.95,.95),RGB(.05,.05,.05)],
+    :grays        => [RGB(.05,.05,.05),RGB(.95,.95,.95)],
     :rainbow      => _rainbowColors,
     :lightrainbow => map(lighten, _rainbowColors),
     :darkrainbow  => map(darken, _rainbowColors),
@@ -87,7 +87,29 @@ end
 
 # --------------------------------------------------------------------------
 
-cgrad_colors(s::Symbol; color_library::Symbol = _gradients[1]) = copy(color_libraries[color_library][s])
+function cgrad_reverse(s::Symbol)
+    str = string(s)
+    rev, s = if length(str) > 2 && str[end-1:end] == "_r"
+        (true, Symbol(str[1:end-2]))
+    else
+        (false, s)
+    end
+end
+
+function iscgrad_symbol(s::Symbol; color_library::Symbol = _gradients[1])
+    rev, s = cgrad_reverse(s)
+    haskey(color_libraries[color_library],s)
+end
+
+function cgrad_colors(s::Symbol; color_library::Symbol = _gradients[1])
+    rev, s = cgrad_reverse(s)
+    if rev
+        reverse(color_library[s])
+    else
+        color_library[s]
+    end
+end
+
 cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
