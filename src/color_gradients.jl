@@ -13,7 +13,7 @@ function register_color_library(name::Symbol, color_library::ColorLibrary)
     color_libraries[name] = color_library
 end
 
-function set_color_library!(grad::Symbol)
+function set_color_library(grad::Symbol)
     haskey(color_libraries, grad) || error("$grad is not a defined color library, valid choices are: "*join([":$(library)"  for library in keys(color_libraries)], ", "))
     _gradients[1] = grad
 end
@@ -41,8 +41,8 @@ register_color_library(:default, default)
 const _gradients = [:default]
 
 
-available_color_libraries() = keys(color_libraries)
-available_gradients(color_library::Symbol = :default) = keys(color_libraries[color_library])
+list_color_libraries() = keys(color_libraries)
+list_gradients(color_library::Symbol = _gradients[1]) = keys(color_libraries[color_library])
 
 
 # --------------------------------------------------------------------------
@@ -104,9 +104,9 @@ end
 function cgrad_colors(s::Symbol; color_library::Symbol = _gradients[1])
     rev, s = cgrad_reverse(s)
     if rev
-        reverse(color_library[s])
+        reverse(color_libraries[color_library][s])
     else
-        color_library[s]
+        color_libraries[color_library][s]
     end
 end
 
@@ -181,3 +181,4 @@ end
 
 include("gradients/matplotlib.jl")
 include("gradients/cmocean.jl")
+include("gradients/colorbrewer.jl")
