@@ -15,11 +15,13 @@ export
     invisible,
     get_color_palette,
     isdark,
-    plot_color
+    plot_color,
+    adapted_grid
 
 include("color_utils.jl")
 include("color_gradients.jl")
 include("colors.jl")
+include("adapted_grid.jl")
 
 export
     optimize_ticks
