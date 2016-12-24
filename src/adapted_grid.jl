@@ -17,7 +17,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         throw(ArgumentError("interval must be given as (min, max)"))
     end
 
-    # When an interval has curvature larger than this, stop refining it.
+    # When an interval has curvature smaller than this, stop refining it.
     max_curvature = 0.05
 
     # Initial number of points
