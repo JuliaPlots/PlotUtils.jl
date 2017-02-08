@@ -26,6 +26,7 @@ Alternately, this acknowledgment may appear in the software itself, if and where
 RGB values were taken from http://www.colorbrewer2.org
 =#
 
+register_color_library(:colorbrewer, ColorLibrary(Dict(:default => :sequential, :sequential => :Spectral, :divergent => :RdBu)))
 
 register_gradient_colors(:Spectral, [
     RGB(158/255, 1/255, 66/255),

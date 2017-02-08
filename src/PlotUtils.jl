@@ -6,6 +6,8 @@ module PlotUtils
 using Reexport
 @reexport using Colors
 
+import Base: getindex, setindex!
+
 export
     ColorGradient,
     cgrad,

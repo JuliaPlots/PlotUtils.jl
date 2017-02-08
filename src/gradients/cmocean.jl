@@ -29,6 +29,8 @@ RGB values were taken from https://github.com/matplotlib/cmocean/tree/master/cmo
 
 =#
 
+register_color_library(:cmocean, ColorLibrary(Dict(:default => :sequential, :sequential => :thermal, :divergent => :balance)))
+
 register_gradient_colors(:algae, sample_evenly([
     RGB(8.429022637670927631e-01, 9.769128443086748659e-01, 8.146495714674897304e-01),
     RGB(8.379898654100343958e-01, 9.732407342044756549e-01, 8.088430556678033456e-01),
