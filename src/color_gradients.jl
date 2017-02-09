@@ -12,7 +12,7 @@ function getgradient(gradient::Symbol = :default, cl::ColorLibrary = _gradients[
         while haskey(cl.defaults, gradient)
             gradient = cl.defaults[gradient]
         end
-        haskey(cl.lib, gradient) || error("No gradients named $gradient, use `list_gradients()` to see the available choices")
+        haskey(cl.lib, gradient) || error("No gradients named $gradient, use `cgradients()` to see the available choices")
     end
 
     cl.lib[gradient]
@@ -29,7 +29,12 @@ function register_color_library(name::Symbol, color_library::ColorLibrary)
     color_libraries[name] = color_library
 end
 
-function set_color_library(grad::Symbol)
+"""
+    clibrary(grad::Symbol)
+
+Set the active color library. A list of possible libraries can be printed with `clibraries()`
+"""
+function clibrary(grad::Symbol)
     haskey(color_libraries, grad) || error("$grad is not a defined color library, valid choices are: "*join([":$(library)"  for library in keys(color_libraries)], ", "))
     _gradients[1] = grad
 end
@@ -56,9 +61,19 @@ const Plots_internal = ColorLibrary(Dict(:default => :heat), Dict(
 register_color_library(:Plots_internal, Plots_internal)
 const _gradients = [:matplotlib]
 
+"""
+    clibraries()
 
-list_color_libraries() = keys(color_libraries)
-list_gradients(color_library::Symbol = _gradients[1]) = join(keys(color_libraries[color_library].lib), ", ")
+List the available color libraries on the system
+"""
+clibraries() = keys(color_libraries)
+
+"""
+    cgradients([color_library::Symbol])
+
+List available color gradients in color_library (defaults to the currently loaded library)
+"""
+cgradients(color_library::Symbol = _gradients[1]) = join(keys(color_libraries[color_library].lib), ", ")
 
 
 # --------------------------------------------------------------------------

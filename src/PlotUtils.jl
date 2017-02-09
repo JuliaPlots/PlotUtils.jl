@@ -18,9 +18,9 @@ export
     get_color_palette,
     isdark,
     plot_color,
-    set_color_library,
-    list_color_libraries,
-    list_gradients
+    clibrary,
+    clibraries,
+    cgradients
     adapted_grid
 
 
