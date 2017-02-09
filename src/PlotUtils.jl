@@ -21,10 +21,13 @@ export
     set_color_library,
     list_color_libraries,
     list_gradients
+    adapted_grid
+
 
 include("color_utils.jl")
 include("color_gradients.jl")
 include("colors.jl")
+include("adapted_grid.jl")
 
 export
     optimize_ticks
