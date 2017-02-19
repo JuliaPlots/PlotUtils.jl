@@ -20,7 +20,7 @@ export
     plot_color,
     clibrary,
     clibraries,
-    cgradients
+    cgradients,
     adapted_grid
 
 
