@@ -5,6 +5,7 @@ module PlotUtils
 
 using Reexport
 @reexport using Colors
+import Base: getindex
 
 export
     ColorGradient,
@@ -16,7 +17,12 @@ export
     get_color_palette,
     isdark,
     plot_color,
-    adapted_grid
+    adapted_grid,
+    set_clibrary,
+    clibrary,
+    clibraries,
+    cgradients,
+    cgraddefaults
 
 include("color_utils.jl")
 include("color_gradients.jl")
