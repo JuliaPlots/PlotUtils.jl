@@ -152,17 +152,18 @@ function cgrad_reverse(s::Symbol)
     end
 end
 
-function iscgrad_symbol(s::Symbol; color_library::Symbol = _gradients[1])
+function iscgrad_symbol(s::Symbol; color_library = _gradients[1])
     rev, s = cgrad_reverse(s)
-    haskey(color_libraries[color_library].lib,s) && return true
-    haskey(color_libraries[color_library].defaults,s) && return true
+    lib = isa(color_library, Symbol) ? color_libraries[color_library] : color_library
+    haskey(lib.lib,s) && return true
+    haskey(lib.defaults,s) && return true
     for library in values(color_libraries)
         haskey(library.lib, s) && return true
     end
     return false
 end
 
-function cgrad_colors(s::Symbol; color_library::Symbol = _gradients[1])
+function cgrad_colors(s::Symbol; color_library = _gradients[1])
     rev, s = cgrad_reverse(s)
     if rev
         reverse(getgradient(s, color_library))
@@ -175,11 +176,11 @@ cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 
-function _color_list(arg, ::Void; color_library::Symbol = _gradients[1])
+function _color_list(arg, ::Void; color_library = _gradients[1])
     cgrad_colors(arg; color_library = color_library)
 end
 
-function _color_list(arg, alpha; color_library::Symbol = _gradients[1])
+function _color_list(arg, alpha; color_library = _gradients[1])
     colors = cgrad_colors(arg; color_library = color_library)
     for i in eachindex(colors)
         colors[i] = RGBA{Float64}(convert(RGB{Float64}, colors[i]), alpha)
@@ -188,7 +189,7 @@ function _color_list(arg, alpha; color_library::Symbol = _gradients[1])
 end
 
 # construct a ColorGradient when given explicit values
-function cgrad(arg, values; alpha = nothing, color_library::Symbol = _gradients[1])
+function cgrad(arg, values; alpha = nothing, color_library = _gradients[1])
     colors = _color_list(arg, alpha; color_library = color_library)
     values = if length(colors) == length(values) && values[1] == 0 && values[end] == 1
         values
@@ -206,7 +207,7 @@ function cgrad(arg, values; alpha = nothing, color_library::Symbol = _gradients[
 end
 
 # construct a ColorGradient automatically
-function cgrad(arg; alpha = nothing, scale = :identity, color_library::Symbol = _gradients[1])
+function cgrad(arg; alpha = nothing, scale = :identity, color_library = _gradients[1])
     colors = _color_list(arg, alpha, color_library = color_library)
     values = if scale in (:log, :log10)
         log10(linspace(1,10,30))
