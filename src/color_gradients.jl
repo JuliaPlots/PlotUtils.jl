@@ -61,7 +61,7 @@ end
 
 function clibrary(grad::Symbol)
     haskey(color_libraries, grad) || error("$grad is not a defined color library, valid choices are: "*join([":$(library)"  for library in keys(color_libraries)], ", "))
-    grad
+    color_libraries[grad]
 end
 
 const _rainbowColors = [colorant"purple", colorant"blue", colorant"green", colorant"orange", colorant"red"]
