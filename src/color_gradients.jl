@@ -21,15 +21,22 @@ end
 
 const color_libraries = Dict{Symbol, ColorLibrary}()
 
-function getgradient(gradient::Symbol = :default, cl::ColorLibrary = _gradients[1])
-    while ! haskey(cl.lib, gradient)
-        while haskey(cl.defaults, gradient)
-            gradient = cl.defaults[gradient]
-        end
-        haskey(cl.lib, gradient) || error("No gradients named $gradient, use `cgradients()` to see the available choices")
-    end
+function getgradient(gradient::Symbol = :default, clibrary::Symbol = _gradients[1])
+    haskey(color_libraries, clibrary) || error("There is no color library named $clibrary . Use clibraries() to get a list of available color libraries")
+    cl = color_libraries[clibrary]
+    getgradient(gradient, cl)
+end
 
-    cl.lib[gradient]
+function getgradient(gradient::Symbol, cl::ColorLibrary)
+    while haskey(cl.defaults, gradient)
+        gradient = cl.defaults[gradient]
+    end
+    haskey(cl.lib, gradient) && return cl.lib[gradient]
+
+    potentials = [name for (name, library) in color_libraries if haskey(library.lib, gradient)]
+    length(potentials) == 0 && error("There is no gradient named $gradient . Use cgradients() to get a list of gradients in the current color library, clibraries() to get a list of available color libraries")
+    length(potentials) > 1 && warn("$gradient is found in more than one library: $(join(potentials, ", ")). Choosing $(potentials[1])")
+    color_libraries[potentials[1]][gradient]
 end
 
 getindex(cl::ColorLibrary, key::Symbol) = getgradient(key, cl)
@@ -141,17 +148,24 @@ function cgrad_reverse(s::Symbol)
     end
 end
 
+
+
 function iscgrad_symbol(s::Symbol; color_library::Symbol = _gradients[1])
     rev, s = cgrad_reverse(s)
-    haskey(color_libraries[color_library].lib,s) || haskey(color_libraries[color_library].defaults,s)
+    haskey(color_libraries[color_library].lib,s) && return true
+    haskey(color_libraries[color_library].defaults,s) && return true
+    for library in values(color_libraries)
+        haskey(library.lib, s) && return true
+    end
+    return false
 end
 
 function cgrad_colors(s::Symbol; color_library::Symbol = _gradients[1])
     rev, s = cgrad_reverse(s)
     if rev
-        reverse(color_libraries[color_library][s])
+        reverse(getgradient(s, color_library))
     else
-        color_libraries[color_library][s]
+        getgradient(s, color_library)
     end
 end
 
