@@ -174,7 +174,7 @@ end
 
 cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
-cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
+cgrad_colors(cs::AbstractVector; color_library = _gradients[1]) = RGBA{Float64}[plot_color(c; color_library = color_library) for c in cs]
 
 function _color_list(arg, ::Void; color_library = _gradients[1])
     cgrad_colors(arg; color_library = color_library)
