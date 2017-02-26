@@ -12,6 +12,8 @@ function ColorLibrary(lib::Dict{Symbol, Vector{RGBA{Float64}}}, default::Symbol)
     ColorLibrary(Dict(:default => default), lib)
 end
 
+cgraddefaults(cl::Symbol = _gradients[1]; kwargs...) = cgraddefaults(clibrary(cl); kwargs...)
+
 function cgraddefaults(cl::ColorLibrary; default = nothing, sequential = nothing, diverging = nothing)
     default == nothing || (cl.defaults[:default] = default)
     sequential == nothing || (cl.defaults[:sequential] = sequential)
@@ -45,7 +47,7 @@ function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AbstractVec
     color_libraries[color_library].lib[name] = colors
 end
 
-function register_color_library(name::Symbol, color_library::ColorLibrary)
+function register_color_library(name::Symbol, color_library::ColorLibrary = ColorLibrary())
     color_libraries[name] = color_library
 end
 
