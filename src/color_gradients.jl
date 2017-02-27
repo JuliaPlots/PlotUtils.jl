@@ -149,7 +149,7 @@ function cgrad_reverse(s::Symbol)
     end
 end
 
-function iscgrad_symbol(s::Symbol; color_library = _gradients[1])
+function iscgrad_symbol(s::Symbol)
     rev, s = cgrad_reverse(s)
     lib = color_libraries[_gradients[1]]
     haskey(lib.lib,s) && return true
@@ -160,12 +160,12 @@ function iscgrad_symbol(s::Symbol; color_library = _gradients[1])
     return false
 end
 
-function cgrad_colors(s::Symbol)
+function cgrad_colors(s::Symbol; color_library = _gradients[1])
     rev, s = cgrad_reverse(s)
     if rev
-        reverse(getgradient(s))
+        reverse(getgradient(s, color_library))
     else
-        getgradient(s)
+        getgradient(s, color_library)
     end
 end
 
@@ -185,6 +185,8 @@ function _color_list(arg, alpha)
     colors
 end
 
+cgrad(arg::Symbol, cl::Symbol, values; kw...) = cgrad(cgrad_colors(arg, color_library = cl), values; kw...)
+
 # construct a ColorGradient when given explicit values
 function cgrad(arg, values; alpha = nothing)
     colors = _color_list(arg, alpha)
@@ -202,6 +204,8 @@ function cgrad(arg, values; alpha = nothing)
     # construct and return the gradient
     ColorGradient(colors, values)
 end
+
+cgrad(arg::Symbol, cl::Symbol; kw...) = cgrad(cgrad_colors(arg, color_library = cl); kw...)
 
 # construct a ColorGradient automatically
 function cgrad(arg; alpha = nothing, scale = :identity)
@@ -223,6 +227,8 @@ function cgrad(arg; alpha = nothing, scale = :identity)
     # construct and return the gradient
     ColorGradient(colors, values)
 end
+
+
 
 # the default gradient
 cgrad(; kw...) = cgrad(:default; kw...)
