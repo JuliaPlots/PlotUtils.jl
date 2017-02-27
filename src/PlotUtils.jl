@@ -18,11 +18,10 @@ export
     isdark,
     plot_color,
     adapted_grid,
-    set_clibrary,
     clibrary,
     clibraries,
     cgradients,
-    cgraddefaults
+    default_cgrad
 
 include("color_utils.jl")
 include("color_gradients.jl")
