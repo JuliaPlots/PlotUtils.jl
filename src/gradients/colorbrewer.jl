@@ -132,18 +132,6 @@ register_gradient_colors(:RdGy, [
     RGB(77/255, 77/255, 77/255),
     RGB(26/255, 26/255, 26/255)], :colorbrewer)
 
-register_gradient_colors(:PuOr, [
-    RGB(127/255, 59/255, 8/255),
-    RGB(179/255, 88/255, 6/255),
-    RGB(224/255, 130/255, 20/255),
-    RGB(253/255, 184/255, 99/255),
-    RGB(254/255, 224/255, 182/255),
-    RGB(247/255, 247/255, 247/255),
-    RGB(216/255, 218/255, 235/255),
-    RGB(178/255, 171/255, 210/255),
-    RGB(128/255, 115/255, 172/255),
-    RGB(84/255, 39/255, 136/255),
-    RGB(45/255, 0/255, 75/255)], :colorbrewer)
 
 # These are commented out as they constitute non-continuous gradients, and are thus used differently by Plots
 # register_gradient_colors(:Set2, [

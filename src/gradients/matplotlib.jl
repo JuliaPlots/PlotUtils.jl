@@ -21,7 +21,7 @@
 
 # note: to use the full arrays, just take out the second param (n) from the sample_evenly calls
 
-register_color_library(:Plots, ColorLibrary(Dict(:default => :sequential, :sequential => :inferno)))
+register_color_library(:Plots, ColorLibrary(Dict(:default => :sequential, :sequential => :inferno, :diverging => :PuOr)))
 
 register_gradient_colors(:magma, sample_evenly([
     RGB(0.001462, 0.000466, 0.013866),
@@ -1059,6 +1059,20 @@ register_gradient_colors(:viridis, sample_evenly([
     RGB(0.993248, 0.906157, 0.143936)
 ], 30), :Plots)
 
+
+
+register_gradient_colors(:PuOr, [
+    RGB(127/255, 59/255, 8/255),
+    RGB(179/255, 88/255, 6/255),
+    RGB(224/255, 130/255, 20/255),
+    RGB(253/255, 184/255, 99/255),
+    RGB(254/255, 224/255, 182/255),
+    RGB(247/255, 247/255, 247/255),
+    RGB(216/255, 218/255, 235/255),
+    RGB(178/255, 171/255, 210/255),
+    RGB(128/255, 115/255, 172/255),
+    RGB(84/255, 39/255, 136/255),
+    RGB(45/255, 0/255, 75/255)], :Plots)
 
 # end of Plots colormaps
 # ----------------------------------------------------------------------
