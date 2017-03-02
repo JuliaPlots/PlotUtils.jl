@@ -1,9 +1,71 @@
+type ColorLibrary
+    defaults::Dict{Symbol, Symbol}
+    lib::Dict{Symbol, Vector{RGBA{Float64}}}
+    ColorLibrary(defaults = Dict(:default => :sequential), lib = Dict{Symbol, Vector{RGBA{Float64}}}()) = new(defaults, lib)
+end
+
+ColorLibrary(lib::Dict{Symbol, Vector{RGBA{Float64}}}) =
+    ColorLibrary(Dict(:default => keys(lib)[1]), lib)
+
+function ColorLibrary(lib::Dict{Symbol, Vector{RGBA{Float64}}}, default::Symbol)
+    in(default, keys(lib)) || error("There is no gradient named $default in lib")
+    ColorLibrary(Dict(:default => default), lib)
+end
+
+default_cgrad(cl::Symbol = _gradients[1]; kwargs...) = default_cgrad(color_libraries[cl]; kwargs...)
+
+function default_cgrad(cl::ColorLibrary; default = nothing, sequential = nothing, diverging = nothing)
+    default == nothing || (cl.defaults[:default] = default)
+    sequential == nothing || (cl.defaults[:sequential] = sequential)
+    diverging == nothing || (cl.defaults[:diverging] = diverging)
+end
+
+const color_libraries = Dict{Symbol, ColorLibrary}()
+
+function getgradient(gradient::Symbol = :default, clib::Symbol = _gradients[1])
+    haskey(color_libraries, clib) || error("There is no color library named $clib . Use clibraries() to get a list of available color libraries")
+    cl = color_libraries[clib]
+    getgradient(gradient, cl)
+end
+
+function getgradient(gradient::Symbol, cl::ColorLibrary)
+    while haskey(cl.defaults, gradient)
+        gradient = cl.defaults[gradient]
+    end
+    haskey(cl.lib, gradient) && return cl.lib[gradient]
+
+    potentials = [name for (name, library) in color_libraries if haskey(library.lib, gradient)]
+    length(potentials) == 0 && error("There is no gradient named $gradient . Use cgradients() to get a list of gradients in the current color library, clibraries() to get a list of available color libraries")
+    length(potentials) > 1 && warn("$gradient is found in more than one library: $(join(potentials, ", ")). Choosing $(potentials[1])")
+    color_libraries[potentials[1]][gradient]
+end
+
+getindex(cl::ColorLibrary, key::Symbol) = getgradient(key, cl)
+
+function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AbstractVector{C}, color_library::Symbol = :default)
+    haskey(color_libraries, color_library) || register_color_library(color_library, ColorLibrary())
+    color_libraries[color_library].lib[name] = colors
+end
+
+function register_color_library(name::Symbol, color_library::ColorLibrary = ColorLibrary())
+    color_libraries[name] = color_library
+end
+
+"""
+    clibrary(grad::Symbol)
+
+Set the active color library. A list of possible libraries can be printed with `clibraries()`
+"""
+function clibrary(grad::Symbol)
+    haskey(color_libraries, grad) || error("$grad is not a defined color library, valid choices are: "*join([":$(library)"  for library in keys(color_libraries)], ", "))
+    _gradients[1] = grad
+end
 
 const _rainbowColors = [colorant"purple", colorant"blue", colorant"green", colorant"orange", colorant"red"]
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
-const _gradients = Dict{Symbol,Vector{RGBA{Float64}}}(
+const misc = ColorLibrary(Dict(:default => :sequential, :sequential => :heat, :diverging => :bluesreds), Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
@@ -16,11 +78,25 @@ const _gradients = Dict{Symbol,Vector{RGBA{Float64}}}(
     :darkrainbow  => map(darken, _rainbowColors),
     :darktest     => _testColors,
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
-  )
+  ))
 
-function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AbstractVector{C})
-    _gradients[name] = colors
-end
+
+register_color_library(:misc, misc)
+const _gradients = [:Plots]
+
+"""
+    clibraries()
+
+List the available color libraries on the system
+"""
+clibraries() = collect(keys(color_libraries))
+
+"""
+    cgradients([color_library::Symbol])
+
+List available color gradients in color_library (defaults to the currently loaded library)
+"""
+cgradients(color_library::Symbol = _gradients[1]) = collect(keys(color_libraries[color_library].lib))
 
 # --------------------------------------------------------------------------
 
@@ -75,17 +151,24 @@ end
 
 function iscgrad_symbol(s::Symbol)
     rev, s = cgrad_reverse(s)
-    haskey(_gradients, s)
+    lib = color_libraries[_gradients[1]]
+    haskey(lib.lib,s) && return true
+    haskey(lib.defaults,s) && return true
+    for library in values(color_libraries)
+        haskey(library.lib, s) && return true
+    end
+    return false
 end
 
-function cgrad_colors(s::Symbol)
+function cgrad_colors(s::Symbol; color_library = _gradients[1])
     rev, s = cgrad_reverse(s)
     if rev
-        reverse(_gradients[s])
+        reverse(getgradient(s, color_library))
     else
-        _gradients[s]
+        getgradient(s, color_library)
     end
 end
+
 cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
@@ -93,6 +176,7 @@ cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 function _color_list(arg, ::Void)
     cgrad_colors(arg)
 end
+
 function _color_list(arg, alpha)
     colors = cgrad_colors(arg)
     for i in eachindex(colors)
@@ -100,6 +184,8 @@ function _color_list(arg, alpha)
     end
     colors
 end
+
+cgrad(arg::Symbol, cl::Symbol, values; kw...) = cgrad(cgrad_colors(arg, color_library = cl), values; kw...)
 
 # construct a ColorGradient when given explicit values
 function cgrad(arg, values; alpha = nothing)
@@ -118,6 +204,8 @@ function cgrad(arg, values; alpha = nothing)
     # construct and return the gradient
     ColorGradient(colors, values)
 end
+
+cgrad(arg::Symbol, cl::Symbol; kw...) = cgrad(cgrad_colors(arg, color_library = cl); kw...)
 
 # construct a ColorGradient automatically
 function cgrad(arg; alpha = nothing, scale = :identity)
@@ -140,10 +228,10 @@ function cgrad(arg; alpha = nothing, scale = :identity)
     ColorGradient(colors, values)
 end
 
-const _default_gradient = Ref(:inferno)
+
 
 # the default gradient
-cgrad(; kw...) = cgrad(_default_gradient[]; kw...)
+cgrad(; kw...) = cgrad(:default; kw...)
 
 
 cvec(s::Symbol, n::Integer = 10; kw...) = cvec(cgrad(s; kw...), n)
@@ -156,3 +244,4 @@ end
 
 include("gradients/matplotlib.jl")
 include("gradients/cmocean.jl")
+include("gradients/colorbrewer.jl")
