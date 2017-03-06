@@ -337,3 +337,47 @@ function multilevel_ticks(viewmin::DateTime, viewmax::DateTime;
 end
 
 
+# Choose "round" (full seconds/minutes/hours/days/months/years) DateTime ticks
+# between x_min and x_max:
+function optimize_datetime_ticks(a_min::Real, a_max::Real;
+    k_min::Integer = 2,
+    k_max::Integer = 4)
+
+    x_min = convert(DateTime, Integer(round(a_min)))
+    x_max = convert(DateTime, Integer(round(a_max)))
+
+    Δt = x_max - x_min
+    if Δt > Dates.Day(365 * k_min)
+        P = Dates.Year
+        steplength = Δt / (k_max * Dates.Millisecond(Dates.Day(365)))
+    elseif Δt > Dates.Day(30 * k_min)
+        P = Dates.Month
+        steplength = Δt / (k_max * Dates.Millisecond(Dates.Day(30)))
+    elseif Δt > Dates.Day(k_min)
+        P = Dates.Day
+        steplength = Δt / (k_max * Dates.Millisecond(Dates.Day(1)))
+    elseif Δt > Dates.Hour(k_min)
+        P = Dates.Hour
+        steplength = Δt / (k_max * Dates.Millisecond(Dates.Hour(1)))
+    elseif Δt > Dates.Minute(k_min)
+        P = Dates.Minute
+        steplength = Δt / (k_max * Dates.Millisecond(Dates.Minute(1)))
+    elseif Δt > Dates.Second(k_min)
+        P = Dates.Second
+        steplength = Δt / (k_max * Dates.Millisecond(Dates.Second(1)))
+    else
+        P = Dates.Millisecond
+        steplength = Δt / (k_max * Dates.Millisecond(1))
+    end
+    steplength = P(max(1, Integer(round(steplength))))
+
+    period_hierarchy = [Dates.Millisecond, Dates.Second, Dates.Minute,
+        Dates.Hour, Dates.Day, Dates.Month, Dates.Year]
+    i = findfirst(period_hierarchy .== P)
+    showtype = i >= 5 ? Date : DateTime
+    start = DateTime((PH(x_min) for PH in period_hierarchy[end:-1:i])...) + P(1)
+    ticks = collect(start:steplength:x_max)
+    labels = string.(showtype.(ticks))
+
+    return Integer.(ticks), labels
+end
