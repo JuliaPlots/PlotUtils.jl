@@ -29,7 +29,8 @@ include("colors.jl")
 include("adapted_grid.jl")
 
 export
-    optimize_ticks
+    optimize_ticks,
+    optimize_datetime_ticks
 
 include("ticks.jl")
 
