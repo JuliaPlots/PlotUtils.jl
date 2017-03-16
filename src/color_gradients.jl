@@ -245,3 +245,4 @@ end
 include("gradients/matplotlib.jl")
 include("gradients/cmocean.jl")
 include("gradients/colorbrewer.jl")
+include("gradients/colorcet.jl")
