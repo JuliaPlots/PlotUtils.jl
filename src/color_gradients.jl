@@ -5,7 +5,7 @@ type ColorLibrary
 end
 
 ColorLibrary(lib::Dict{Symbol, Vector{RGBA{Float64}}}) =
-    ColorLibrary(Dict(:default => keys(lib)[1]), lib)
+    ColorLibrary(Dict(:default => first(keys(lib))), lib)
 
 function ColorLibrary(lib::Dict{Symbol, Vector{RGBA{Float64}}}, default::Symbol)
     in(default, keys(lib)) || error("There is no gradient named $default in lib")
