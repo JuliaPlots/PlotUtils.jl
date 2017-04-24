@@ -114,7 +114,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                     g = 0 < k < 2k_ideal ? 1 - abs(k - k_ideal) / k_ideal : 0.0
 
                     # coverage
-                    c = 1.5*xspan/span
+                    c = 1.5 * xspan/span
 
                     score = granularity_weight * g +
                             simplicity_weight * s +
