@@ -1,24 +1,4 @@
 
-# --------------------------------------------------------------------------
-# --------------------------------------------------------------------------
-# The following gradients were taken from https://github.com/BIDS/colormap/blob/master/colormaps.py
-# Here is the licensing note which accompanied this:
-
-    # New Plots colormaps by Nathaniel J. Smith, Stefan van der Walt,
-    # and (in the case of viridis) Eric Firing.
-    #
-    # This file and the colormaps in it are released under the CC0 license /
-    # public domain dedication. We would appreciate credit if you use or
-    # redistribute these colormaps, but do not impose any legal restrictions.
-    #
-    # To the extent possible under law, the persons who associated CC0 with
-    # mpl-colormaps have waived all copyright and related or neighboring rights
-    # to mpl-colormaps.
-    #
-    # You should have received a copy of the CC0 legalcode along with this
-    # work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
-
-
 # note: to use the full arrays, just take out the second param (n) from the sample_evenly calls
 
 register_color_library(:Plots, ColorLibrary(Dict(:default => :sequential, :sequential => :inferno, :diverging => :pu_or)))

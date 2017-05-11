@@ -156,3 +156,5 @@ function rgba_string(c::Colorant)
 	@sprintf("rgba(%d, %d, %d, %1.3f)", make255(red(c)), make255(green(c)), make255(blue(c)), alpha(c))
 end
 
+# allows passing a ColorGradient to rgba_string and get a useful response by picking the first color - introduced because the plotly backend to Plots uses this functionality
+rgba_string(cg::ColorGradient) = rgba_string(cg[1])

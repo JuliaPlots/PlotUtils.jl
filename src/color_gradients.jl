@@ -1,3 +1,4 @@
+
 type ColorLibrary
     defaults::Dict{Symbol, Symbol}
     lib::Dict{Symbol, Vector{RGBA{Float64}}}
