@@ -1,4 +1,3 @@
-# These are the perceptually correct color maps designed by Peter Kovesi and described in Peter Kovesi. Good Colour Maps: How to Design Them. arXiv:1509.03700 [cs.GR] 2015
 
 register_color_library(:colorcet, ColorLibrary(Dict(:default => :sequential, :sequential => :fire, :diverging => :coolwarm)))
 
