@@ -243,6 +243,10 @@ function sample_evenly(v::AbstractVector, n::Integer = length(v))
     v[idx]
 end
 
+
+# allows passing a ColorGradient to rgba_string and get a useful response by picking the first color - introduced because the plotly backend to Plots uses this functionality
+rgba_string(cg::ColorGradient) = rgba_string(cg[1])
+
 include("gradients/matplotlib.jl")
 include("gradients/cmocean.jl")
 include("gradients/colorbrewer.jl")
