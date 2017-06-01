@@ -1040,7 +1040,6 @@ register_gradient_colors(:viridis, sample_evenly([
 ], 30), :Plots)
 
 
-
 register_gradient_colors(:pu_or, [
     RGB(45/255, 0/255, 75/255),
     RGB(84/255, 39/255, 136/255),
@@ -1053,6 +1052,8 @@ register_gradient_colors(:pu_or, [
     RGB(224/255, 130/255, 20/255),
     RGB(179/255, 88/255, 6/255),
     RGB(127/255, 59/255, 8/255)], :Plots)
+
+register_gradient_colors(:blues, [colorant"lightblue", colorant"darkblue"], :Plots)
 
 # end of Plots colormaps
 # ----------------------------------------------------------------------
