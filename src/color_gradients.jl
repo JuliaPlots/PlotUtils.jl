@@ -67,7 +67,6 @@ const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcya
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
 const misc = ColorLibrary(Dict(:default => :sequential, :sequential => :heat, :diverging => :bluesreds), Dict(
-    :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
     :redsblues    => [colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
