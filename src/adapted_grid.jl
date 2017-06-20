@@ -44,9 +44,9 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     while true
         curvatures = Vector{Float64}(n_intervals)
         active = Vector{Bool}(n_intervals)
-        max_f = maximum(abs, fs)
+        max_f = maximum(abs, fs[isfinite.(fs)])
         # Guard against division by zero later
-        if max_f == 0
+        if max_f == 0 || !isfinite(max_f)
             max_f = one(max_f)
         end
         # Skip first and last interval
