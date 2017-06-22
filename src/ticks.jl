@@ -346,8 +346,8 @@ function optimize_datetime_ticks(a_min::Real, a_max::Real;
     k_min::Integer = 2,
     k_max::Integer = 4)
 
-    x_min = convert(DateTime, Integer(round(a_min)))
-    x_max = convert(DateTime, Integer(round(a_max)))
+    x_min = DateTime(Dates.UTM(Int(round(a_min))))
+    x_max = DateTime(Dates.UTM(Int(round(a_max))))
 
     Δt = x_max - x_min
     if Δt > Dates.Day(365 * k_min)
@@ -382,5 +382,5 @@ function optimize_datetime_ticks(a_min::Real, a_max::Real;
     ticks = collect(start:steplength:x_max)
     labels = string.(showtype.(ticks))
 
-    return Integer.(ticks), labels
+    return Dates.value.(ticks), labels
 end
