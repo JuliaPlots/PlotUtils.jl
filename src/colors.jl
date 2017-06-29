@@ -48,7 +48,7 @@ end
 # end
 function plot_color{T<:Number}(zs::AbstractArray{T})
     grad = cgrad()
-    zmin, zmax = extrema(zs)
+    zmin, zmax = extrema(zs[isfinite.(zs)])
     a = Array{RGBA{Float64}}(size(zs))
     for i in eachindex(zs)
         a[i] = grad[(zs[i]-zmin)/(zmax-zmin)]
