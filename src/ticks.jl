@@ -123,10 +123,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
 
                     # strict limits on coverage
                     if strict_span && span > xspan
-                        score -= 10000
-                        if span >= 4.0*xspan
-                            score -= 1000
-                        end
+                        score -= 10000 * (span/xspan + 1)
                     elseif !strict_span && (span >= 2.0*xspan || span < xspan)
                         score -= 1000
                     end
