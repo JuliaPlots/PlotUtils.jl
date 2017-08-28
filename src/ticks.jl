@@ -90,8 +90,8 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
     r_best = 0.0
     q_best = 0.0
 
-    while k_max * 10.0^(z+1) * one_t > xspan
-        for k in k_min:k_max
+    while 2k_max * 10.0^(z+1) * one_t > xspan
+        for k in k_min:2k_max
             for (q, qscore) in Q
                 span = (k - 1) * q * 10.0^z * one_t
                 if span < xspan
@@ -105,13 +105,38 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                 r = ceil((x_max - span) / (stp * one_t))
 
                 while r*stp * one_t <= x_min
+                    span2 = q * 10.0^z * one_t
+                    if extend_ticks
+                        S = Array{typeof(1.0 * one_t)}(Int(3 * k))
+                        for i in 0:(3*k - 1)
+                            S[i+1] = (r + i - k) * span2
+                        end
+                        viewmin, viewmax = S[k + 1], S[2 * k]
+                    else
+                        S = Array{typeof(1.0 * one_t)}(k)
+                        for i in 0:(k - 1)
+                            S[i+1] = (r + i) * span2
+                        end
+                        viewmin, viewmax = S[1], S[end]
+                    end
+                    if strict_span
+                        viewmin = max(viewmin, x_min)
+                        viewmax = min(viewmax, x_max)
+                        if span_buffer == nothing
+                            S = filter(si -> viewmin <= si <= viewmax, S)
+                        else
+                            buf = span_buffer * (viewmax - viewmin)
+                            # @show buf
+                            S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
+                        end
+                    end
                     has_zero = r <= 0 && abs(r) < k
 
                     # simplicity
                     s = has_zero ? 1.0 : 0.0
 
                     # granularity
-                    g = 0 < k < 2k_ideal ? 1 - abs(k - k_ideal) / k_ideal : 0.0
+                    g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0.0
 
                     # coverage
                     c = 1.5 * xspan/span
@@ -129,7 +154,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                         score -= 1000
                     end
 
-                    if score > high_score
+                    if score > high_score && (k_min <= length(S) <= k_max)
                         (q_best, r_best, k_best, z_best) = (q, r, k, z)
                         high_score = score
                     end
