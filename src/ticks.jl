@@ -169,8 +169,18 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
     end
 
     if isinf(high_score)
-        R = typeof(1.0 * one_t)
-        return R[x_min], x_min - one_t, x_min + one_t
+        if strict_span
+            warn("No strict ticks found")
+            return optimize_ticks_typed(x_min, x_max, extend_ticks,
+                                       Q, k_min,
+                                       k_max, k_ideal,
+                                       granularity_weight, simplicity_weight,
+                                       coverage_weight, niceness_weight,
+                                       false, span_buffer)
+        else
+            R = typeof(1.0 * one_t)
+            return R[x_min], x_min - one_t, x_min + one_t
+        end
     end
 
     return S_best, viewmin_best, viewmax_best
