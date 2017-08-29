@@ -85,15 +85,14 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
     z = bounding_order_of_magnitude(xspan)
 
     high_score = -Inf
-    z_best = 0.0
-    k_best = 0
-    r_best = 0.0
-    q_best = 0.0
+    S_best = Array{typeof(1.0 * one_t)}(0)
+    viewmin_best, viewmax_best = x_min, x_max
 
-    while k_max * 10.0^(z+1) * one_t > xspan
-        for k in k_min:k_max
+    while 2k_max * 10.0^(z+1) * one_t > xspan
+        for k in k_min:2k_max
             for (q, qscore) in Q
-                span = (k - 1) * q * 10.0^z * one_t
+                tickspan = q * 10.0^z * one_t
+                span = (k - 1) * tickspan
                 if span < xspan
                     continue
                 end
@@ -105,16 +104,45 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                 r = ceil((x_max - span) / (stp * one_t))
 
                 while r*stp * one_t <= x_min
+                    # Filter or expand ticks
+                    if extend_ticks
+                        S = Array{typeof(1.0 * one_t)}(Int(3 * k))
+                        for i in 0:(3*k - 1)
+                            S[i+1] = (r + i - k) * tickspan
+                        end
+                        viewmin, viewmax = S[k + 1], S[2 * k]
+                    else
+                        S = Array{typeof(1.0 * one_t)}(k)
+                        for i in 0:(k - 1)
+                            S[i+1] = (r + i) * tickspan
+                        end
+                        viewmin, viewmax = S[1], S[end]
+                    end
+                    if strict_span
+                        viewmin = max(viewmin, x_min)
+                        viewmax = min(viewmax, x_max)
+                        if span_buffer == nothing
+                            S = filter(si -> viewmin <= si <= viewmax, S)
+                        else
+                            buf = span_buffer * (viewmax - viewmin)
+                            # @show buf
+                            S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
+                        end
+                    end
+
+                    # evaluate quality of ticks
+
                     has_zero = r <= 0 && abs(r) < k
 
                     # simplicity
                     s = has_zero ? 1.0 : 0.0
 
                     # granularity
-                    g = 0 < k < 2k_ideal ? 1 - abs(k - k_ideal) / k_ideal : 0.0
+                    g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0.0
 
                     # coverage
-                    c = 1.5 * xspan/span
+                    effective_span = (length(S)-1) * tickspan
+                    c = 1.5 * xspan/effective_span
 
                     score = granularity_weight * g +
                             simplicity_weight * s +
@@ -124,15 +152,13 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                     # strict limits on coverage
                     if strict_span && span > xspan
                         score -= 10000
-                        if span >= 4.0*xspan
-                            score -= 1000
-                        end
-                    elseif !strict_span && (span >= 2.0*xspan || span < xspan)
+                    end
+                    if  span >= 2.0*xspan
                         score -= 1000
                     end
 
-                    if score > high_score
-                        (q_best, r_best, k_best, z_best) = (q, r, k, z)
+                    if score > high_score && (k_min <= length(S) <= k_max)
+                        (S_best, viewmin_best, viewmax_best) = (S, viewmin, viewmax)
                         high_score = score
                     end
                     r += 1
@@ -143,40 +169,21 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
     end
 
     if isinf(high_score)
-        R = typeof(1.0 * one_t)
-        return R[x_min], x_min - one_t, x_min + one_t
-    end
-
-    span = q_best * 10.0^z_best * one_t
-    if extend_ticks
-        S = Array{typeof(1.0 * one_t)}(Int(3 * k_best))
-        for i in 0:(3*k_best - 1)
-            S[i+1] = (r_best + i - k_best) * span
-        end
-        viewmin, viewmax = S[k_best + 1], S[2 * k_best]
-    else
-        S = Array{typeof(1.0 * one_t)}(k_best)
-        for i in 0:(k_best - 1)
-            S[i+1] = (r_best + i) * span
-        end
-        viewmin, viewmax = S[1], S[end]
-    end
-
-    # @show "before" S viewmin viewmax
-    if strict_span
-        viewmin = max(viewmin, x_min)
-        viewmax = min(viewmax, x_max)
-        if span_buffer == nothing
-            S = filter(si -> viewmin <= si <= viewmax, S)
+        if strict_span
+            warn("No strict ticks found")
+            return optimize_ticks_typed(x_min, x_max, extend_ticks,
+                                       Q, k_min,
+                                       k_max, k_ideal,
+                                       granularity_weight, simplicity_weight,
+                                       coverage_weight, niceness_weight,
+                                       false, span_buffer)
         else
-            buf = span_buffer * (viewmax - viewmin)
-            # @show buf
-            S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
+            R = typeof(1.0 * one_t)
+            return R[x_min], x_min - one_t, x_min + one_t
         end
     end
-    # @show "after" S viewmin viewmax
 
-    return S, viewmin, viewmax
+    return S_best, viewmin_best, viewmax_best
 end
 
 
