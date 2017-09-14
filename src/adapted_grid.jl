@@ -89,9 +89,9 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         n_new_points = 2*length(intervals_to_refine)
 
         # Do division of the intervals
-        new_xs = similar(xs, n_points + n_new_points)
-        new_fs = similar(fs, n_points + n_new_points)
-        new_tot_refinements = similar(n_tot_refinements, n_intervals + n_intervals_to_refine)
+        new_xs = zeros(eltype(xs), n_points + n_new_points)
+        new_fs = zeros(eltype(fs), n_points + n_new_points)
+        new_tot_refinements = zeros(Int, n_intervals + n_intervals_to_refine)
         k = 0
         kk = 0
         for i in 1:n_points
