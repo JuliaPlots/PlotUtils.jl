@@ -31,7 +31,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     xs[end-1] = xs[end] - (xs[end] - xs[end-1]) * 0.25
 
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
-    rng = MersenneTwister(1337)
+    rng = MersenneTwister()#(1337)
     rand_factor = 0.05
     for i in 2:length(xs)-1
         xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i+1] - xs[i-1])
