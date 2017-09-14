@@ -42,8 +42,8 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     # We only evaluate the function on interior points
     fs = [NaN; [f(x) for x in xs[2:end-1]]; NaN]
     while true
-        curvatures = Vector{Float64}(n_intervals)
-        active = Vector{Bool}(n_intervals)
+        curvatures = zeros(n_intervals)
+        active = falses(n_intervals)
         max_f = maximum(abs, fs[isfinite.(fs)])
         # Guard against division by zero later
         if max_f == 0 || !isfinite(max_f)
