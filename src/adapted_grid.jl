@@ -31,10 +31,10 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     xs[end-1] = xs[end] - (xs[end] - xs[end-1]) * 0.25
 
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
-    rng = MersenneTwister(1337)
+    #rng = MersenneTwister(1337)
     rand_factor = 0.05
     for i in 2:length(xs)-1
-        xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i+1] - xs[i-1])
+        xs[i] += rand_factor * 2 * (rand() - 0.5) * (xs[i+1] - xs[i-1]) #set rand(rng) for debugging
     end
 
     n_tot_refinements = zeros(Int, n_intervals)
@@ -42,8 +42,8 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     # We only evaluate the function on interior points
     fs = [NaN; [f(x) for x in xs[2:end-1]]; NaN]
     while true
-        curvatures = Vector{Float64}(n_intervals)
-        active = Vector{Bool}(n_intervals)
+        curvatures = zeros(n_intervals)
+        active = falses(n_intervals)
         max_f = maximum(abs, fs[isfinite.(fs)])
         # Guard against division by zero later
         if max_f == 0 || !isfinite(max_f)
@@ -89,9 +89,9 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         n_new_points = 2*length(intervals_to_refine)
 
         # Do division of the intervals
-        new_xs = similar(xs, n_points + n_new_points)
-        new_fs = similar(fs, n_points + n_new_points)
-        new_tot_refinements = similar(n_tot_refinements, n_intervals + n_intervals_to_refine)
+        new_xs = zeros(eltype(xs), n_points + n_new_points)
+        new_fs = zeros(eltype(fs), n_points + n_new_points)
+        new_tot_refinements = zeros(Int, n_intervals + n_intervals_to_refine)
         k = 0
         kk = 0
         for i in 1:n_points
