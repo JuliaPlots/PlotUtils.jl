@@ -211,13 +211,13 @@ cgrad(arg::Symbol, cl::Symbol; kw...) = cgrad(cgrad_colors(arg, color_library = 
 function cgrad(arg; alpha = nothing, scale = :identity)
     colors = _color_list(arg, alpha)
     values = if scale in (:log, :log10)
-        log10(linspace(1,10,30))
+        log10(linspace(1,10,length(colors)))
     elseif scale == :log2
-        log2(linspace(1,2,30))
+        log2(linspace(1,2,length(colors)))
     elseif scale == :ln
-        log(linspace(1,pi,30))
+        log(linspace(1,pi,length(colors)))
     elseif scale in (:exp, :exp10)
-        (exp10(linspace(0,1,30)) - 1) / 9
+        (exp10(linspace(0,1,length(colors))) - 1) / 9
     elseif isa(arg, ColorGradient)
         arg.values
     else
