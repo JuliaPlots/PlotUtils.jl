@@ -3368,7 +3368,7 @@ register_gradient_colors(:gwv, sample_evenly([
     RGB(0.71995, 0.34979, 0.89497),
 ], 64), :colorcet)
 
-register_gradient_colors(:inferno, sample_evenly([
+register_gradient_colors(:cinferno, sample_evenly([
     RGB(0, 0.047803, 0.4883),
     RGB(0, 0.049705, 0.49553),
     RGB(0, 0.051451, 0.50272),
