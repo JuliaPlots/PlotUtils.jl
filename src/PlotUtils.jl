@@ -5,6 +5,7 @@ module PlotUtils
 
 using Reexport
 @reexport using Colors
+using Dates
 import Base: getindex
 
 export
