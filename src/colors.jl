@@ -5,14 +5,14 @@ invisible() = RGBA{Float64}(0.,0.,0.,0.)
 plot_color(s::AbstractString) = parse(RGBA{Float64}, s)
 plot_color(s::Symbol) = (iscgrad_symbol(s) ? cgrad(s) : parse(RGBA{Float64}, s))
 plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : invisible()
-plot_color(::Void) = invisible()
+plot_color(::Nothing) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
 # plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 # plot_color(cs::AbstractArray) = map(plot_color, cs)
 plot_color(grad::ColorGradient) = grad
 
 # no alpha override
-plot_color(x, ::Void) = plot_color(x)
+plot_color(x, ::Nothing) = plot_color(x)
 
 # alpha override
 plot_color(x, α::Number) = RGBA{Float64}(convert(RGB, plot_color(x)), α)
