@@ -55,7 +55,7 @@ function generate_colorgradient(bgcolor = plot_color(:white);
 		seed_colors,
 		lchoices=Float64[lightness],
 		cchoices=Float64[chroma],
-		hchoices=linspace(0, 340, 20)
+		hchoices=range(0; stop=340, length=20)
 	)[2:end]
 	gradient_from_list(colors)
 end

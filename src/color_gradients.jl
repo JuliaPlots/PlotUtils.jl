@@ -173,7 +173,7 @@ cgrad_colors(grad::ColorGradient) = copy(grad.colors)
 cgrad_colors(cs::Vector{RGBA{Float64}}) = cs
 cgrad_colors(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 
-function _color_list(arg, ::Void)
+function _color_list(arg, ::Nothing)
     cgrad_colors(arg)
 end
 
@@ -194,10 +194,10 @@ function cgrad(arg, values; alpha = nothing)
         values
     else
         # merge values into the default range, then recompute color list and return vals
-        # vals = merge(collect(linspace(0, 1, length(colors))), collect(values))
-        vals = sort(unique(vcat(linspace(0, 1, length(colors)), values)))
+        # vals = merge(collect(range(0; stop=1, length=length(colors))), collect(values))
+        vals = sort(unique(vcat(range(0; stop=1, length=length(colors)), values)))
         grad = ColorGradient(colors)
-        colors = RGBA{Float64}[grad[z] for z in linspace(0, 1, length(vals))]
+        colors = RGBA{Float64}[grad[z] for z in range(0; stop=1, length=length(vals))]
         vals
     end
 
@@ -211,17 +211,17 @@ cgrad(arg::Symbol, cl::Symbol; kw...) = cgrad(cgrad_colors(arg, color_library = 
 function cgrad(arg; alpha = nothing, scale = :identity)
     colors = _color_list(arg, alpha)
     values = if scale in (:log, :log10)
-        log10(linspace(1,10,length(colors)))
+        log10(range(1; stop=10, length=length(colors)))
     elseif scale == :log2
-        log2(linspace(1,2,length(colors)))
+        log2(range(1; stop=2, length=length(colors)))
     elseif scale == :ln
-        log(linspace(1,pi,length(colors)))
+        log(range(1; stop=pi, length=length(colors)))
     elseif scale in (:exp, :exp10)
-        (exp10(linspace(0,1,length(colors))) - 1) / 9
+        (exp10(range(0; stop=1, length=length(colors))) - 1) / 9
     elseif isa(arg, ColorGradient)
         arg.values
     else
-        linspace(0, 1, length(colors))
+        range(0; stop=1, length=length(colors))
     end
 
     # construct and return the gradient
@@ -235,10 +235,10 @@ cgrad(; kw...) = cgrad(:default; kw...)
 
 
 cvec(s::Symbol, n::Integer = 10; kw...) = cvec(cgrad(s; kw...), n)
-cvec(grad::ColorGradient, n::Integer = 10; kw...) = RGBA{Float64}[grad[z] for z in linspace(0,1,n)]
+cvec(grad::ColorGradient, n::Integer = 10; kw...) = RGBA{Float64}[grad[z] for z in range(0; stop=1, length=n)]
 
 function sample_evenly(v::AbstractVector, n::Integer = length(v))
-    idx = Int[round(Int, x) for x in linspace(1, length(v), n)]
+    idx = Int[round(Int, x) for x in range(1; stop=length(v), length=n)]
     v[idx]
 end
 
