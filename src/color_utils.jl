@@ -70,7 +70,7 @@ function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
 	RGBA{Float64}[grad[z] for z in zrng]
 end
 
-get_color_palette{C<:Colorant}(palette::Vector{C}, bgcolor::Colorant, numcolors::Integer) = palette
+get_color_palette(palette::Vector{C}, bgcolor::Colorant, numcolors::Integer) where {C<:Colorant} = palette
 
 
 # ----------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 
-type ColorLibrary
+mutable struct ColorLibrary
     defaults::Dict{Symbol, Symbol}
     lib::Dict{Symbol, Vector{RGBA{Float64}}}
     ColorLibrary(defaults = Dict(:default => :sequential), lib = Dict{Symbol, Vector{RGBA{Float64}}}()) = new(defaults, lib)
@@ -43,7 +43,7 @@ end
 
 getindex(cl::ColorLibrary, key::Symbol) = getgradient(key, cl)
 
-function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AbstractVector{C}, color_library::Symbol = :default)
+function register_gradient_colors(name::Symbol, colors::AbstractVector{C}, color_library::Symbol = :default) where {C<:Colorant}
     haskey(color_libraries, color_library) || register_color_library(color_library, ColorLibrary())
     color_libraries[color_library].lib[name] = colors
 end
@@ -103,7 +103,7 @@ cgradients(color_library::Symbol = _gradients[1]) = collect(keys(color_libraries
 
 
 "Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
-immutable ColorGradient
+struct ColorGradient
   colors::Vector{RGBA{Float64}}
   values::Vector{Float64}
 end
