@@ -4,7 +4,7 @@
 # Find the smallest order of magnitude that is larger than xspan This is a
 # little opaque because I want to avoid assuming the log function is defined
 # over typeof(xspan)
-function bounding_order_of_magnitude{DT}(xspan::DT)
+function bounding_order_of_magnitude(xspan::DT) where DT
     one_dt = convert(DT, one(DT))
 
     a = 1
@@ -53,12 +53,12 @@ optimize_ticks() = Any[]
 # Returns:
 #   A Float64 vector containing tick marks.
 #
-function optimize_ticks{T}(x_min::T, x_max::T; extend_ticks::Bool=false,
+function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
                            Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
                            granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
-                           strict_span=true, span_buffer = nothing)
+                           strict_span=true, span_buffer = nothing) where T
 
     Qv = [(Float64(q[1]), Float64(q[2])) for q in Q]
     optimize_ticks_typed(x_min, x_max, extend_ticks, Qv, k_min, k_max, k_ideal,
@@ -66,26 +66,26 @@ function optimize_ticks{T}(x_min::T, x_max::T; extend_ticks::Bool=false,
                          coverage_weight, niceness_weight, strict_span, span_buffer)
 end
 
-function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
+function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                            Q::Vector{Tuple{Float64,Float64}}, k_min,
                            k_max, k_ideal,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
-                           strict_span, span_buffer)
+                           strict_span, span_buffer) where T
     one_t = convert(T, one(T))
     if x_max - x_min < eps()*one_t
         R = typeof(1.0 * one_t)
         return R[x_min], x_min - one_t, x_min + one_t
     end
 
-    const n = length(Q)
+    n = length(Q)
 
     # generalizing "order of magnitude"
     xspan = x_max - x_min
     z = bounding_order_of_magnitude(xspan)
 
     high_score = -Inf
-    S_best = Array{typeof(1.0 * one_t)}(0)
+    S_best = Array{typeof(1.0 * one_t)}(undef, )
     viewmin_best, viewmax_best = x_min, x_max
 
     while 2k_max * 10.0^(z+1) * one_t > xspan
@@ -112,7 +112,7 @@ function optimize_ticks_typed{T}(x_min::T, x_max::T, extend_ticks,
                         end
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
-                        S = Array{typeof(1.0 * one_t)}(k)
+                        S = Array{typeof(1.0 * one_t)}(undef, k)
                         for i in 0:(k - 1)
                             S[i+1] = (r + i) * tickspan
                         end
@@ -210,7 +210,7 @@ function optimize_ticks(x_min::DateTime, x_max::DateTime; extend_ticks::Bool=fal
         if year(x_max) == year(x_min) && month(x_max) - month(x_min) <= 1 && scale != :month
             ticks = DateTime[]
 
-            const scales = [
+            scales = [
                 Day(1), Hour(1), Minute(1), Second(1), Millisecond(100),
                 Millisecond(10), Millisecond(1)
             ]
@@ -303,8 +303,8 @@ end
 
 
 # Generate ticks suitable for multiple scales.
-function multilevel_ticks{T}(viewmin::T, viewmax::T;
-                             scales=[0.5, 5.0, 10.0])
+function multilevel_ticks(viewmin::T, viewmax::T;
+                          scales=[0.5, 5.0, 10.0]) where T
 
     ticks = Dict()
     for scale in scales

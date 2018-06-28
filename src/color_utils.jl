@@ -55,7 +55,7 @@ function generate_colorgradient(bgcolor = plot_color(:white);
 		seed_colors,
 		lchoices=Float64[lightness],
 		cchoices=Float64[chroma],
-		hchoices=linspace(0, 340, 20)
+		hchoices=range(0; stop=340, length=20)
 	)[2:end]
 	gradient_from_list(colors)
 end
@@ -70,7 +70,7 @@ function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
 	RGBA{Float64}[grad[z] for z in zrng]
 end
 
-get_color_palette{C<:Colorant}(palette::Vector{C}, bgcolor::Colorant, numcolors::Integer) = palette
+get_color_palette(palette::Vector{C}, bgcolor::Colorant, numcolors::Integer) where {C<:Colorant} = palette
 
 
 # ----------------------------------------------------------------------------------

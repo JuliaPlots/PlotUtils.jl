@@ -5,14 +5,14 @@ invisible() = RGBA{Float64}(0.,0.,0.,0.)
 plot_color(s::AbstractString) = parse(RGBA{Float64}, s)
 plot_color(s::Symbol) = (iscgrad_symbol(s) ? cgrad(s) : parse(RGBA{Float64}, s))
 plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : invisible()
-plot_color(::Void) = invisible()
+plot_color(::Nothing) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
 # plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 # plot_color(cs::AbstractArray) = map(plot_color, cs)
 plot_color(grad::ColorGradient) = grad
 
 # no alpha override
-plot_color(x, ::Void) = plot_color(x)
+plot_color(x, ::Nothing) = plot_color(x)
 
 # alpha override
 plot_color(x, α::Number) = RGBA{Float64}(convert(RGB, plot_color(x)), α)
@@ -30,7 +30,7 @@ end
 
 # plot_color(cs::AbstractVector, α::Number) = RGBA{Float64}[plot_color(c,α) for c in cs]
 function plot_color(cs::AbstractArray, α::Number)
-    a = Array{RGBA{Float64}}(size(cs))
+    a = Array{RGBA{Float64}}(undef, size(cs))
     for i in eachindex(cs)
         a[i] = plot_color(cs[i], α)
     end
@@ -41,28 +41,28 @@ end
 
 # convenience conversions from numeric arrays to gradient values
 # note: we need the first version because of dispatch
-# function plot_color{T<:Number}(zs::AbstractVector{T})
+# function plot_color(zs::AbstractVector{T}) where T<:Number
 #     grad = cgrad()
 #     zmin, zmax = extrema(zs)
 #     RGBA{Float64}[grad[(z-zmin)/(zmax-zmin)] for z in zs]
 # end
-function plot_color{T<:Number}(zs::AbstractArray{T})
+function plot_color(zs::AbstractArray{T}) where T<:Number
     grad = cgrad()
     zmin, zmax = extrema(zs[isfinite.(zs)])
-    a = Array{RGBA{Float64}}(size(zs))
+    a = Array{RGBA{Float64}}(undef, size(zs))
     for i in eachindex(zs)
         a[i] = grad[(zs[i]-zmin)/(zmax-zmin)]
     end
     a
 end
 
-# function plot_color{T<:Number}(zs::AbstractVector{T}, α::Number)
+# function plot_color(zs::AbstractVector{T}, α::Number) where T<:Number
 #     cs = plot_color(zs)
 #     RGBA{Float64}[RGBA{Float64}(convert(RGB, c), α) for c in cs]
 # end
-function plot_color{T<:Number}(zs::AbstractArray{T}, α::Number)
+function plot_color(zs::AbstractArray{T}, α::Number) where T<:Number
     cs = plot_color(zs)
-    a = Array{RGBA{Float64}}(size(zs))
+    a = Array{RGBA{Float64}}(undef, size(zs))
     for i in eachindex(zs)
         a[i] = RGBA{Float64}(convert(RGB, cs[i]), α)
     end

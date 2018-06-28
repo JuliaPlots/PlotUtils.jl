@@ -25,7 +25,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     n_intervals = n_points ÷ 2
     @assert isodd(n_points)
 
-    xs = collect(linspace(minmax[1], minmax[2], n_points))
+    xs = collect(range(minmax[1]; stop=minmax[2], length=n_points))
     # Move the first and last interior points a bit closer to the end points
     xs[2] = xs[1] + (xs[2] - xs[1]) * 0.25
     xs[end-1] = xs[end] - (xs[end] - xs[end-1]) * 0.25
@@ -34,7 +34,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     rng = MersenneTwister(1337)
     rand_factor = 0.05
     for i in 2:length(xs)-1
-        xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i+1] - xs[i-1]) 
+        xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i+1] - xs[i-1])
     end
 
     n_tot_refinements = zeros(Int, n_intervals)

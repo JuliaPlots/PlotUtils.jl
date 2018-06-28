@@ -1,5 +1,5 @@
 using PlotUtils
-using Base.Test
+using Test
 
 # TODO: real tests
 
@@ -26,11 +26,11 @@ const C = RGBA{Float64}
 
     grad = cgrad([:red, "blue"])
     @test grad.colors == C[colorant"red", colorant"blue"]
-    @test grad.values == collect(linspace(0,1,2))
+    @test grad.values == collect(range(0,stop=1,length=2))
 
     grad = cgrad([:red, "blue"], alpha = 0.5)
     @test grad.colors == C[C(1,0,0,0.5), C(0,0,1,0.5)]
-    @test grad.values == collect(linspace(0,1,2))
+    @test grad.values == collect(range(0,stop=1,length=2))
 
     grad = cgrad([:red,:blue], [0,0.1,1])
     @test grad.colors == C[C(1,0,0), C(0.5,0,0.5), C(0,0,1)]

@@ -3,7 +3,9 @@ __precompile__()
 
 module PlotUtils
 
+using Dates
 using Reexport
+using Printf
 @reexport using Colors
 import Base: getindex
 
