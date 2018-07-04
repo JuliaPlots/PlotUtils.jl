@@ -101,7 +101,7 @@ function get_zvalues(n::Int)
     offsets = vcat(offsets[1], offsets[3:end])
     zvalues = Float64[]
     for offset in offsets
-        append!(zvalues, offset + [0.0, 0.5, 0.25, 0.75])
+        append!(zvalues, offset .+ [0.0, 0.5, 0.25, 0.75])
     end
     vcat(zvalues[1], 1.0, zvalues[2:n-1])
 end
