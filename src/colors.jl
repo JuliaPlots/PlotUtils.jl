@@ -21,7 +21,7 @@ plot_color(s::Symbol, α::Number) = (iscgrad_symbol(s) ? cgrad(s, alpha=α) : RG
 plot_color(grad::ColorGradient, α::Number) = cgrad(grad, alpha=α)
 
 function plot_color(cs::AbstractArray)
-    a = Array{RGBA{Float64}}(undef, size(cs))
+    a = Array{RGBA{Float64}}(undef, size(cs)...)
     for i in eachindex(cs)
         a[i] = plot_color(cs[i])
     end
