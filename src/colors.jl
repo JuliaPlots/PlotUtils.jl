@@ -30,7 +30,7 @@ end
 
 # plot_color(cs::AbstractVector, α::Number) = RGBA{Float64}[plot_color(c,α) for c in cs]
 function plot_color(cs::AbstractArray, α::Number)
-    a = Array{RGBA{Float64}}(undef, size(cs))
+    a = Array{RGBA{Float64}}(undef, size(cs)...)
     for i in eachindex(cs)
         a[i] = plot_color(cs[i], α)
     end
@@ -49,7 +49,7 @@ end
 function plot_color(zs::AbstractArray{T}) where T<:Number
     grad = cgrad()
     zmin, zmax = extrema(zs[isfinite.(zs)])
-    a = Array{RGBA{Float64}}(undef, size(zs))
+    a = Array{RGBA{Float64}}(undef, size(zs)...)
     for i in eachindex(zs)
         a[i] = grad[(zs[i]-zmin)/(zmax-zmin)]
     end
@@ -62,7 +62,7 @@ end
 # end
 function plot_color(zs::AbstractArray{T}, α::Number) where T<:Number
     cs = plot_color(zs)
-    a = Array{RGBA{Float64}}(undef, size(zs))
+    a = Array{RGBA{Float64}}(undef, size(zs)...)
     for i in eachindex(zs)
         a[i] = RGBA{Float64}(convert(RGB, cs[i]), α)
     end

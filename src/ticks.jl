@@ -106,7 +106,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                 while r*stp * one_t <= x_min
                     # Filter or expand ticks
                     if extend_ticks
-                        S = Array{typeof(1.0 * one_t)}(Int(3 * k))
+                        S = Array{typeof(1.0 * one_t)}(undef, Int(3 * k))
                         for i in 0:(3*k - 1)
                             S[i+1] = (r + i - k) * tickspan
                         end
