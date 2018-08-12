@@ -8,6 +8,7 @@ using Reexport
 using Printf
 @reexport using Colors
 import Base: getindex
+import Random: MersenneTwister
 
 export
     ColorGradient,
