@@ -110,7 +110,7 @@ end
 
 # if the values aren't passed in, pass to the cgrad method for processing
 ColorGradient(colors; kw...) = cgrad(colors; kw...)
-
+Base.length(::ColorGradient) = @error "length(::ColorGradient) was called, possibly due to a spuriously broadcast call to a function accepting ColorGradient (e.g. PlotUtils.plot_color). Please open an issue on the library you're using (e.g. Plots)"
 
 Base.getindex(gradient::ColorGradient, idx::Integer) = gradient.colors[mod1(idx, length(gradient.colors))]
 
