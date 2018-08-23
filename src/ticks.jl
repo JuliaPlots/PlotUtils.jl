@@ -170,7 +170,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
 
     if isinf(high_score)
         if strict_span
-            warn("No strict ticks found")
+            @warn("No strict ticks found")
             return optimize_ticks_typed(x_min, x_max, extend_ticks,
                                        Q, k_min,
                                        k_max, k_ideal,

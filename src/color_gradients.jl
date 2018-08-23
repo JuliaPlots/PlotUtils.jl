@@ -37,7 +37,7 @@ function getgradient(gradient::Symbol, cl::ColorLibrary)
 
     potentials = [name for (name, library) in color_libraries if haskey(library.lib, gradient)]
     length(potentials) == 0 && error("There is no gradient named $gradient . Use cgradients() to get a list of gradients in the current color library, clibraries() to get a list of available color libraries")
-    length(potentials) > 1 && warn("$gradient is found in more than one library: $(join(potentials, ", ")). Choosing $(potentials[1])")
+    length(potentials) > 1 && @warn("$gradient is found in more than one library: $(join(potentials, ", ")). Choosing $(potentials[1])")
     color_libraries[potentials[1]][gradient]
 end
 
