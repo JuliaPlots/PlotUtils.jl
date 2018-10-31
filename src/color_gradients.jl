@@ -69,19 +69,36 @@ const _testColors = RGBA{Float64}[colorant"darkblue", colorant"blueviolet",  col
 
 const _gradients = [:Plots]
 
-_misc_color_lib = ColorLibrary(Dict(:default => :sequential, :sequential => :heat, :diverging => :bluesreds), Dict(
-    :reds         => [colorant"lightpink", colorant"darkred"],
-    :greens       => [colorant"lightgreen", colorant"darkgreen"],
-    :redsblues    => [colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
-    :bluesreds    => [colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
-    :heat         => [colorant"lightyellow", colorant"orange", colorant"darkred"],
-    :grays        => [RGB(.05,.05,.05),RGB(.95,.95,.95)],
+
+const _misc_color_lib_contents = Pair{Symbol,Vector{RGBA{Float64}}}[
+    :reds         => RGBA{Float64}[colorant"lightpink", colorant"darkred"],
+    :greens       => RGBA{Float64}[colorant"lightgreen", colorant"darkgreen"],
+    :redsblues    => RGBA{Float64}[colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
+    :bluesreds    => RGBA{Float64}[colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
+    :heat         => RGBA{Float64}[colorant"lightyellow", colorant"orange", colorant"darkred"],
+    :grays        => RGBA{Float64}[RGB(.05,.05,.05),RGB(.95,.95,.95)],
     :rainbow      => _rainbowColors,
     :lightrainbow => map(lighten, _rainbowColors),
     :darkrainbow  => map(darken, _rainbowColors),
     :darktest     => _testColors,
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
-))
+]
+
+function _generate_misc_color_lib()
+    lib = Dict{Symbol, Vector{RGBA{Float64}}}()
+    for elem in _misc_color_lib_contents
+        lib[elem[1]] = elem[2]
+    end
+
+    ColorLibrary(
+        Dict{Symbol, Symbol}(
+            :default => :sequential,
+            :sequential => :heat,
+            :diverging => :bluesreds
+        ),
+        lib
+    )
+end
 
 
 """
