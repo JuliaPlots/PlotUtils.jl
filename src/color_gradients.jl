@@ -69,22 +69,20 @@ const _testColors = RGBA{Float64}[colorant"darkblue", colorant"blueviolet",  col
 
 const _gradients = [:Plots]
 
-function __init__()
-    misc = ColorLibrary(Dict(:default => :sequential, :sequential => :heat, :diverging => :bluesreds), Dict(
-        :reds         => [colorant"lightpink", colorant"darkred"],
-        :greens       => [colorant"lightgreen", colorant"darkgreen"],
-        :redsblues    => [colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
-        :bluesreds    => [colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
-        :heat         => [colorant"lightyellow", colorant"orange", colorant"darkred"],
-        :grays        => [RGB(.05,.05,.05),RGB(.95,.95,.95)],
-        :rainbow      => _rainbowColors,
-        :lightrainbow => map(lighten, _rainbowColors),
-        :darkrainbow  => map(darken, _rainbowColors),
-        :darktest     => _testColors,
-        :lighttest    => map(c -> lighten(c, 0.3), _testColors),
-    ))
-    register_color_library(:misc, misc)
-end
+_misc_color_lib = ColorLibrary(Dict(:default => :sequential, :sequential => :heat, :diverging => :bluesreds), Dict(
+    :reds         => [colorant"lightpink", colorant"darkred"],
+    :greens       => [colorant"lightgreen", colorant"darkgreen"],
+    :redsblues    => [colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
+    :bluesreds    => [colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
+    :heat         => [colorant"lightyellow", colorant"orange", colorant"darkred"],
+    :grays        => [RGB(.05,.05,.05),RGB(.95,.95,.95)],
+    :rainbow      => _rainbowColors,
+    :lightrainbow => map(lighten, _rainbowColors),
+    :darkrainbow  => map(darken, _rainbowColors),
+    :darktest     => _testColors,
+    :lighttest    => map(c -> lighten(c, 0.3), _testColors),
+))
+
 
 """
     clibraries()
