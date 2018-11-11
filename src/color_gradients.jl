@@ -219,7 +219,7 @@ function cgrad(arg; alpha = nothing, scale = :identity)
     elseif scale == :ln
         log.(range(1; stop=pi, length=length(colors)))
     elseif scale in (:exp, :exp10)
-        (exp10.(range(0; stop=1, length=length(colors))) - 1) / 9
+        (exp10.(range(0; stop=1, length=length(colors))) .- 1) ./ 9
     elseif isa(arg, ColorGradient)
         arg.values
     else
