@@ -44,10 +44,11 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     while true
         curvatures = zeros(n_intervals)
         active = falses(n_intervals)
-        max_f = maximum(abs, fs[isfinite.(fs)])
+        min_f, max_f = extrema(fs[isfinite.(fs)])
+        f_range = max_f - min_f
         # Guard against division by zero later
-        if max_f == 0 || !isfinite(max_f)
-            max_f = one(max_f)
+        if f_range == 0 || !isfinite(f_range)
+            f_range = one(f_range)
         end
         # Skip first and last interval
         for interval in 2:n_intervals-1
@@ -63,7 +64,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
                 # https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
                 curvatures[interval] += abs(2 * ((fs[i+1] - fs[i]) / ((xs[i+1]-xs[i]) * (xs[i+1]-xs[i-1]))
                                                 -(fs[i] - fs[i-1]) / ((xs[i]-xs[i-1]) * (xs[i+1]-xs[i-1])))
-                                                * (xs[i+1] - xs[i-1])^2) / max_f * w
+                                                * (xs[i+1] - xs[i-1])^2) / f_range * w
             end
             curvatures[interval] /= tot_w
             # Only consider intervals that have not been refined too much and have a high enough curvature
@@ -119,10 +120,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
                 end
             else
                 new_xs[i + k] = xs[i]
-                # Don't evaluate function at end points
-                if !(i == 1 || i == n_points)
-                    new_fs[i + k] = fs[i]
-                end
+                new_fs[i + k] = fs[i]
             end
         end
 
