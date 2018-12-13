@@ -44,7 +44,8 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     while true
         curvatures = zeros(n_intervals)
         active = falses(n_intervals)
-        min_f, max_f = extrema(fs[isfinite.(fs)])
+        isfinite_f = isfinite.(fs)
+        min_f, max_f = any(isfinite_f) ? extrema(fs[isfinite_f]) : (0.0, 0.0)
         f_range = max_f - min_f
         # Guard against division by zero later
         if f_range == 0 || !isfinite(f_range)
@@ -53,22 +54,29 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         # Skip first and last interval
         for interval in 2:n_intervals-1
             p = 2 * interval
-            tot_w = 0.0
-            # Do a small convolution
-            for (q,w) in ((-1, 0.25), (0, 0.5), (1, 0.25))
-                interval == 1 && q == -1 && continue
-                interval == n_intervals && q == 1 && continue
-                tot_w += w
-                i = p + q
-                # Estimate integral of second derivative over interval, use that as a refinement indicator
-                # https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
-                curvatures[interval] += abs(2 * ((fs[i+1] - fs[i]) / ((xs[i+1]-xs[i]) * (xs[i+1]-xs[i-1]))
-                                                -(fs[i] - fs[i-1]) / ((xs[i]-xs[i-1]) * (xs[i+1]-xs[i-1])))
-                                                * (xs[i+1] - xs[i-1])^2) / f_range * w
+            if n_tot_refinements[interval] >= max_recursions
+                # Skip intervals that have been refined too much
+                active[interval] = false
+            elseif !all(isfinite.(fs[[p-1,p,p+1]]))
+                active[interval] = true
+            else
+                tot_w = 0.0
+                # Do a small convolution
+                for (q,w) in ((-1, 0.25), (0, 0.5), (1, 0.25))
+                    interval == 1 && q == -1 && continue
+                    interval == n_intervals && q == 1 && continue
+                    tot_w += w
+                    i = p + q
+                    # Estimate integral of second derivative over interval, use that as a refinement indicator
+                    # https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
+                    curvatures[interval] += abs(2 * ((fs[i+1] - fs[i]) / ((xs[i+1]-xs[i]) * (xs[i+1]-xs[i-1]))
+                                                    -(fs[i] - fs[i-1]) / ((xs[i]-xs[i-1]) * (xs[i+1]-xs[i-1])))
+                                                    * (xs[i+1] - xs[i-1])^2) / f_range * w
+                end
+                curvatures[interval] /= tot_w
+                # Only consider intervals with a high enough curvature
+                active[interval] = curvatures[interval] > max_curvature
             end
-            curvatures[interval] /= tot_w
-            # Only consider intervals that have not been refined too much and have a high enough curvature
-            active[interval] = n_tot_refinements[interval] < max_recursions && curvatures[interval] > max_curvature
         end
         # Approximate end intervals as being the same curvature as those next to it.
         # This avoids computing the function in the end points
