@@ -37,4 +37,8 @@ export
 
 include("ticks.jl")
 
+function __init__()
+    register_color_library(:misc, _misc_color_lib)
+end
+
 end # module
