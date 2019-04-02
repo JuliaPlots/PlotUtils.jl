@@ -2332,7 +2332,7 @@ register_gradient_colors(:coolwarm, sample_evenly([
     RGB(0.75243, 0.0084181, 0.021805),
 ], 64), :colorcet)
 
-register_gradient_colors(:dimgray, sample_evenly([
+register_gradient_colors(:dimgreys, sample_evenly([
     RGB(0.10767, 0.1077, 0.1077),
     RGB(0.11032, 0.11035, 0.11035),
     RGB(0.11295, 0.11298, 0.11297),
@@ -2850,7 +2850,7 @@ register_gradient_colors(:fire, sample_evenly([
     RGB(1, 1, 1),
 ], 64), :colorcet)
 
-register_gradient_colors(:gray, sample_evenly([
+register_gradient_colors(:greys, sample_evenly([
     RGB(0, 0, 0),
     RGB(0.0055606, 0.0055631, 0.0055625),
     RGB(0.011212, 0.011219, 0.011217),
