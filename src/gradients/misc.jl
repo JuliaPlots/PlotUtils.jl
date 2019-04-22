@@ -1,3 +1,8 @@
+
+const _rainbowColors = RGBA{Float64}[colorant"purple", colorant"blue", colorant"green", colorant"orange", colorant"red"]
+const _testColors = RGBA{Float64}[colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
+                     darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
+
 const _misc_color_lib = ColorLibrary(IdDict(:default => :sequential, :sequential => :heat, :diverging => :bluesreds), IdDict(
     :reds         => RGBA{Float64}[colorant"lightpink", colorant"darkred"],
     :greens       => RGBA{Float64}[colorant"lightgreen", colorant"darkgreen"],
