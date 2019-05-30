@@ -91,6 +91,8 @@ end
 # if the values aren't passed in, pass to the cgrad method for processing
 ColorGradient(colors; kw...) = cgrad(colors; kw...)
 Base.length(::ColorGradient) = @error "length(::ColorGradient) was called, possibly due to a spuriously broadcast call to a function accepting ColorGradient (e.g. PlotUtils.plot_color). Please open an issue on the library you're using (e.g. Plots)"
+Base.:(==)(g1::ColorGradient, g2::ColorGradient) = (g1.colors == g2.colors) && (g1.values == g2.values)
+Base.hash(g::ColorGradient) = hash(g.colors) | hash(g.values)
 
 Base.getindex(gradient::ColorGradient, idx::Integer) = gradient.colors[mod1(idx, length(gradient.colors))]
 
