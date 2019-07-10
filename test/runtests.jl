@@ -78,4 +78,14 @@ end
 
 @testset "ticks" begin
     @test optimize_ticks(-1,2) == ([-1.0,0.0,1.0,2.0],-1.0,2.0)
+    
+    @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
+        y = x + i*eps(x)
+        x,y = minmax(x,y)
+        ticks = PlotUtils.optimize_ticks(x, y)[1]
+        @test issorted(ticks)
+        @test all(x .<= ticks .<= y)
+        # Fails:
+        # @test allunique(ticks)
+    end
 end
