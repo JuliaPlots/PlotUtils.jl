@@ -101,7 +101,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                 if stp < eps()
                     continue
                 end
-                r = ceil(Int, (x_max - span) / (stp * one_t))
+                r = ceil(Int64, (x_max - span) / (stp * one_t))
 
                 while r*stp * one_t <= x_min
                     # Filter or expand ticks
