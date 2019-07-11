@@ -101,7 +101,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                 if stp < eps()
                     continue
                 end
-                r = ceil((x_max - span) / (stp * one_t))
+                r = ceil(Int64, (x_max - span) / (stp * one_t))
 
                 while r*stp * one_t <= x_min
                     # Filter or expand ticks
@@ -121,13 +121,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     if strict_span
                         viewmin = max(viewmin, x_min)
                         viewmax = min(viewmax, x_max)
-                        if span_buffer == nothing
-                            S = filter(si -> viewmin <= si <= viewmax, S)
-                        else
-                            buf = span_buffer * (viewmax - viewmin)
-                            # @show buf
-                            S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
-                        end
+                        buf = something(span_buffer, 0) * (viewmax - viewmin)
+                        S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
                     end
 
                     # evaluate quality of ticks
