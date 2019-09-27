@@ -40,7 +40,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
     n_tot_refinements = zeros(Int, n_intervals)
 
     # We only evaluate the function on interior points
-    fs = [NaN; [f(x) for x in xs[2:end-1]]; NaN]
+    fs = f.(xs)
     while true
         curvatures = zeros(n_intervals)
         active = falses(n_intervals)
@@ -139,5 +139,5 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         n_intervals = n_points ÷ 2
     end
 
-    return xs[2:end-1]
+    return xs
 end
