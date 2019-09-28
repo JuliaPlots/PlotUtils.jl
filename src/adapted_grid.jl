@@ -139,5 +139,5 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         n_intervals = n_points ÷ 2
     end
 
-    return xs
+    return xs, fs
 end
