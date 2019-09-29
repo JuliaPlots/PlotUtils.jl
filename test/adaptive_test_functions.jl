@@ -1,3 +1,4 @@
+# This is not run by runtests.jl. Only intended to be checked manually.
 using Plots
 const test_funcs = [
                         (x -> 2, 0, 1),
