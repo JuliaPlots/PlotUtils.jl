@@ -52,7 +52,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
             f_range = one(f_range)
         end
         # Skip first and last interval
-        for interval in 2:n_intervals-1
+        for interval in 1:n_intervals
             p = 2 * interval
             if n_tot_refinements[interval] >= max_recursions
                 # Skip intervals that have been refined too much
