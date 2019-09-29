@@ -1,8 +1,8 @@
 
 """
-    adapted_grid(f, xlimits::Tuple{Number, Number}; max_recursions = 7)
+    adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7)
 
-Computes a grid `x` on the interval [xlimits[1], xlimits[2]] so that
+Computes a grid `x` on the interval [minmax[1], minmax[2]] so that
 `plot(f, x)` gives a smooth "nice" plot.
 The method used is to create an initial uniform grid (21 points) and refine intervals
 where the second derivative is approximated to be large. When an interval
@@ -12,8 +12,8 @@ exactly at the end points of the intervals.
 The parameter `max_recusions` computes how many times each interval is allowed to
 be refined.
 """
-function adapted_grid(f, xlimits::Tuple{Real, Real}, ylimits::Tuple{Real, Real}; max_recursions = 7)
-    if xlimits[1] >= xlimits[2]
+function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
+    if minmax[1] >= minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     end
 
@@ -25,8 +25,10 @@ function adapted_grid(f, xlimits::Tuple{Real, Real}, ylimits::Tuple{Real, Real};
     n_intervals = n_points ÷ 2
     @assert isodd(n_points)
 
-    # TODO: choose points equidistant on the scale to be plotted, might be log-scale
-    xs = collect(range(xlimits[1]; stop=xlimits[2], length=n_points))
+    xs = collect(range(minmax[1]; stop=minmax[2], length=n_points))
+    # Move the first and last interior points a bit closer to the end points
+    xs[2] = xs[1] + (xs[2] - xs[1]) * 0.25
+    xs[end-1] = xs[end] - (xs[end] - xs[end-1]) * 0.25
 
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
     rng = MersenneTwister(1337)
@@ -39,28 +41,6 @@ function adapted_grid(f, xlimits::Tuple{Real, Real}, ylimits::Tuple{Real, Real};
 
     # We evaluate the function on the whole interval
     fs = f.(xs)
-
-    binary_escape = function(x1, x2; rtol = 1e-2)
-        while x1 <= x2
-            mx = (x1 + x2) ÷ 2
-            mf = f(m)
-            if mf < ylimits[1] * (1 - rtol) || mf > ylimits[2] * (1 + rtol)
-                x1 = mx
-            elseif mf > ylimits[1] * (1 + rtol) || mf < ylimits[2] * (1 - rtol)
-                x2 = mx
-            else
-                return mx
-            end
-        end
-        return NaN
-    end
-    # Move the first and last points inside if function is out of bounds
-    if fs[1] < ylimits[1] || fs[1] > ylimits[2]
-        x[1] = binary_escape(x[1], x[2])
-    end
-    if fs[end] < ylimits[1] || fs[end] > ylimits[2]
-        x[end] = binary_escape(x[end-1], x[end])
-    end
     while true
         curvatures = zeros(n_intervals)
         active = falses(n_intervals)
