@@ -108,13 +108,13 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     if extend_ticks
                         S = Array{typeof(1.0 * one_t)}(undef, Int(3 * k))
                         for i in 0:(3*k - 1)
-                            S[i+1] = (r + i - k) * tickspan
+                            S[i+1] = round((r + i - k) * tickspan, sigdigits=3)
                         end
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
                         S = Array{typeof(1.0 * one_t)}(undef, k)
                         for i in 0:(k - 1)
-                            S[i+1] = (r + i) * tickspan
+                            S[i+1] = round((r + i) * tickspan, sigdigits=3)
                         end
                         viewmin, viewmax = S[1], S[end]
                     end
