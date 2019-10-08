@@ -6,8 +6,7 @@ Computes a grid `x` on the interval [minmax[1], minmax[2]] so that
 `plot(f, x)` gives a smooth "nice" plot.
 The method used is to create an initial uniform grid (21 points) and refine intervals
 where the second derivative is approximated to be large. When an interval
-becomes "straight enough" it is no longer divided. Functions are never evaluated
-exactly at the end points of the intervals.
+becomes "straight enough" it is no longer divided. Functions are evaluated at the end points of the intervals.
 
 The parameter `max_recusions` computes how many times each interval is allowed to
 be refined.
@@ -39,8 +38,8 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
 
     n_tot_refinements = zeros(Int, n_intervals)
 
-    # We only evaluate the function on interior points
-    fs = [NaN; [f(x) for x in xs[2:end-1]]; NaN]
+    # We evaluate the function on the whole interval
+    fs = f.(xs)
     while true
         curvatures = zeros(n_intervals)
         active = falses(n_intervals)
@@ -52,7 +51,7 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
             f_range = one(f_range)
         end
         # Skip first and last interval
-        for interval in 2:n_intervals-1
+        for interval in 1:n_intervals
             p = 2 * interval
             if n_tot_refinements[interval] >= max_recursions
                 # Skip intervals that have been refined too much
@@ -139,5 +138,5 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
         n_intervals = n_points ÷ 2
     end
 
-    return xs[2:end-1]
+    return xs, fs
 end
