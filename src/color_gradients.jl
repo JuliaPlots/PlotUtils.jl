@@ -43,7 +43,11 @@ end
 
 getindex(cl::ColorLibrary, key::Symbol) = getgradient(key, cl)
 
-function register_gradient_colors(name::Symbol, colors::AbstractVector{C}, color_library::Symbol = :default) where {C<:Colorant}
+const _categorical_gradients = Symbol[]
+is_categorical(grad) = grad in _categorical_gradients
+
+function register_gradient_colors(name::Symbol, colors::AbstractVector{C}, color_library::Symbol = :default, is_categorical = false) where {C<:Colorant}
+    is_categorical && push!(_categorical_gradients, name)
     haskey(color_libraries, color_library) || register_color_library(color_library, ColorLibrary())
     color_libraries[color_library].lib[name] = colors
 end

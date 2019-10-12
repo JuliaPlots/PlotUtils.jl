@@ -60,12 +60,20 @@ function generate_colorgradient(bgcolor = plot_color(:white);
 	gradient_from_list(colors)
 end
 
-function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
+function get_color_palette(palette::Symbol, bgcolor::Colorant, numcolors::Integer)
 	grad = if palette == :auto
 		generate_colorgradient(bgcolor)
 	else
 		cgrad(palette)
 	end
+	if is_categorical(palette)
+		return grad.colors
+	else
+		return get_color_palette(grad, bgcolor, numcolors)
+	end
+end
+
+function get_color_palette(grad, bgcolor::Colorant, numcolors::Integer)
 	zrng = get_zvalues(numcolors)
 	RGBA{Float64}[grad[z] for z in zrng]
 end
