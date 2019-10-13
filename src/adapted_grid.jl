@@ -38,8 +38,22 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
 
     n_tot_refinements = zeros(Int, n_intervals)
 
+    # Replace DomainErrors with NaNs
+    g = function(x)
+        local y
+        try
+            y = f(x)
+        catch err
+            if err isa DomainError
+                y = NaN
+            else
+                rethrow(err)
+            end
+        end
+        return y
+    end
     # We evaluate the function on the whole interval
-    fs = f.(xs)
+    fs = g.(xs)
     while true
         curvatures = zeros(n_intervals)
         active = falses(n_intervals)
@@ -112,13 +126,13 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
 
                     k += 1
                     new_xs[i - 1 + k] = (xs[i] + xs[i-1]) / 2
-                    new_fs[i - 1 + k] = f(new_xs[i-1 + k])
+                    new_fs[i - 1 + k] = g(new_xs[i-1 + k])
 
                     new_xs[i + k] = xs[i]
                     new_fs[i + k] = fs[i]
 
                     new_xs[i + 1 + k] = (xs[i+1] + xs[i]) / 2
-                    new_fs[i + 1 + k] = f(new_xs[i + 1 + k])
+                    new_fs[i + 1 + k] = g(new_xs[i + 1 + k])
                     k += 1
                 else
                     new_tot_refinements[interval + kk] = n_tot_refinements[interval]
