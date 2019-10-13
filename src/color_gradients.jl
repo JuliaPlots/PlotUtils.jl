@@ -119,6 +119,8 @@ function Base.getindex(gradient::ColorGradient, z::Number)
     cs[end]
 end
 
+Base.getindex(gradient::ColorGradient, inds::AbstractArray) = map(i -> getindex(gradient, i), inds)
+
 
 # --------------------------------------------------------------------------
 
