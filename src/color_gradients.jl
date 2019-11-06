@@ -188,14 +188,18 @@ cgrad(arg::Symbol, cl::Symbol; kw...) = cgrad(cgrad_colors(arg, color_library = 
 # construct a ColorGradient automatically
 function cgrad(arg; alpha = nothing, scale = :identity)
     colors = _color_list(arg, alpha)
-    values = if scale in (:log, :log10)
+    values = if scale in (:log, :log10) || scale isa typeof(log10)
         log10.(range(1; stop=10, length=length(colors)))
-    elseif scale == :log2
+    elseif scale == :log2 || scale isa typeof(log2)
         log2.(range(1; stop=2, length=length(colors)))
-    elseif scale == :ln
+    elseif scale == :ln || scale isa typeof(log)
         log.(range(1; stop=pi, length=length(colors)))
-    elseif scale in (:exp, :exp10)
+    elseif scale in (:exp, :exp10) || scale isa typeof(exp10) || scale isa typeof(exp)
         (exp10.(range(0; stop=1, length=length(colors))) .- 1) ./ 9
+    elseif scale isa Function
+        v = scale.(range(0; stop = 1, length = length(colors)))
+        min, max = extrema(v)
+        (v .- min) ./ (max - min)
     elseif isa(arg, ColorGradient)
         arg.values
     else
