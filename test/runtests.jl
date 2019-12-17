@@ -1,4 +1,5 @@
 using PlotUtils
+using Plots: is_uniformly_spaced
 using Test
 
 # TODO: real tests
@@ -87,5 +88,15 @@ end
         @test all(x .<= ticks .<= y)
         # Fails:
         # @test allunique(ticks)
+    end
+
+        y0 = 10^n
+        x0 = y0-1
+        x, y = (x0,y0) .* 10.0^i
+        ticks = optimize_ticks(x, y)[1]
+        @test length(ticks) >= 2
+        @test issorted(ticks)
+        @test all(x .<= ticks .<= y)
+        @test is_uniformly_spaced(ticks)
     end
 end
