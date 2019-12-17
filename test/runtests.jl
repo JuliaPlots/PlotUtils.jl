@@ -90,6 +90,7 @@ end
         # @test allunique(ticks)
     end
 
+    @testset "digits $((10^n)-1)*10^$i" for n in 1:9, i in -9:9
         y0 = 10^n
         x0 = y0-1
         x, y = (x0,y0) .* 10.0^i
