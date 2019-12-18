@@ -31,6 +31,8 @@ function bounding_order_of_magnitude(xspan::DT) where DT
     return b
 end
 
+const float_digit_range = floor(Int,log10(floatmin())):ceil(Int,log10(floatmax()))
+postdecimal_digits(x) = first(i for i in float_digit_range if x==floor(x; digits=i))
 
 # Empty catchall
 optimize_ticks() = Any[]
@@ -84,6 +86,12 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     xspan = x_max - x_min
     z = bounding_order_of_magnitude(xspan)
 
+    # find required significant digits for ticks with q*10^z spacing,
+    # for q values specified in Q
+    x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)))
+    q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
+    sigdigits(z) = max(1, x_digits - z + q_extra_digits)
+
     high_score = -Inf
     S_best = Array{typeof(1.0 * one_t)}(undef, )
     viewmin_best, viewmax_best = x_min, x_max
@@ -108,13 +116,13 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     if extend_ticks
                         S = Array{typeof(1.0 * one_t)}(undef, Int(3 * k))
                         for i in 0:(3*k - 1)
-                            S[i+1] = round((r + i - k) * tickspan, sigdigits=3)
+                            S[i+1] = round((r + i - k) * tickspan, sigdigits=sigdigits(z))
                         end
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
                         S = Array{typeof(1.0 * one_t)}(undef, k)
                         for i in 0:(k - 1)
-                            S[i+1] = round((r + i) * tickspan, sigdigits=3)
+                            S[i+1] = round((r + i) * tickspan, sigdigits=sigdigits(z))
                         end
                         viewmin, viewmax = S[1], S[end]
                     end

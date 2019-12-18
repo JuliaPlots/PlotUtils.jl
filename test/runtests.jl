@@ -1,5 +1,6 @@
 using PlotUtils
 using Test
+using Statistics: mean
 
 # TODO: real tests
 
@@ -76,6 +77,13 @@ end
 # ----------------------
 # ticks
 
+# Copied from Plots.is_uniformly_spaced to avoid dependency on recent version
+# on Plots which is not used on Travis.
+function is_uniformly_spaced(v; tol=1e-6)
+  dv = diff(v)
+  maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+end
+
 @testset "ticks" begin
     @test optimize_ticks(-1,2) == ([-1.0,0.0,1.0,2.0],-1.0,2.0)
     
@@ -87,5 +95,16 @@ end
         @test all(x .<= ticks .<= y)
         # Fails:
         # @test allunique(ticks)
+    end
+
+    @testset "digits $((10^n)-1)*10^$i" for n in 1:9, i in -9:9
+        y0 = 10^n
+        x0 = y0-1
+        x, y = (x0,y0) .* 10.0^i
+        ticks = optimize_ticks(x, y)[1]
+        @test length(ticks) >= 2
+        @test issorted(ticks)
+        @test all(x .<= ticks .<= y)
+        @test is_uniformly_spaced(ticks)
     end
 end
