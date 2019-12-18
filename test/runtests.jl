@@ -1,6 +1,6 @@
 using PlotUtils
-using Plots: is_uniformly_spaced
 using Test
+using Statistics: mean
 
 # TODO: real tests
 
@@ -76,6 +76,13 @@ end
 
 # ----------------------
 # ticks
+
+# Copied from Plots.is_uniformly_spaced to avoid dependency on recent version
+# on Plots which is not used on Travis.
+function is_uniformly_spaced(v; tol=1e-6)
+  dv = diff(v)
+  maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+end
 
 @testset "ticks" begin
     @test optimize_ticks(-1,2) == ([-1.0,0.0,1.0,2.0],-1.0,2.0)
