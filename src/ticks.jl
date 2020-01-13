@@ -37,24 +37,95 @@ postdecimal_digits(x) = first(i for i in float_digit_range if x==floor(x; digits
 # Empty catchall
 optimize_ticks() = Any[]
 
+"""
+    optimize_ticks(xmin, xmax; extend_ticks::Bool=false,
+                           Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
+                           k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
+                           granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
+                           coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
+                           strict_span=true, span_buffer = nothing
+        )
+            
+Find some reasonable values for tick marks.
 
-# Find some reasonable values for tick marks.
-#
-# This is basically Wilkinson's ad-hoc scoring method that tries to balance
-# tight fit around the data, optimal number of ticks, and simple numbers.
-#
-# Args:
-#   x_min: minimum value occuring in the data.
-#   x_max: maximum value occuring in the data.
-#   Q: tick intervals and scores
-#   k_min: minimum number of ticks
-#   k_max: maximum number of ticks
-#   k_ideal: ideal number of ticks
-#   strict_span: true if no ticks should be outside [x_min, x_max].
-#
-# Returns:
-#   A Float64 vector containing tick marks.
-#
+This is basically Wilkinson's ad-hoc scoring method that tries to balance
+tight fit around the data, optimal number of ticks, and simple numbers.
+
+## Arguments:
+
+*    `xmax`:
+
+    The maximum value occurring in the data.
+
+*    `xmin`:
+
+    The minimum value occurring in the data.
+
+*    `extend_ticks`:
+
+    Determines whether to extend tick computation. Defaults to false.
+
+*    `strict_span`:
+
+    True if no ticks should be outside [x_min, x_max]. Defaults to true.
+
+*    `Q`:
+
+    A distribution of nice numbers from which labellings are sampled. Stored in the form (number, score).
+
+*    `k_min`:
+
+    The minimum number of ticks.
+
+*    `k_max`:
+
+    The maximum number of ticks.
+
+*    `k_ideal`:
+
+    The ideal number of ticks.
+
+*    `granularity_weight`:
+
+    Encourages returning roughly the number of labels requested.
+
+*    `simplicity_weight`:
+
+    Encourages nicer labeling sequences by preferring step sizes that appear earlier in Q.
+    Also rewards labelings that include 0 as a way to ground the sequence.
+
+*    `coverage_weight`:
+
+    Encourages labelings that do not extend far beyond the range of the data, penalizing unnecessary whitespace.
+
+*    `niceness_weight`:
+
+    Encourages labellings to produce nice ranges.
+
+## Returns:
+  `(ticklocations::Vector{Float64}, x_min, x_max)`
+            
+## Mathematical details
+
+Wilkinson’s optimization function is defined as the sum of three
+components. If the user requests m labels and a possible labeling has
+k labels, then the components are `simplicity`, `coverage` and `granularity`.
+
+These components are defined as follows:
+```math
+\\begin{aligned}
+  &\\text{simplicity} = 1 - \\frac{i}{|Q|} + \\frac{v}{|Q|}\\\\
+  &\\text{coverage}   = \\frac{x_{max} - x_{min}}{\\mathrm{label}_{max} - \\mathrm{label}_{min}}\\\\
+  &\\text{granularity}= 1 - \\frac{\\left|k - m\\right|}{m}
+\\end{aligned}
+```
+
+and the variables here are:
+
+*  `q`: element of `Q`.
+*  `i`: index of `q` in `Q`.
+*  `v`: 1 if label range includes 0, 0 otherwise.
+"""
 function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
                            Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
