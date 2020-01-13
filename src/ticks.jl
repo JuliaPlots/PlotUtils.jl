@@ -53,53 +53,52 @@ tight fit around the data, optimal number of ticks, and simple numbers.
 
 ## Arguments:
 
-*    xmax
+*    `xmax`:
 
     The maximum value occurring in the data.
 
-*    xmin
+*    `xmin`:
 
     The minimum value occurring in the data.
 
-*    extend_ticks
+*    `extend_ticks`:
 
     Determines whether to extend tick computation. Defaults to false.
 
-*    strict_span
+*    `strict_span`:
 
     True if no ticks should be outside [x_min, x_max]. Defaults to true.
 
-*    Q
+*    `Q`:
 
     A distribution of nice numbers from which labellings are sampled. Stored in the form (number, score).
 
-*    k_min
+*    `k_min`:
 
     The minimum number of ticks.
 
-*    k_max
+*    `k_max`:
 
     The maximum number of ticks.
 
-*    k_ideal
+*    `k_ideal`:
 
     The ideal number of ticks.
 
-*    granularity_weight
+*    `granularity_weight`:
 
     Encourages returning roughly the number of labels requested.
 
-*    simplicity_weight
+*    `simplicity_weight`:
 
     Encourages nicer labeling sequences by preferring step sizes that appear earlier in Q.
-
     Also rewards labelings that include 0 as a way to ground the sequence.
 
-*    coverage_weight
+*    `coverage_weight`:
 
     Encourages labelings that do not extend far beyond the range of the data, penalizing unnecessary whitespace.
 
-*    niceness_weight
+*    `niceness_weight`:
 
     Encourages labellings to produce nice ranges.
 
