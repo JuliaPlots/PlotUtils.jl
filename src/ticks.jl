@@ -37,24 +37,32 @@ postdecimal_digits(x) = first(i for i in float_digit_range if x==floor(x; digits
 # Empty catchall
 optimize_ticks() = Any[]
 
+"""
+    optimize_ticks(xmin, xmax; extend_ticks::Bool=false,
+                           Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
+                           k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
+                           granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
+                           coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
+                           strict_span=true, span_buffer = nothing
+        )
+            
+Find some reasonable values for tick marks.
 
-# Find some reasonable values for tick marks.
-#
-# This is basically Wilkinson's ad-hoc scoring method that tries to balance
-# tight fit around the data, optimal number of ticks, and simple numbers.
-#
-# Args:
-#   x_min: minimum value occuring in the data.
-#   x_max: maximum value occuring in the data.
-#   Q: tick intervals and scores
-#   k_min: minimum number of ticks
-#   k_max: maximum number of ticks
-#   k_ideal: ideal number of ticks
-#   strict_span: true if no ticks should be outside [x_min, x_max].
-#
-# Returns:
-#   A Float64 vector containing tick marks.
-#
+This is basically Wilkinson's ad-hoc scoring method that tries to balance
+tight fit around the data, optimal number of ticks, and simple numbers.
+
+## Args:
+*  `x_min`: minimum value occuring in the data.
+*  `x_max`: maximum value occuring in the data.
+*  `Q`: tick intervals and scores
+*  `k_min`: minimum number of ticks
+*  `k_max`: maximum number of ticks
+*  `k_ideal`: ideal number of ticks
+*  `strict_span`: true if no ticks should be outside [x_min, x_max].
+
+## Returns:
+  `(ticklocations::Vector{Float64}, x_min, x_max)`
+"""
 function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
                            Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
