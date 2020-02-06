@@ -1,6 +1,7 @@
 using PlotUtils
 using Test
 using Statistics: mean
+using Dates
 
 # TODO: real tests
 
@@ -86,7 +87,12 @@ end
 
 @testset "ticks" begin
     @test optimize_ticks(-1,2) == ([-1.0,0.0,1.0,2.0],-1.0,2.0)
-    
+    dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
+    @test optimize_datetime_ticks(dt1, dt2) == (
+        [63113990400000, 63902908800000, 64691827200000, 65480745600000],
+        ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"]
+    )
+
     @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
         y = x + i*eps(x)
         x,y = minmax(x,y)
