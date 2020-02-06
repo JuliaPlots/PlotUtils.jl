@@ -45,7 +45,7 @@ optimize_ticks() = Any[]
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
                            strict_span=true, span_buffer = nothing
         )
-            
+
 Find some reasonable values for tick marks.
 
 This is basically Wilkinson's ad-hoc scoring method that tries to balance
@@ -104,7 +104,7 @@ tight fit around the data, optimal number of ticks, and simple numbers.
 
 ## Returns:
   `(ticklocations::Vector{Float64}, x_min, x_max)`
-            
+
 ## Mathematical details
 
 Wilkinson’s optimization function is defined as the sum of three
@@ -423,12 +423,9 @@ end
 
 # Choose "round" (full seconds/minutes/hours/days/months/years) DateTime ticks
 # between x_min and x_max:
-function optimize_datetime_ticks(a_min::Real, a_max::Real;
-    k_min::Integer = 2,
-    k_max::Integer = 4)
-
-    x_min = DateTime(Dates.UTM(Int(round(a_min))))
-    x_max = DateTime(Dates.UTM(Int(round(a_max))))
+function optimize_datetime_ticks(a_min, a_max; k_min = 2, k_max = 4)
+    x_min = DateTime(Dates.UTM(Int64(round(a_min))))
+    x_max = DateTime(Dates.UTM(Int64(round(a_max))))
 
     Δt = x_max - x_min
     if Δt > Dates.Day(365 * k_min)
@@ -453,7 +450,7 @@ function optimize_datetime_ticks(a_min::Real, a_max::Real;
         P = Dates.Millisecond
         steplength = Δt / (k_max * Dates.Millisecond(1))
     end
-    steplength = P(max(1, Integer(round(steplength))))
+    steplength = P(max(1, Int(round(steplength))))
 
     period_hierarchy = [Dates.Millisecond, Dates.Second, Dates.Minute,
         Dates.Hour, Dates.Day, Dates.Month, Dates.Year]

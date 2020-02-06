@@ -1,6 +1,6 @@
 name = "PlotUtils"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "0.6.2"
+version = "0.6.3"
 
 [deps]
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
@@ -10,9 +10,9 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-julia = "0.7, 1"
 Colors = "0"
 Reexport = "0"
+julia = "0.7, 1"
 
 [extras]
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
