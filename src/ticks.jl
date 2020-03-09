@@ -164,7 +164,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     sigdigits_z = max(1, x_digits - z + q_extra_digits)
 
     high_score = -Inf
-    S_best = Array{typeof(1.0 * one_t)}(undef, )
+    S_best = Array{typeof(1.0 * one_t)}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
 
     while 2k_max * 10.0^(z+1) * one_t > xspan
