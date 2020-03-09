@@ -171,8 +171,15 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     sig_tens = 10 ^ sigdigits_z
     round_sigdigits(x) = round(x * sig_tens) / sig_tens
 
+
+    prealloc_Ss = if extend_ticks
+        [Array{typeof(1.0 * one_t)}(undef, Int(3 * k)) for k in k_min:2k_max]
+    else
+        [Array{typeof(1.0 * one_t)}(undef, k) for k in k_min:2k_max]
+    end
+
     while 2k_max * 10.0^(z+1) * one_t > xspan
-        for k in k_min:2k_max
+        for (ik, k) in enumerate(k_min:2k_max)
             for (q, qscore) in Q
                 tickspan = q * 10.0^z * one_t
                 span = (k - 1) * tickspan
@@ -189,13 +196,13 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                 while r*stp * one_t <= x_min
                     # Filter or expand ticks
                     if extend_ticks
-                        S = Array{typeof(1.0 * one_t)}(undef, Int(3 * k))
+                        S = prealloc_Ss[ik]
                         for i in 0:(3*k - 1)
                             S[i+1] = round_sigdigits((r + i - k) * tickspan)
                         end
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
-                        S = Array{typeof(1.0 * one_t)}(undef, k)
+                        S = prealloc_Ss[ik]
                         for i in 0:(k - 1)
                             S[i+1] = round_sigdigits((r + i) * tickspan)
                         end
