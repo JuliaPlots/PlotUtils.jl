@@ -201,7 +201,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         viewmin = max(viewmin, x_min)
                         viewmax = min(viewmax, x_max)
                         buf = something(span_buffer, 0) * (viewmax - viewmin)
-                        S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
+                        S = S[(viewmin-buf) .<= S .<= (viewmax + buf)]
                     end
 
                     # evaluate quality of ticks
