@@ -167,6 +167,10 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     S_best = Array{typeof(1.0 * one_t)}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
 
+
+    sig_tens = 10 ^ sigdigits_z
+    round_sigdigits(x) = round(x * sig_tens) / sig_tens
+
     while 2k_max * 10.0^(z+1) * one_t > xspan
         for k in k_min:2k_max
             for (q, qscore) in Q
