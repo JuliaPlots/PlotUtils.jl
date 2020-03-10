@@ -114,3 +114,30 @@ end
         @test is_uniformly_spaced(ticks)
     end
 end
+
+# ----------------------
+# adapted grid
+
+@testset "adapted grid" begin
+    f = sin
+    int = (0, π)
+    xs, fs = adapted_grid(f, int)
+    l = length(xs) - 1
+    for i in 1:l
+        for λ in 0:0.1:1
+            # test that `f` is well approximated by a line
+            # in the interval `(xs[i], xs[i+1])`
+            x = λ * xs[i] + (1 - λ) * xs[i+1]
+            y = λ * fs[i] + (1 - λ) * fs[i+1]
+            @test y ≈ f(x) atol = 1e-2
+        end
+    end
+
+    int = (2, 2)
+    xs, fs = adapted_grid(f, int)
+    @test xs == [2]
+    @test fs == [f(2)]
+
+    int = (2, 1)
+    @test_throws ArgumentError adapted_grid(f, int)
+end
