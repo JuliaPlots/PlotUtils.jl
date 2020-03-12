@@ -209,14 +209,27 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
                         S[1] = round(S[1], sigdigits = sigdigits_z)
-                        S[end] = round(S[end], sigdigits = sigdigits_z)
-                        viewmin, viewmax = S[1], S[end]
+                        S[k] = round(S[k], sigdigits = sigdigits_z)
+                        viewmin, viewmax = S[1], S[k]
                     end
                     if strict_span
                         viewmin = max(viewmin, x_min)
                         viewmax = min(viewmax, x_max)
                         buf = something(span_buffer, 0) * (viewmax - viewmin)
-                        S = S[(viewmin-buf) .<= S .<= (viewmax + buf)]
+
+                        # filter the S array while reusing its own memory to do so
+                        # this works because S is sorted, and we will only overwrite
+                        # values that are not needed anymore going forward in the loop
+
+                        # we do this because it saves allocations and leaves S type stable
+                        counter = 0
+                        @inbounds for i in 1:length(S)
+                            if (viewmin - buf) <= S[i] <= (viewmax + buf)
+                                counter += 1
+                                S[counter] = S[i]
+                            end
+                        end
+                        S = view(S, 1:counter)
                     end
 
                     # evaluate quality of ticks
@@ -247,6 +260,11 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     end
 
                     if score > high_score && (k_min <= length(S) <= k_max)
+                        if strict_span
+                            # make S a copy because it is a view and
+                            # could otherwise be mutated in the next runs
+                            S = collect(S)
+                        end
                         (S_best, viewmin_best, viewmax_best) = (S, viewmin, viewmax)
                         high_score = score
                     end
