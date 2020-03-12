@@ -168,10 +168,6 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     viewmin_best, viewmax_best = x_min, x_max
 
 
-    sig_tens = 10 ^ sigdigits_z
-    round_sigdigits(x) = round(x * sig_tens) / sig_tens
-
-
     prealloc_Ss = if extend_ticks
         [Array{typeof(1.0 * one_t)}(undef, Int(3 * k)) for k in k_min:2k_max]
     else
@@ -198,14 +194,22 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     if extend_ticks
                         S = prealloc_Ss[ik]
                         for i in 0:(3*k - 1)
-                            S[i+1] = round_sigdigits((r + i - k) * tickspan)
+                            S[i+1] = (r + i - k) * tickspan
                         end
+                        # round only those values that end up as viewmin and viewmax
+                        # to save computation time
+                        S[k + 1] = round(S[k + 1], sigdigits = sigdigits_z)
+                        S[2 * k] = round(S[2 * k], sigdigits = sigdigits_z)
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
                         S = prealloc_Ss[ik]
                         for i in 0:(k - 1)
-                            S[i+1] = round_sigdigits((r + i) * tickspan)
+                            S[i+1] = (r + i) * tickspan
                         end
+                        # round only those values that end up as viewmin and viewmax
+                        # to save computation time
+                        S[1] = round(S[1], sigdigits = sigdigits_z)
+                        S[end] = round(S[end], sigdigits = sigdigits_z)
                         viewmin, viewmax = S[1], S[end]
                     end
                     if strict_span
