@@ -161,14 +161,24 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     # for q values specified in Q
     x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)))
     q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
-    sigdigits(z) = max(1, x_digits - z + q_extra_digits)
+    sigdigits_z = max(1, x_digits - z + q_extra_digits)
 
     high_score = -Inf
-    S_best = Array{typeof(1.0 * one_t)}(undef, )
+    S_best = Array{typeof(1.0 * one_t)}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
 
+
+    # we preallocate arrays that hold all required S arrays for every given
+    # the k parameter, so we don't have to create them again and again, which
+    # saves many allocations
+    prealloc_Ss = if extend_ticks
+        [Array{typeof(1.0 * one_t)}(undef, Int(3 * k)) for k in k_min:2k_max]
+    else
+        [Array{typeof(1.0 * one_t)}(undef, k) for k in k_min:2k_max]
+    end
+
     while 2k_max * 10.0^(z+1) * one_t > xspan
-        for k in k_min:2k_max
+        for (ik, k) in enumerate(k_min:2k_max)
             for (q, qscore) in Q
                 tickspan = q * 10.0^z * one_t
                 span = (k - 1) * tickspan
@@ -185,23 +195,44 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                 while r*stp * one_t <= x_min
                     # Filter or expand ticks
                     if extend_ticks
-                        S = Array{typeof(1.0 * one_t)}(undef, Int(3 * k))
+                        S = prealloc_Ss[ik]
                         for i in 0:(3*k - 1)
-                            S[i+1] = round((r + i - k) * tickspan, sigdigits=sigdigits(z))
+                            S[i+1] = (r + i - k) * tickspan
                         end
+                        # round only those values that end up as viewmin and viewmax
+                        # to save computation time
+                        S[k + 1] = round(S[k + 1], sigdigits = sigdigits_z)
+                        S[2 * k] = round(S[2 * k], sigdigits = sigdigits_z)
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
-                        S = Array{typeof(1.0 * one_t)}(undef, k)
+                        S = prealloc_Ss[ik]
                         for i in 0:(k - 1)
-                            S[i+1] = round((r + i) * tickspan, sigdigits=sigdigits(z))
+                            S[i+1] = (r + i) * tickspan
                         end
-                        viewmin, viewmax = S[1], S[end]
+                        # round only those values that end up as viewmin and viewmax
+                        # to save computation time
+                        S[1] = round(S[1], sigdigits = sigdigits_z)
+                        S[k] = round(S[k], sigdigits = sigdigits_z)
+                        viewmin, viewmax = S[1], S[k]
                     end
                     if strict_span
                         viewmin = max(viewmin, x_min)
                         viewmax = min(viewmax, x_max)
                         buf = something(span_buffer, 0) * (viewmax - viewmin)
-                        S = filter(si -> viewmin-buf <= si <= viewmax+buf, S)
+
+                        # filter the S array while reusing its own memory to do so
+                        # this works because S is sorted, and we will only overwrite
+                        # values that are not needed anymore going forward in the loop
+
+                        # we do this because it saves allocations and leaves S type stable
+                        counter = 0
+                        @inbounds for i in 1:length(S)
+                            if (viewmin - buf) <= S[i] <= (viewmax + buf)
+                                counter += 1
+                                S[counter] = S[i]
+                            end
+                        end
+                        S = view(S, 1:counter)
                     end
 
                     # evaluate quality of ticks
@@ -232,6 +263,11 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     end
 
                     if score > high_score && (k_min <= length(S) <= k_max)
+                        if strict_span
+                            # make S a copy because it is a view and
+                            # could otherwise be mutated in the next runs
+                            S = collect(S)
+                        end
                         (S_best, viewmin_best, viewmax_best) = (S, viewmin, viewmax)
                         high_score = score
                     end
