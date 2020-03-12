@@ -168,6 +168,9 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     viewmin_best, viewmax_best = x_min, x_max
 
 
+    # we preallocate arrays that hold all required S arrays for every given
+    # the k parameter, so we don't have to create them again and again, which
+    # saves many allocations
     prealloc_Ss = if extend_ticks
         [Array{typeof(1.0 * one_t)}(undef, Int(3 * k)) for k in k_min:2k_max]
     else
