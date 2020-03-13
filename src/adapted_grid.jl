@@ -157,3 +157,36 @@ function adapted_grid(f, minmax::Tuple{Real, Real}; max_recursions = 7)
 
     return xs, fs
 end
+
+
+# The following `tryrange` code was copied from Plots.jl
+# https://github.com/JuliaPlots/Plots.jl/blob/15dc61feb57cba1df524ce5d69f68c2c4ea5b942/src/series.jl#L399-L416
+
+"""
+    tryrange(F, vec)
+
+Tries to call the callable `F` (which must accept one real argument)
+and determine when it executes without error.
+
+If `F` is an `AbstractArray`, it will find the first element of `vec`
+for which all callables in `F` execute.
+"""
+function tryrange(F, vec)
+    for v in vec
+        try
+            tmp = F(v)
+            return v
+        catch
+        end
+    end
+    error("$F is not a Function, or is not defined at any of the values $vec")
+end
+
+# try some intervals over which the function may be defined
+
+function tryrange(F::AbstractArray, vec)
+    rets = [tryrange(f, vec) for f in F] # get the preferred for each
+    maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
+    rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
+    rets[1]
+end
