@@ -69,8 +69,8 @@ end
 
 @testset "gradients" begin
     grad = cgrad(:inferno)
-    @test length(grad.colors) == 30
-    @test length(grad.values) == 30
+    @test length(grad.colors) == 256
+    @test length(grad.values) == 256
     @test RGB(grad.colors[1]) == RGB(0.001462, 0.000466, 0.013866)
     @test RGB(grad.colors[end]) == RGB(0.988362, 0.998364, 0.644924)
 end
