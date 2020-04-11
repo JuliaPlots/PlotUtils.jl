@@ -75,6 +75,17 @@ end
 
 # ----------------------------------------------------------------------------------
 
+function darken(c, v=0.1)
+    rgba = convert(RGBA, c)
+    r = max(0, min(rgba.r - v, 1))
+    g = max(0, min(rgba.g - v, 1))
+    b = max(0, min(rgba.b - v, 1))
+    RGBA(r,g,b,rgba.alpha)
+end
+function lighten(c, v=0.3)
+    darken(c, -v)
+end
+
 # borrowed from http://stackoverflow.com/a/1855903:
 lightness_level(c::Colorant) = 0.299 * red(c) + 0.587 * green(c) + 0.114 * blue(c)
 

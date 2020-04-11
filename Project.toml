@@ -12,8 +12,8 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 ColorSchemes = "3.6"
-Colors = "0"
-Reexport = "0"
+Colors = "0.12"
+Reexport = "0.2"
 julia = "0.7, 1"
 
 [extras]

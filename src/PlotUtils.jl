@@ -16,6 +16,7 @@ export
     ColorPalette,
     cgrad,
     palette,
+    color_list,
     cvec,
     rgb_string,
     rgba_string,
