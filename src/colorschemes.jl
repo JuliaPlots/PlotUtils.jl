@@ -1,8 +1,3 @@
-## Type Piracy
-# Until ColorSchemes 3.7 is released is released
-# Base.getindex(cs::ColorScheme, i::AbstractFloat) = get(cs, i)
-# Base.getindex(cs::ColorScheme, i::AbstractVector{<: AbstractFloat}) = get(cs, i)
-# Base.lastindex(cs::ColorScheme) = lastindex(cs.colors)
 
 abstract type AbstractColorList end
 
