@@ -27,16 +27,13 @@ const C = RGBA{Float64}
     @test plot_color(grad) === grad
 
     grad = cgrad([:red, "blue"])
-    @test grad.colors == C[colorant"red", colorant"blue"]
-    @test grad.values == collect(range(0,stop=1,length=2))
+    @test plot_color(color_list(grad)) == C[colorant"red", colorant"blue"]
 
     grad = cgrad([:red, "blue"], alpha = 0.5)
-    @test grad.colors == C[C(1,0,0,0.5), C(0,0,1,0.5)]
-    @test grad.values == collect(range(0,stop=1,length=2))
+    @test plot_color(color_list(grad), 0.5) == C[C(1,0,0,0.5), C(0,0,1,0.5)]
 
-    grad = cgrad([:red,:blue], [0,0.1,1])
-    @test grad.colors == C[C(1,0,0), C(0.5,0,0.5), C(0,0,1)]
-    @test grad.values == [0,0.1,1]
+    grad = cgrad([:red, :blue])
+    @test plot_color(color_list(grad)) == C[C(1,0,0), C(0,0,1)]
 
     cs = plot_color(rand(10))
     @test typeof(cs) == Vector{C}
@@ -69,10 +66,9 @@ end
 
 @testset "gradients" begin
     grad = cgrad(:inferno)
-    @test length(grad.colors) == 256
-    @test length(grad.values) == 256
-    @test RGB(grad.colors[1]) == RGB(0.001462, 0.000466, 0.013866)
-    @test RGB(grad.colors[end]) == RGB(0.988362, 0.998364, 0.644924)
+    @test length(grad) == 256
+    @test RGB(grad[1]) == RGB(0.001462, 0.000466, 0.013866)
+    @test RGB(grad[end]) == RGB(0.988362, 0.998364, 0.644924)
 end
 
 # ----------------------

@@ -120,7 +120,8 @@ end
 
 ## Utils
 
-get_colorscheme(v) = ColorScheme(v)
+get_colorscheme(v::AbstractVector{<:Colorant}) = ColorScheme(v)
+get_colorscheme(v::AbstractVector) = ColorScheme(parse.(Colorant, v))
 function get_colorscheme(sym::Symbol)
     if haskey(MISC_COLORSCHEMES, sym)
         return MISC_COLORSCHEMES[sym]
