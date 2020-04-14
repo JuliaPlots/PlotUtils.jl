@@ -2,6 +2,8 @@
 abstract type AbstractColorList end
 
 get_colorscheme(acl::AbstractColorList) = acl.colors
+color_list(acl::AbstractColorList) = color_list(acl.colors)
+plot_color(cl::AbstractColorList) = cl
 
 # Interface
 Base.show(io::IO, m::MIME"image/svg+xml", acl::AbstractColorList) = show(io, m, acl.colors)
@@ -19,56 +21,198 @@ ColorSchemes.getinverse(cl::AbstractColorList, c) =
 
 ## ColorGradient
 
-struct ColorGradient <: AbstractColorList
-    colors::ColorScheme
+abstract type ColorGradient <: AbstractColorList end
+
+Base.getindex(cg::ColorGradient, x::Union{AbstractFloat, AbstractVector{<:AbstractFloat}}) = get(cg, x)
+function Base.get(cg::ColorGradient, v::AbstractArray, rangescale = (0.0, 1.0))
+    rangescale == :extrema && (rangescale = extrema(x))
+    map(x -> get(cg, x, rangescale), v)
 end
 
-Base.reverse(cg::ColorGradient) = ColorGradient(reverse(cg.colors))
+# Continuous
+struct ContinuousColorGradient <: ColorGradient
+    colors::ColorScheme
+    values::Vector{Float64}
 
-"""
-    cgrad(cs; scale = identity, rev = false, alpha = nothing)
+    ContinuousColorGradient(colors, values = range(0, 1, length(colors))) =
+        new(prepare_continuous_cgrad_colors(colors, values)...)
+end
 
-Construct a `ColorGradient`. Accepts symbols for Colorschemes.jl `ColorScheme`s,
-`ColorScheme`s, vectors of colors, `ColorGradient`s and `ColorPalettes`.
-If `rev` is `true` colors are reversed. `scale` accepts symbols the `:log`, `:log10`,
-`:log2`, `:ln`, `:exp`, `:exp10` or functions. If `alpha` is set, it is applied to all
-colors.
-"""
-function cgrad(cs; scale = identity, rev = false, alpha = nothing)
-    if cs === :default
-        cs = :inferno
+
+plot_color(cg::ContinuousColorGradient, α::Number) = ContinuousColorGradient(plot_color(cg.colors, α), cg.values)
+
+Base.show(io::IO, m::MIME"image/svg+xml", cg::ContinuousColorGradient) =
+    show(io, m, cg[range(0.0, 1.0, length = 100)])
+function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
+    isfinite(x) || return invisible()
+    rangescale = get_rangescale(rangescale)
+    allunique(rangescale) || return cg.colors[1]
+    x = clamp(x, rangescale...)
+    if rangescale != (0.0, 1.0)
+        x = ColorSchemes.remap(x, rangescale..., 0, 1)
     end
-    cs = get_colorscheme(cs)
+    c, v = cg.colors, cg.values
+    if x in v
+        index = findfirst(==(x), v)
+    else
+        i = findlast(<(x), v)
+        r = (x - v[i]) / (v[i + 1] - v[i])
+        index = (i + r - 1) / (length(v) - 1)
+    end
+return c[index]
+end
+Base.reverse(cg::ContinuousColorGradient) =
+    ContinuousColorGradient(reverse(cg.colors), reverse(1 .- cg.values))
+
+function prepare_continuous_cgrad_colors(c, v)
+    v = sort(unique(clamp.(v, 0, 1)))
+    0 in v || pushfirst!(v, 0)
+    1 in v || push!(v, 1)
+    nv = length(v)
+    nc = length(c)
+    c, v = if nc != nv
+        value_range = get_range(nv)
+        color_range = get_range(nc)
+        values = [0.0]
+        for i in 2:nv
+            inds = findall(x -> value_range[i - 1] < x < value_range[i], color_range)
+            if !isempty(inds)
+                append!(
+                    values,
+                    ColorSchemes.remap(
+                        color_range[inds],
+                        value_range[i - 1],
+                        value_range[i],
+                        v[i - 1],
+                        v[i],
+                    ),
+                )
+            end
+            push!(values, v[i])
+        end
+        colors = c[sort(unique([value_range; color_range]))]
+        colors, values
+    else
+        color_list(c), v
+    end
+    return ColorScheme(plot_color(c)), v
+end
+
+# Categorical
+struct CategoricalColorGradient <: ColorGradient
+    colors::ColorScheme
+    values::Vector{Float64}
+
+    CategoricalColorGradient(colors, values = range(0, 1, length(colors))) =
+        new(prepare_categorical_cgrad_colors(colors, values)...)
+end
+
+plot_color(cg::CategoricalColorGradient, α::Number) = CategoricalColorGradient(plot_color(cg.colors, α), cg.values)
+
+Base.show(io::IO, m::MIME"image/svg+xml", cg::CategoricalColorGradient) =
+    show(io, m, cg[range(0.0, 1.0, length = 30)])
+function Base.get(cg::CategoricalColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
+    isfinite(x) || return invisible()
+    rangescale = get_rangescale(rangescale)
+    x = clamp.(x, rangescale...)
+    if rangescale != (0.0, 1.0)
+        x = ColorSchemes.remap(x, rangescale..., 0, 1)
+    end
+    return cg.colors[x == 0 ? 1 : findlast(<(x), cg.values)]
+end
+Base.reverse(cg::CategoricalColorGradient) =
+    CategoricalColorGradient(reverse(cg.colors), reverse(1 .- cg.values))
+
+function prepare_categorical_cgrad_colors(c, v)
+    v = sort(unique(clamp.(v, 0, 1)))
+    0 in v || pushfirst!(v, 0)
+    1 in v || push!(v, 1)
+    c = ColorScheme(plot_color(c[get_range(length(v) - 1)]))
+    return c, v
+end
+
+
+
+"""
+    cgrad(colors, [values]; categorical = nothing, scale = nothing, rev = false, alpha = nothing)
+
+Construct a Colorgradient with from `colors` and `values`.
+
+`colors` can be a symbol for Colorschemes.jl `ColorScheme`s, a `ColorScheme`, a vectors of colors, a `ColorGradient` or and `ColorPalettes`.
+If `values` is an integer, `values` colors are chosen equidistantly from the colorscheme.
+Otherwise vectors are accepted.
+For continuous color gradients `values` indicate where between 0 and 1 the colors are positioned and are expected to have the same length of colors.
+Otherwise colors and values are interpolated accordingly.
+For categorical color gradients `values` indicate where a color ends and where a new one begins between 0 and 1.
+0 and 1 are added to `values` if not already present.
+The resulting values require to have one more element than colors.
+
+If `rev` is `true` colors are reversed.
+`scale` accepts the symbols `:log`, `:log10`, `:log2`, `:ln`, `:exp`, `:exp10` or functions.
+If `alpha` is set, it is applied to all colors.
+"""
+function cgrad(colors, values; categorical = nothing, scale = nothing, rev = false, alpha = nothing)
+    if colors === :default
+        colors = :inferno
+    end
+    colors = get_colorscheme(colors)
+    if categorical !== nothing
+        colors, values = prepare_categorical_cgrad_colors(colors, values)
+    end
+
     if alpha !== nothing
-        rgbs = convert.(RGB, cs.colors)
-        cs = ColorScheme(RGBA.(rgbs, alpha))
+        rgbs = convert.(RGB, colors.colors)
+        colors = ColorScheme(RGBA.(rgbs, alpha))
     end
     if rev
-        cs = reverse(cs)
+        colors = reverse(colors)
     end
-    sf = scale_function(scale)
-    if scale !== identity
-        n = length(cs)
-        cs = ColorScheme(get(cs, sf.(range(1/n, stop = 1, length = n)), :extrema))
+    values = if scale in (:log, :log10) || scale isa typeof(log10)
+        log10.(ColorSchemes.remap(values, 0, 1, 1, 10))
+    elseif scale == :log2 || scale isa typeof(log2)
+        log2.(ColorSchemes.remap(values, 0, 1, 1, 2))
+    elseif scale == :ln || scale isa typeof(log)
+        log.(ColorSchemes.remap(values, 0, 1, 1, ℯ))
+    elseif scale in (:exp, :exp10) || scale isa typeof(exp10) || scale isa typeof(exp)
+        ColorSchemes.remap(exp10.(values), 1, 10, 0, 1)
+    elseif scale isa Function
+        v = scale.(values)
+        ColorSchemes.remap(v, extrema(v)..., 0, 1)
+    else
+        values
     end
-    return ColorGradient(cs)
+
+    if categorical !== nothing
+        return CategoricalColorGradient(colors, values)
+    else
+        return ContinuousColorGradient(colors, values)
+    end
 end
 
-const SCALE_FUNCTIONS = Dict{Symbol, Function}(
-    :log => log10,
-    :log10 => log10,
-    :log2 => log2,
-    :ln => log,
-    :exp => exp10,
-    :exp10 => exp10,
-)
-scale_function(f) = f
-scale_function(sym::Symbol) = get(SCALE_FUNCTIONS, sym, identity)
+function cgrad(colors, n::Int; categorical = nothing, kwargs...)
+    values = get_range(n + (categorical !== nothing))
+    return cgrad(colors, values; categorical = categorical, kwargs...)
+end
+
+function cgrad(colors; kwargs...)
+    if colors === :default
+        colors = :inferno
+    end
+    colors = get_colorscheme(colors)
+    return cgrad(colors, length(colors); kwargs...)
+end
 
 cgrad(; kw...) = cgrad(DEFAULT_COLOR_GRADIENT[]; kw...)
 
 function default_cgrad(cg; kw...)
     DEFAULT_COLOR_GRADIENT[] = cgrad(cg; kw...)
+end
+
+function get_rangescale(rangescale)
+    rangescale == :clamp && return (0.0, 1.0)
+    rangescale == :extrema && return extrema(x)
+    (rangescale isa NTuple{2, Number}) || error("rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).")
+    return rangescale
 end
 
 
@@ -78,27 +222,19 @@ struct ColorPalette <: AbstractColorList
     colors::ColorScheme
 end
 
+plot_color(cp::ColorPalette, α::Number) = palette(cp, alpha = α)
+
 Base.getindex(cp::ColorPalette, x::Union{AbstractFloat, AbstractVector{<:AbstractFloat}}) =
     get(cp, x)
 Base.reverse(cp::ColorPalette) = ColorPalette(reverse(cp.colors))
-function Base.get(cp::ColorPalette, x, rangescale = (0.0, 1.0))
-    rangescale == :clamp && (rangescale = (0.0, 1.0))
-    rangescale == :extrema && (rangescale = extrema(x))
-    (rangescale isa NTuple{2, Number}) || error("rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).")
-   x isa AbstractRange && (x = collect(x))
-   x = clamp.(x, rangescale...)
-   index = Int.(round.(ColorSchemes.remap(x, rangescale..., 1, length(cp))))
-   return cp[index]
-end
 
 """
-    palette(cs; scale = identity, rev = false, alpha = nothing)
+    palette(colors, [n]; rev = false, alpha = nothing)
 
-Construct a `ColorGradient`. Accepts symbols for Colorschemes.jl `ColorScheme`s,
-`ColorScheme`s, vectors of colors, `ColorGradient`s and `ColorPalettes`.
-If `rev` is `true` colors are reversed. `scale` accepts symbols the `:log`, `:log10`,
-`:log2`, `:ln`, `:exp`, `:exp10` or functions. If `alpha` is set, it is applied to all
-colors.
+Construct a `ColorPalette`.
+Accepts symbols for Colorschemes.jl `ColorScheme`s, `ColorScheme`s, vectors of colors, `ColorGradient`s and `ColorPalettes`.
+If 'n' is provided, `n` colors are chosen equidistantly from the colorscheme.
+If `rev` is `true` colors are reversed.
 """
 function palette(cs; rev = false, alpha = nothing)
     cs = get_colorscheme(cs)
@@ -119,6 +255,9 @@ function palette(cs, n; kwargs...)
 end
 
 ## Utils
+
+get_range(n::Int) = range(0, 1, length = n)
+get_range(cs) = get_range(length(cs))
 
 get_colorscheme(v::AbstractVector{<:Colorant}) = ColorScheme(v)
 get_colorscheme(v::AbstractVector) = ColorScheme(parse.(Colorant, v))

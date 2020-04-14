@@ -28,8 +28,8 @@ export
     default_cgrad
 
 include("color_utils.jl")
-include("colorschemes.jl")
 include("colors.jl")
+include("colorschemes.jl")
 include("adapted_grid.jl")
 
 export

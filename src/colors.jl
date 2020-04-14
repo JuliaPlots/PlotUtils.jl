@@ -15,8 +15,6 @@ plot_color(::Nothing) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
 # plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
 # plot_color(cs::AbstractArray) = map(plot_color, cs)
-plot_color(cg::ColorGradient) = cg
-plot_color(cp::ColorPalette) = cp
 
 # no alpha override
 plot_color(x, ::Nothing) = plot_color(x)
@@ -25,8 +23,6 @@ plot_color(x, ::Nothing) = plot_color(x)
 plot_color(x, α::Number) = RGBA{Float64}(convert(RGB, plot_color(x)), α)
 plot_color(c::Colorant, α::Number) = RGBA{Float64}(red(c), green(c), blue(c), α)
 plot_color(s::Symbol, α::Number) = (is_colorscheme(s) ? cgrad(s, alpha=α) : RGBA{Float64}(convert(RGB, plot_color(s)), α))
-plot_color(cg::ColorGradient, α::Number) = cgrad(cg, alpha = α)
-plot_color(cp::ColorPalette, α::Number) = palette(cp, alpha = α)
 
 function plot_color(cs::AbstractArray)
     a = Array{RGBA{Float64}}(undef, size(cs)...)
