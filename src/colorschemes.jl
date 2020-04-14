@@ -34,8 +34,10 @@ struct ContinuousColorGradient <: ColorGradient
     colors::ColorScheme
     values::Vector{Float64}
 
-    ContinuousColorGradient(colors, values = range(0, 1, length(colors))) =
-        new(prepare_continuous_cgrad_colors(colors, values)...)
+    function ContinuousColorGradient(colors, values = range(0, 1, length(colors)))
+        c, v = prepare_continuous_cgrad_colors(colors, values)
+        new(c, v)
+    end
 end
 
 
@@ -103,8 +105,10 @@ struct CategoricalColorGradient <: ColorGradient
     colors::ColorScheme
     values::Vector{Float64}
 
-    CategoricalColorGradient(colors, values = range(0, 1, length(colors))) =
-        new(prepare_categorical_cgrad_colors(colors, values)...)
+    function CategoricalColorGradient(colors, values = range(0, 1, length(colors)))
+        c, v = prepare_categorical_cgrad_colors(colors, values)
+        new(c, v)
+    end
 end
 
 plot_color(cg::CategoricalColorGradient, α::Number) = CategoricalColorGradient(plot_color(cg.colors, α), cg.values)
