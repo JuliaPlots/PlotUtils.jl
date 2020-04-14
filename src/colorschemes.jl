@@ -34,7 +34,7 @@ struct ContinuousColorGradient <: ColorGradient
     colors::ColorScheme
     values::Vector{Float64}
 
-    function ContinuousColorGradient(colors, values = range(0, 1, length(colors)))
+    function ContinuousColorGradient(colors, values = get_range(colors))
         c, v = prepare_continuous_cgrad_colors(colors, values)
         new(c, v)
     end
@@ -44,7 +44,7 @@ end
 plot_color(cg::ContinuousColorGradient, α::Number) = ContinuousColorGradient(plot_color(cg.colors, α), cg.values)
 
 Base.show(io::IO, m::MIME"image/svg+xml", cg::ContinuousColorGradient) =
-    show(io, m, cg[range(0.0, 1.0, length = 100)])
+    show(io, m, cg[get_range(100)])
 function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
     isfinite(x) || return invisible()
     rangescale = get_rangescale(rangescale)
@@ -105,7 +105,7 @@ struct CategoricalColorGradient <: ColorGradient
     colors::ColorScheme
     values::Vector{Float64}
 
-    function CategoricalColorGradient(colors, values = range(0, 1, length(colors)))
+    function CategoricalColorGradient(colors, values = get_range(colors))
         c, v = prepare_categorical_cgrad_colors(colors, values)
         new(c, v)
     end
@@ -114,7 +114,7 @@ end
 plot_color(cg::CategoricalColorGradient, α::Number) = CategoricalColorGradient(plot_color(cg.colors, α), cg.values)
 
 Base.show(io::IO, m::MIME"image/svg+xml", cg::CategoricalColorGradient) =
-    show(io, m, cg[range(0.0, 1.0, length = 30)])
+    show(io, m, cg[get_range(100)])
 function Base.get(cg::CategoricalColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
     isfinite(x) || return invisible()
     rangescale = get_rangescale(rangescale)
@@ -254,13 +254,13 @@ end
 
 function palette(cs, n; kwargs...)
     cs = get_colorscheme(cs)
-    z = range(0, 1, length = n)
+    z = get_range(n)
     return palette(cs[z]; kwargs...)
 end
 
 ## Utils
 
-get_range(n::Int) = range(0, 1, length = n)
+get_range(n::Int) = range(0, stop = 1, length = n)
 get_range(cs) = get_range(length(cs))
 
 get_colorscheme(v::AbstractVector{<:Colorant}) = ColorScheme(v)
@@ -283,7 +283,7 @@ get_colorscheme(cs::ColorScheme) = cs
 
 function cvec(cs, n = 10; kw...)
     cg = cgrad(cg; kw...)
-    return RGBA{Float64}[cg[z] for z in range(0; stop=1, length=n)]
+    return RGBA{Float64}[cg[z] for z in get_range(n)]
 end
 
 
