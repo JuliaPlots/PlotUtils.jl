@@ -9,6 +9,7 @@ using Dates
 # colors
 
 const C = RGBA{Float64}
+const C0 = RGBA{PlotUtils.Colors.N0f8}
 
 @testset "colors" begin
 
@@ -23,19 +24,19 @@ const C = RGBA{Float64}
     @test plot_color(colorant"red") == C(1,0,0,1)
 
     grad = cgrad()
-    @test typeof(grad) == ColorGradient
+    @test typeof(grad) == PlotUtils.ContinuousColorGradient
     @test plot_color(grad) === grad
 
     grad = cgrad([:red, "blue"])
-    @test grad.colors == C[colorant"red", colorant"blue"]
+    @test color_list(grad) == C[colorant"red", colorant"blue"]
     @test grad.values == collect(range(0,stop=1,length=2))
 
     grad = cgrad([:red, "blue"], alpha = 0.5)
-    @test grad.colors == C[C(1,0,0,0.5), C(0,0,1,0.5)]
+    @test C0.(color_list(grad)) == C0[C(1,0,0,0.5), C(0,0,1,0.5)]
     @test grad.values == collect(range(0,stop=1,length=2))
 
     grad = cgrad([:red,:blue], [0,0.1,1])
-    @test grad.colors == C[C(1,0,0), C(0.5,0,0.5), C(0,0,1)]
+    @test length(color_list(grad)) == 3
     @test grad.values == [0,0.1,1]
 
     cs = plot_color(rand(10))
@@ -69,8 +70,7 @@ end
 
 @testset "gradients" begin
     grad = cgrad(:inferno)
-    @test length(grad.colors) == 30
-    @test length(grad.values) == 30
+    @test length(grad) == 256
     @test RGB(grad.colors[1]) == RGB(0.001462, 0.000466, 0.013866)
     @test RGB(grad.colors[end]) == RGB(0.988362, 0.998364, 0.644924)
 end

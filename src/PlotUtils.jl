@@ -3,6 +3,7 @@ __precompile__()
 
 module PlotUtils
 
+using ColorSchemes
 using Dates
 using Reexport
 using Printf
@@ -12,7 +13,10 @@ import Random: MersenneTwister
 
 export
     ColorGradient,
+    ColorPalette,
     cgrad,
+    palette,
+    color_list,
     cvec,
     rgb_string,
     rgba_string,
@@ -21,14 +25,11 @@ export
     isdark,
     plot_color,
     adapted_grid,
-    clibrary,
-    clibraries,
-    cgradients,
     default_cgrad
 
 include("color_utils.jl")
-include("color_gradients.jl")
 include("colors.jl")
+include("colorschemes.jl")
 include("adapted_grid.jl")
 
 export
