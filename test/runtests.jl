@@ -123,10 +123,14 @@ end
 
     @testset "random ranges" begin
         r = [minmax(rand(-100:100,2)...) .* 10.0^i for _=1:10, i=-5:5]
-        @testset "random ranges $r" for r in r
-            (x,y) = r
+        @testset "random range $x..$y" for (x,y) in r
             test_ticks(x, y, optimize_ticks(x, y)[1])
         end
+    end
+
+    # issue 86
+    let x = -1.0, y = 13.0
+        test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
     end
 
     @testset "digits" begin
