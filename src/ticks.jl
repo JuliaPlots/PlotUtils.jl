@@ -161,7 +161,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     # for q values specified in Q
     x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)))
     q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
-    sigdigits_z = max(1, x_digits - z + q_extra_digits)
+    sigdigits(z) = max(1, x_digits - z + q_extra_digits)
 
     high_score = -Inf
     S_best = Array{typeof(1.0 * one_t)}(undef, 1)
@@ -201,8 +201,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         end
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
-                        S[k + 1] = round(S[k + 1], sigdigits = sigdigits_z)
-                        S[2 * k] = round(S[2 * k], sigdigits = sigdigits_z)
+                        S[k + 1] = round(S[k + 1], sigdigits = sigdigits(z))
+                        S[2 * k] = round(S[2 * k], sigdigits = sigdigits(z))
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
                         S = prealloc_Ss[ik]
@@ -211,8 +211,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         end
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
-                        S[1] = round(S[1], sigdigits = sigdigits_z)
-                        S[k] = round(S[k], sigdigits = sigdigits_z)
+                        S[1] = round(S[1], sigdigits = sigdigits(z))
+                        S[k] = round(S[k], sigdigits = sigdigits(z))
                         viewmin, viewmax = S[1], S[k]
                     end
                     if strict_span

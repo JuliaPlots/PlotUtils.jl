@@ -93,25 +93,54 @@ end
         ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"]
     )
 
-    @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
-        y = x + i*eps(x)
-        x,y = minmax(x,y)
-        ticks = PlotUtils.optimize_ticks(x, y)[1]
-        @test issorted(ticks)
-        @test all(x .<= ticks .<= y)
-        # Fails:
-        # @test allunique(ticks)
+    @testset "small range" begin
+        @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
+            y = x + i*eps(x)
+            x,y = minmax(x,y)
+            ticks = PlotUtils.optimize_ticks(x, y)[1]
+            @test issorted(ticks)
+            @test all(x .<= ticks .<= y)
+            # Fails:
+            # @test allunique(ticks)
+        end
     end
 
-    @testset "digits $((10^n)-1)*10^$i" for n in 1:9, i in -9:9
-        y0 = 10^n
-        x0 = y0-1
-        x, y = (x0,y0) .* 10.0^i
-        ticks = optimize_ticks(x, y)[1]
-        @test length(ticks) >= 2
+    function test_ticks(x, y, ticks)
         @test issorted(ticks)
         @test all(x .<= ticks .<= y)
-        @test is_uniformly_spaced(ticks)
+        if x < y
+            @test length(ticks) >= 2
+            @test is_uniformly_spaced(ticks)
+        end
+    end
+
+    @testset "fixed ranges" begin
+        @testset "fixed range $x..$y" for (x,y) in [(2,14),(14,25),(16,36),(57,69)]
+            test_ticks(x, y, optimize_ticks(x, y)[1])
+            test_ticks(-y, -x, optimize_ticks(-y, -x)[1])
+        end
+    end
+
+    @testset "random ranges" begin
+        r = [minmax(rand(-100:100,2)...) .* 10.0^i for _=1:10, i=-5:5]
+        @testset "random range $x..$y" for (x,y) in r
+            test_ticks(x, y, optimize_ticks(x, y)[1])
+        end
+    end
+
+    # issue 86
+    let x = -1.0, y = 13.0
+        test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+    end
+
+    @testset "digits" begin
+        @testset "digits $((10^n)-1)*10^$i" for n in 1:9, i in -9:9
+            y0 = 10^n
+            x0 = y0-1
+            x, y = (x0,y0) .* 10.0^i
+            ticks = optimize_ticks(x, y)[1]
+            test_ticks(x, y, ticks)
+        end
     end
 end
 
