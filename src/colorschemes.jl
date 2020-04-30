@@ -6,15 +6,16 @@ color_list(acl::AbstractColorList) = color_list(acl.colors)
 plot_color(cl::AbstractColorList) = cl
 
 # Interface
-Base.show(io::IO, m::MIME"image/svg+xml", acl::AbstractColorList) = show(io, m, acl.colors)
-Base.length(acl::AbstractColorList) = length(get_colorscheme(acl))
-Base.getindex(acl::AbstractColorList, x) = getindex(get_colorscheme(acl), x)
-Base.size(acl::AbstractColorList) = size(get_colorscheme(acl))
+Base.show(io::IO, m::MIME"image/svg+xml", acl::AbstractColorList) = show(io, m, color_list(acl))
+Base.length(acl::AbstractColorList) = length(color_list(acl))
+Base.getindex(acl::AbstractColorList, x) = getindex(color_list(acl), x)
+Base.size(acl::AbstractColorList) = size(color_list(acl))
 Base.IndexStyle(::Type{<:AbstractColorList}) = IndexLinear()
-Base.iterate(acl::AbstractColorList) = iterate(get_colorscheme(acl))
-Base.iterate(acl::AbstractColorList, s) = iterate(get_colorscheme(acl), s)
+Base.iterate(acl::AbstractColorList) = iterate(color_list(acl))
+Base.iterate(acl::AbstractColorList, s) = iterate(color_list(acl), s)
+Base.lastindex(acl::AbstractColorList) = lastindex(color_list(acl))
+Base.firstindex(acl::AbstractColorList) = firstindex(color_list(acl))
 Base.get(acl::AbstractColorList, args...) = get(get_colorscheme(acl), args...)
-Base.lastindex(acl::AbstractColorList) = lastindex(get_colorscheme(acl))
 
 
 ## ColorGradient
