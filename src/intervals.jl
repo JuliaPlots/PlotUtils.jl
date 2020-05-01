@@ -6,12 +6,12 @@ return a tuple (min, max) of the limits corresponding to the function
 
 import Polynomials
 using Statistics: std, median
-using ImageFiltering: imfilter, centered, Fill
+using DSP: conv
 
 # implementation of the "zscale" IRAF function for finding appropriate
 # color limits in an iterative manner.
 """
-    zscale(input, nsamples=1000;
+    zscale(input, nsamples=600;
         contrast=0.25,
         max_reject=0.5,
         min_npixels=5,
@@ -46,7 +46,7 @@ function zscale(input,
 
     # get samples from finite values of input
     values = float(filter(isfinite, input))
-    stride = max(1, Int(length(values) / nsamples))
+    stride = max(1, round(Int, length(values) / nsamples))
     samples = values[1:stride:end][1:nsamples]
     sort!(samples)
 
@@ -65,8 +65,10 @@ function zscale(input,
     badmask = zeros(Bool, N)
 
     # get number of neighbors to mask if a pixel is bad
-    ngrow = max(1, Int(N / 100))
+    ngrow = max(1, round(Int, N / 100))
     kernel = centered(ones(Bool, ngrow))
+    nleft = ngrow ÷ 2
+    nright = ngrow - nleft - 1
 
     local fit
     # iteratively fit samples and reject sigma-clipped outliers
@@ -83,8 +85,8 @@ function zscale(input,
         # detect and reject outliers based on threshold
         @. badmask[!(-threshold ≤ flat ≤ threshold)] = true
 
-        # disalte mask
-        badmask = imfilter(Bool, badmask, kernel, Fill(false))
+        # dialate mask
+        badmask .= conv(badmask, kernel)[axes(badmask)...] .> 0
 
         last_good = ngood
         ngood = sum(.!badmask)
@@ -92,7 +94,7 @@ function zscale(input,
 
     if ngood ≥ min_pix
         slope = contrast > 0 ? fit[1] / contrast : fit[1]
-        center = N ÷ 2
+        center = (N - 1) ÷ 2
         m = median(samples)
         vmin = max(vmin, m - (center - 1) * slope)
         vmax = min(vmax, m + (N - center) * slope)

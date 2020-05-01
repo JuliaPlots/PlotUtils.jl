@@ -2,6 +2,9 @@ using PlotUtils
 using Test
 using Statistics: mean
 using Dates
+using Random
+
+Random.seed!(42)
 
 # TODO: real tests
 
@@ -169,4 +172,13 @@ end
 
     int = (2, 1)
     @test_throws ArgumentError adapted_grid(f, int)
+end
+
+@testset "zscale" begin
+    data = 5 .* randn(100, 100) .+ 10
+    cmin, cmax = zscale(data)
+    # values calculated using IRAF
+    @test cmin ≈ -4.89 atol=0.01
+    @test cmax ≈ 25.25 atol=0.01
+
 end
