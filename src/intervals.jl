@@ -85,7 +85,7 @@ function zscale(input::AbstractArray,
         @. badmask[!(-threshold ≤ flat ≤ threshold)] = true
 
         # dialate mask
-        badmask .= imfilter(badmask, kernel, Fill())[axes(badmask)...] .> 0
+        badmask .= imfilter(badmask, kernel, Fill(false))[axes(badmask)...] .> 0
 
         last_good = ngood
         ngood = sum(.!badmask)
