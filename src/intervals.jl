@@ -92,7 +92,7 @@ function zscale(input,
 
     if ngood ≥ min_pix
         slope = contrast > 0 ? fit[1] / contrast : fit[1]
-        center = (N - 1) ÷ 2
+        center = N ÷ 2
         m = median(samples)
         vmin = max(vmin, m - (center - 1) * slope)
         vmax = min(vmax, m + (N - center) * slope)
