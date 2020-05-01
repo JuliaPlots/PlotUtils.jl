@@ -182,13 +182,13 @@ end
     @test cmax ≈ 25.25 atol=0.01
 
     data = vcat(1:100)
-    cmin, cmax = zscale(date)
+    cmin, cmax = zscale(data)
     @test cmin == 1
     @test cmax == 100
 
     # Make sure output is finite
     data = vcat(0:999, NaN)
-    cmin, cmax = zscale(date)
+    cmin, cmax = zscale(data)
     @test cmin == 0
     @test cmax == 999
 end
