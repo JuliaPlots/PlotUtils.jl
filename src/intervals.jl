@@ -8,8 +8,6 @@ import Polynomials
 using Statistics: std, median
 using DSP: conv
 
-# implementation of the "zscale" IRAF function for finding appropriate
-# color limits in an iterative manner.
 """
     zscale(input, nsamples=600;
         contrast=0.25,
