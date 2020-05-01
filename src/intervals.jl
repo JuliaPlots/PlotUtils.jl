@@ -46,7 +46,7 @@ function zscale(input::AbstractArray,
     # get samples from finite values of input
     values = float(filter(isfinite, input))
     stride = max(1, round(Int, length(values) / nsamples))
-    samples = values[1:stride:end][1:nsamples]
+    samples = values[1:stride:end][1:min(nsamples, end)]
     sort!(samples)
 
     N = length(samples)
