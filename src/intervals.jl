@@ -54,7 +54,7 @@ function zscale(input,
 
     # fit a line to the sorted samples
     min_pix = max(min_npixels, Int(N * max_reject))
-    x = 1:N
+    x = 0:N - 1
 
     ngood = N
     last_good = N + 1
@@ -92,7 +92,7 @@ function zscale(input,
 
     if ngood ≥ min_pix
         slope = contrast > 0 ? fit[1] / contrast : fit[1]
-        center = N ÷ 2
+        center = (N - 1) ÷ 2
         m = median(samples)
         vmin = max(vmin, m - (center - 1) * slope)
         vmax = min(vmax, m + (N - center) * slope)
