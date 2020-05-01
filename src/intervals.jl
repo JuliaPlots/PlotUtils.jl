@@ -6,10 +6,11 @@ return a tuple (min, max) of the limits corresponding to the function
 
 import Polynomials
 using Statistics: std, median
-using DSP: conv
+using ImageFiltering
 
 """
-    zscale(input, nsamples=600;
+    zscale(input::AbstractArray, 
+        nsamples=600;
         contrast=0.25,
         max_reject=0.5,
         min_npixels=5,
@@ -28,13 +29,13 @@ Implementation of the `zscale` IRAF function for finding colorbar limits of `inp
 
 # Examples
 ```jldoctest
-julia> img = reshape(0:9999, (100, 100));
+julia> img = 0:9999
 
 julia> zscale(img)
 (0, 9990)
 ```
 """
-function zscale(input,
+function zscale(input::AbstractArray,
     nsamples::Int=1000;
     contrast=0.25,
     max_reject=0.5,
@@ -84,7 +85,7 @@ function zscale(input,
         @. badmask[!(-threshold ≤ flat ≤ threshold)] = true
 
         # dialate mask
-        badmask .= conv(badmask, kernel)[axes(badmask)...] .> 0
+        badmask .= imfilter(badmask, kernel, Fill())[axes(badmask)...] .> 0
 
         last_good = ngood
         ngood = sum(.!badmask)
