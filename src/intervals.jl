@@ -6,6 +6,7 @@ return a tuple (min, max) of the limits corresponding to the function
 
 import Polynomials
 using Statistics: std, median
+using ImageFiltering: imfilter, centered, Fill
 
 # implementation of the "zscale" IRAF function for finding appropriate
 # color limits in an iterative manner.
@@ -44,7 +45,7 @@ function zscale(input,
     max_iterations=5)
 
     # get samples from finite values of input
-    values = filter(isfinite, input)
+    values = float(filter(isfinite, input))
     stride = max(1, Int(length(values) / nsamples))
     samples = values[1:stride:end][1:nsamples]
     sort!(samples)
@@ -55,7 +56,7 @@ function zscale(input,
 
     # fit a line to the sorted samples
     min_pix = max(min_npixels, Int(N * max_reject))
-    x = 1:N-1
+    x = 1:N
 
     ngood = N
     last_good = N + 1
@@ -63,10 +64,11 @@ function zscale(input,
     # bad pixel mask (array bool faster than bitarray)
     badmask = zeros(Bool, N)
 
-    # kernel to dilate bad pixel mask
+    # get number of neighbors to mask if a pixel is bad
     ngrow = max(1, Int(N / 100))
-    kernel = ones(Bool, ngrow)
+    kernel = centered(ones(Bool, ngrow))
 
+    local fit
     # iteratively fit samples and reject sigma-clipped outliers
     for _ in 1:max_iterations
         (ngood ≥ last_good || ngood < min_pix) && break
@@ -81,8 +83,8 @@ function zscale(input,
         # detect and reject outliers based on threshold
         @. badmask[!(-threshold ≤ flat ≤ threshold)] = true
 
-        # enlarge mask
-        # TODO
+        # disalte mask
+        badmask = imfilter(Bool, badmask, kernel, Fill(false))
 
         last_good = ngood
         ngood = sum(.!badmask)
