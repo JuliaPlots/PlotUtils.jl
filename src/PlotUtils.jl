@@ -25,12 +25,14 @@ export
     isdark,
     plot_color,
     adapted_grid,
-    default_cgrad
+    default_cgrad,
+    zscale
 
 include("color_utils.jl")
 include("colors.jl")
 include("colorschemes.jl")
 include("adapted_grid.jl")
+include("zscale.jl")
 
 export
     optimize_ticks,
