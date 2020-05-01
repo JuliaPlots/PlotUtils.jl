@@ -1,21 +1,51 @@
-# ----------------------------------------------------------------------------------
-
-# implementation of the "zscale" IRAF function for finding appropriate
-# color limits in an iterative manner.
+#=
+This file contains code for calculating intervals for plotting purposes.
+These functions should, at minimum, take in some form of data input and
+return a tuple (min, max) of the limits corresponding to the function
+=#
 
 import Polynomials
 using Statistics: std, median
 
+# implementation of the "zscale" IRAF function for finding appropriate
+# color limits in an iterative manner.
+"""
+    zscale(input, nsamples=1000;
+        contrast=0.25,
+        max_reject=0.5,
+        min_npixels=5,
+        k_rej=2.5,
+        max_iterations=5)
+
+Implementation of the `zscale` IRAF function for finding colorbar limits of `input`.
+
+## Arguments
+* `nsamples` - The number of samples to use from `input`. If fewer than `nsamples` are present, will use the full input
+* `contrast` - The desired contrast
+* `k_rej` - The number of standard deviations above which data is rejected
+* `max_iteration` - The number of iterations used for fitting samples
+* `max_reject` - The maximum number of pixels to reject during the iterative fitting
+* `min_npixesl` - The minimum number of pixels to calculate the limits after the iterative fitting
+
+# Examples
+```jldoctest
+julia> img = reshape(0:9999, (100, 100));
+
+julia> zscale(img)
+(0, 9990)
+```
+"""
 function zscale(input,
     nsamples::Int=1000;
     contrast=0.25,
     max_reject=0.5,
     min_npixels=5,
-    kref=2.5,
+    k_rej=2.5,
     max_iterations=5)
 
+    # get samples from finite values of input
     values = filter(isfinite, input)
-    stride = Int(max(1, length(values) / nsamples))
+    stride = max(1, Int(length(values) / nsamples))
     samples = values[1:stride:end][1:nsamples]
     sort!(samples)
 
@@ -46,7 +76,7 @@ function zscale(input,
         flat = @. samples - fit(x)
 
         # k-sigma rejection threshold
-        threshold = krej * std(flat[.!badmask])
+        threshold = k_rej * std(flat[.!badmask])
 
         # detect and reject outliers based on threshold
         @. badmask[!(-threshold ≤ flat ≤ threshold)] = true

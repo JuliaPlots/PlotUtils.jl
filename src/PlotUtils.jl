@@ -32,7 +32,7 @@ include("color_utils.jl")
 include("colors.jl")
 include("colorschemes.jl")
 include("adapted_grid.jl")
-include("zscale.jl")
+include("intervals.jl")
 
 export
     optimize_ticks,
