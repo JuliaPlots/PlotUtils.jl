@@ -44,7 +44,7 @@ function postdecimal_digits(x::T) where {T}
     return 0
 end
 struct Ticks{T} <: AbstractRange{T}
-    u::UnitRange{Int}
+    u::UnitRange{Int64}
     q::Int
     z::Int
     step::Float64
@@ -69,8 +69,8 @@ Base.show(io::IO, t::Ticks{T}) where T = print(io, _ticks_str(t), " * ", oneunit
 
 function restrict_ticks(t::Ticks{T}, from, to) where T
     tickspan = step(t)
-    u_start = max(first(t.u), ceil(Int, from / tickspan))
-    u_end = min(last(t.u), floor(Int, to / tickspan))
+    u_start = max(first(t.u), ceil(Int64, from / tickspan))
+    u_end = min(last(t.u), floor(Int64, to / tickspan))
     t = Ticks{T}(u_start:u_end,t.q,t.z)
 
     # Fix possible floating-point errors (may occur in division above, or due
