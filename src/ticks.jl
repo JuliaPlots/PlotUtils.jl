@@ -5,7 +5,7 @@
 # little opaque because I want to avoid assuming the log function is defined
 # over typeof(xspan)
 function bounding_order_of_magnitude(xspan::DT) where DT
-    one_dt = convert(DT, one(DT))
+    one_dt = oneunit(DT)
 
     a = 1
     step = 1
@@ -31,8 +31,41 @@ function bounding_order_of_magnitude(xspan::DT) where DT
     return b
 end
 
-const float_digit_range = floor(Int,log10(floatmin())):ceil(Int,log10(floatmax()))
-postdecimal_digits(x) = first(i for i in float_digit_range if x==floor(x; digits=i))
+struct Ticks{T} <: AbstractRange{T}
+    u::UnitRange{Int64}
+    q::Int
+    z::Int
+    step::Float64
+    Ticks{T}(u,q,z) where T = new(u, q, z, q * 10.0^z)
+end
+
+Base.size(t::Ticks) = size(t.u)
+Base.step(t::Ticks{T}) where T = t.step * oneunit(T)
+Base.getindex(t::Ticks{T}, i::Integer) where T = round(t.u[i]*t.step; digits=-t.z) * oneunit(T)
+_ticks_str(t::Ticks) = "($(t.q*t.u))*10^$(t.z)"
+Base.show(io::IO, t::Ticks{<:AbstractFloat}) = print(io, _ticks_str(t))
+Base.show(io::IO, t::Ticks{T}) where T = print(io, _ticks_str(t), " * ", oneunit(T))
+
+
+function restrict_ticks(t::Ticks{T}, from, to) where T
+    tickspan = step(t)
+    u_start = max(first(t.u), ceil(Int64, from / tickspan))
+    u_end = min(last(t.u), floor(Int64, to / tickspan))
+    t = Ticks{T}(u_start:u_end,t.q,t.z)
+
+    # Fix possible floating-point errors (may occur in division above, or due
+    # rounding in (::Ticks)[::Int] when endpoints are near a round number)
+    while u_start <= u_end && t[1] < from
+        u_start += 1
+        t = Ticks{T}(u_start:u_end,t.q,t.z)
+    end
+    while u_start <= u_end && t[end] > to
+        u_end -= 1
+        t = Ticks{T}(u_start:u_end,t.q,t.z)
+    end
+    t
+end
+
 
 # Empty catchall
 optimize_ticks() = Any[]
@@ -127,25 +160,25 @@ and the variables here are:
 *  `v`: 1 if label range includes 0, 0 otherwise.
 """
 function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
-                           Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
+                           Q=[(10,1.0), (50, 0.9), (20, 0.7), (25, 0.5), (30, 0.2)],
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
                            granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
                            strict_span=true, span_buffer = nothing) where T
 
-    Qv = [(Float64(q[1]), Float64(q[2])) for q in Q]
+    Qv = [(Int(q[1]), Float64(q[2])) for q in Q]
     optimize_ticks_typed(x_min, x_max, extend_ticks, Qv, k_min, k_max, k_ideal,
                          granularity_weight, simplicity_weight,
                          coverage_weight, niceness_weight, strict_span, span_buffer)
 end
 
 function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
-                           Q::Vector{Tuple{Float64,Float64}}, k_min,
+                           Q::Vector{Tuple{Int,Float64}}, k_min,
                            k_max, k_ideal,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
                            strict_span, span_buffer) where T
-    one_t = convert(T, one(T))
+    one_t = oneunit(T)
     if x_max - x_min < eps()*one_t
         R = typeof(1.0 * one_t)
         return R[x_min], x_min - one_t, x_min + one_t
@@ -155,85 +188,44 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
 
     # generalizing "order of magnitude"
     xspan = x_max - x_min
-    z = bounding_order_of_magnitude(xspan)
-
-    # find required significant digits for ticks with q*10^z spacing,
-    # for q values specified in Q
-    x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)))
-    q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
-    sigdigits(z) = max(1, x_digits - z + q_extra_digits)
+    z = bounding_order_of_magnitude(xspan / minimum(q[1] for q in Q))
 
     high_score = -Inf
-    S_best = Array{typeof(1.0 * one_t)}(undef, 1)
-    viewmin_best, viewmax_best = x_min, x_max
+    best_ticks = nothing
 
-
-    # we preallocate arrays that hold all required S arrays for every given
-    # the k parameter, so we don't have to create them again and again, which
-    # saves many allocations
-    prealloc_Ss = if extend_ticks
-        [Array{typeof(1.0 * one_t)}(undef, Int(3 * k)) for k in k_min:2k_max]
-    else
-        [Array{typeof(1.0 * one_t)}(undef, k) for k in k_min:2k_max]
-    end
-
-    while 2k_max * 10.0^(z+1) * one_t > xspan
+    max_q_exponent = ceil(Int,log10(maximum(q[1] for q in Q)))
+    while 2k_max * 10.0^(z+max_q_exponent) * one_t > xspan
         for (ik, k) in enumerate(k_min:2k_max)
             for (q, qscore) in Q
-                tickspan = q * 10.0^z * one_t
+                stp = q*10.0^z
+                if stp < eps()
+                    continue
+                end
+
+                tickspan = stp * one_t
                 span = (k - 1) * tickspan
                 if span < xspan
                     continue
                 end
 
-                stp = q*10.0^z
-                if stp < eps()
-                    continue
-                end
-                r = ceil(Int64, (x_max - span) / (stp * one_t))
+                r = ceil(Int64, (x_max - span) / tickspan)
 
-                while r*stp * one_t <= x_min
-                    # Filter or expand ticks
-                    if extend_ticks
-                        S = prealloc_Ss[ik]
-                        for i in 0:(3*k - 1)
-                            S[i+1] = (r + i - k) * tickspan
-                        end
-                        # round only those values that end up as viewmin and viewmax
-                        # to save computation time
-                        S[k + 1] = round(S[k + 1], sigdigits = sigdigits(z))
-                        S[2 * k] = round(S[2 * k], sigdigits = sigdigits(z))
-                        viewmin, viewmax = S[k + 1], S[2 * k]
-                    else
-                        S = prealloc_Ss[ik]
-                        for i in 0:(k - 1)
-                            S[i+1] = (r + i) * tickspan
-                        end
-                        # round only those values that end up as viewmin and viewmax
-                        # to save computation time
-                        S[1] = round(S[1], sigdigits = sigdigits(z))
-                        S[k] = round(S[k], sigdigits = sigdigits(z))
-                        viewmin, viewmax = S[1], S[k]
-                    end
+                while r*tickspan <= x_min
+                    u = extend_ticks ? (r-k:r+2k-1) : (r:r+k-1)
+                    ticks = Ticks{T}(u, q, z)
+
                     if strict_span
-                        viewmin = max(viewmin, x_min)
-                        viewmax = min(viewmax, x_max)
+                        viewmin = max(r*tickspan, x_min)
+                        viewmax = min((r+k-1)*tickspan, x_max)
                         buf = something(span_buffer, 0) * (viewmax - viewmin)
 
-                        # filter the S array while reusing its own memory to do so
-                        # this works because S is sorted, and we will only overwrite
-                        # values that are not needed anymore going forward in the loop
-
-                        # we do this because it saves allocations and leaves S type stable
-                        counter = 0
-                        @inbounds for i in 1:length(S)
-                            if (viewmin - buf) <= S[i] <= (viewmax + buf)
-                                counter += 1
-                                S[counter] = S[i]
-                            end
+                        ticks = restrict_ticks(ticks,viewmin-buf,viewmax+buf)
+                        if length(ticks) < k_min
+                            r += 1
+                            continue
                         end
-                        S = view(S, 1:counter)
                     end
+                    nticks = length(ticks)
 
                     # evaluate quality of ticks
 
@@ -243,10 +235,10 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     s = has_zero ? 1.0 : 0.0
 
                     # granularity
-                    g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0.0
+                    g = 0 < nticks < 2k_ideal ? 1 - abs(nticks - k_ideal) / k_ideal : 0.0
 
                     # coverage
-                    effective_span = (length(S)-1) * tickspan
+                    effective_span = (nticks-1) * tickspan
                     c = 1.5 * xspan/effective_span
 
                     score = granularity_weight * g +
@@ -262,13 +254,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         score -= 1000
                     end
 
-                    if score > high_score && (k_min <= length(S) <= k_max)
-                        if strict_span
-                            # make S a copy because it is a view and
-                            # could otherwise be mutated in the next runs
-                            S = collect(S)
-                        end
-                        (S_best, viewmin_best, viewmax_best) = (S, viewmin, viewmax)
+                    if score > high_score && (k_min <= nticks <= k_max)
+                        best_ticks = ticks
                         high_score = score
                     end
                     r += 1
@@ -278,7 +265,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
         z -= 1
     end
 
-    if isinf(high_score)
+    if best_ticks === nothing
         if strict_span
             @warn("No strict ticks found")
             return optimize_ticks_typed(x_min, x_max, extend_ticks,
@@ -293,7 +280,9 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
         end
     end
 
-    return S_best, viewmin_best, viewmax_best
+    viewmin = min(first(best_ticks), x_min)
+    viewmax = max(last(best_ticks), x_max)
+    return (best_ticks, viewmin, viewmax)
 end
 
 

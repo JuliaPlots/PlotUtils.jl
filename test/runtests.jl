@@ -2,6 +2,7 @@ using PlotUtils
 using Test
 using Statistics: mean
 using Dates
+using Unitful
 
 # TODO: real tests
 
@@ -99,9 +100,15 @@ end
             x,y = minmax(x,y)
             ticks = PlotUtils.optimize_ticks(x, y)[1]
             @test issorted(ticks)
-            @test all(x .<= ticks .<= y)
+            @test allunique(ticks)
+            if (x,y) ∈ [(1.0,1.0+eps()), (1.0-eps(),1.0)] # known failures
+                @test_broken all(x .<= ticks .<= y)
+            else
+                @test all(x .<= ticks .<= y)
+            end
             # Fails:
-            # @test allunique(ticks)
+            #@test is_uniformly_spaced(ticks)
+
         end
     end
 
@@ -137,11 +144,14 @@ end
         @testset "digits $((10^n)-1)*10^$i" for n in 1:9, i in -9:9
             y0 = 10^n
             x0 = y0-1
-            x, y = (x0,y0) .* 10.0^i
+            x,y = (x0,y0) .* 10.0^i
             ticks = optimize_ticks(x, y)[1]
             test_ticks(x, y, ticks)
         end
     end
+
+    km = Unitful.km
+    @test optimize_ticks(2km, 5km) == optimize_ticks(2, 5) .* 1km
 end
 
 # ----------------------
