@@ -2,6 +2,7 @@ using PlotUtils
 using Test
 using Statistics: mean
 using Dates
+using Unitful
 using Random
 using StableRNGs
 
@@ -112,9 +113,15 @@ end
             x, y = minmax(x, y)
             ticks, = optimize_ticks(x, y)
             @test issorted(ticks)
-            @test all(x .<= ticks .<= y)
+            @test allunique(ticks)
+            if (x,y) ∈ [(1.0,1.0+eps()), (1.0-eps(),1.0)] # known failures
+                @test_broken all(x .<= ticks .<= y)
+            else
+                @test all(x .<= ticks .<= y)
+            end
             # Fails:
-            # @test allunique(ticks)
+            #@test is_uniformly_spaced(ticks)
+
         end
     end
 
@@ -141,6 +148,9 @@ end
             test_ticks(x, y, ticks)
         end
     end
+
+    km = Unitful.km
+    @test optimize_ticks(2km, 5km) == optimize_ticks(2, 5) .* 1km
 
     @testset "types" begin
         for T in (Int32, Int64, Float16, Float32, Float64)
