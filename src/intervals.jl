@@ -25,7 +25,7 @@ Implementation of the `zscale` IRAF function for finding colorbar limits of `inp
 * `k_rej` - The number of standard deviations above which data is rejected
 * `max_iteration` - The number of iterations used for fitting samples
 * `max_reject` - The maximum number of pixels to reject during the iterative fitting
-* `min_npixesl` - The minimum number of pixels to calculate the limits after the iterative fitting
+* `min_npixels` - The minimum number of pixels to calculate the limits after the iterative fitting
 
 # Examples
 ```jldoctest
