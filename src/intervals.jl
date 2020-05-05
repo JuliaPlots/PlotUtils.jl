@@ -1,7 +1,8 @@
 #= 
 This file contains code for calculating intervals for plotting purposes.
 These functions should, at minimum, take in some form of data input and
-return a tuple (min, max) of the limits corresponding to the function =#
+return a tuple (min, max) of the limits corresponding to the function 
+=#
 
 import Polynomials
 using Statistics: std, median
