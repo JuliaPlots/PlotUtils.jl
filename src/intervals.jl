@@ -1,8 +1,7 @@
-#=
+#= 
 This file contains code for calculating intervals for plotting purposes.
 These functions should, at minimum, take in some form of data input and
-return a tuple (min, max) of the limits corresponding to the function
-=#
+return a tuple (min, max) of the limits corresponding to the function =#
 
 import Polynomials
 using Statistics: std, median
@@ -36,12 +35,12 @@ julia> zscale(img)
 ```
 """
 function zscale(input::AbstractArray,
-    nsamples::Int=1000;
-    contrast=0.25,
-    max_reject=0.5,
-    min_npixels=5,
-    k_rej=2.5,
-    max_iterations=5)
+    nsamples::Int = 1000;
+    contrast = 0.25,
+    max_reject = 0.5,
+    min_npixels = 5,
+    k_rej = 2.5,
+    max_iterations = 5)
 
     # get samples from finite values of input
     values = float(filter(isfinite, input))
@@ -75,7 +74,7 @@ function zscale(input::AbstractArray,
         (ngood ≥ last_good || ngood < min_pix) && break
         
         # linear fit using mask for weighting
-        fit = Polynomials.fit(x, samples, 1; weights=.!badmask)
+        fit = Polynomials.fit(x, samples, 1; weights = .!badmask)
         flat = @. samples - fit(x)
 
         # k-sigma rejection threshold
