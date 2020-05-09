@@ -1,8 +1,7 @@
 #= 
 This file contains code for calculating intervals for plotting purposes.
 These functions should, at minimum, take in some form of data input and
-return a tuple (min, max) of the limits corresponding to the function 
-=#
+return a tuple (min, max) of the limits corresponding to the function =#
 
 using Statistics: mean, median, std
 
@@ -73,8 +72,8 @@ function zscale(input::AbstractArray,
     ngood = N
     last_good = N + 1
 
-    # bad pixel mask (array bool faster than bitarray)
-    badmask = zeros(Bool, N)
+    # good pixel mask (array bool faster than bitarray)
+    mask = ones(Bool, N)
 
     # get number of neighbors to mask if a pixel is bad
     ngrow = max(1, round(Int, N / 100) ÷ 2)
@@ -85,22 +84,22 @@ function zscale(input::AbstractArray,
         (ngood ≥ last_good || ngood < min_pix) && break
         
         # linear fit using mask
-        x_ = @view x[.!badmask]
-        y = @view samples[.!badmask]
+        x_ = @view x[mask]
+        y = @view samples[mask]
         α, β = fit_line(x_, y)
         flat = @. samples - (α + β * x)
 
         # k-sigma rejection threshold
-        threshold = k_rej * std(flat[.!badmask])
+        threshold = k_rej * std(flat[mask])
 
         # detect and reject outliers based on threshold
-        @. badmask[!(-threshold ≤ flat ≤ threshold)] = true
+        @. mask[!(-threshold ≤ flat ≤ threshold)] = false
 
         # dialate mask
-        badmask .= dilate_mask(badmask, ngrow)
+        mask = dilate_mask(mask, ngrow)
 
         last_good = ngood
-        ngood = count(!, badmask)
+        ngood = count(mask)
     end
 
     if ngood ≥ min_pix
@@ -114,7 +113,8 @@ function zscale(input::AbstractArray,
     return vmin, vmax
 end
 
-# takes a mask and "convolves" it by a `true` kernel of width 2ngrow + 1
+# takes a mask and will dilate each `false` with `ngrow` `false`s on either side
+# this is equivalent to boolean "convolution" 
 function dilate_mask(mask, ngrow)
     out = similar(mask)
     idxs = CartesianIndices(mask)
@@ -123,7 +123,8 @@ function dilate_mask(mask, ngrow)
     @inbounds for idx in idxs
         lower = max(mindx, idx.I[1] - ngrow)
         upper = min(maxdx, idx.I[1] + ngrow)
-        out[idx] = any(mask[lower:upper])
+        # output will only be true if there are no falses in the input section
+        out[idx] = all(mask[lower:upper])
     end
     return out
 end
