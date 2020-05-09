@@ -1,7 +1,8 @@
 #= 
 This file contains code for calculating intervals for plotting purposes.
 These functions should, at minimum, take in some form of data input and
-return a tuple (min, max) of the limits corresponding to the function =#
+return a tuple (min, max) of the limits corresponding to the function 
+=#
 
 using Statistics: mean, median, std
 
@@ -37,7 +38,7 @@ As can be seen, the `contrast` parameter may be used to adjust the contrast prod
 * `k_rej` - The number of standard deviations above which data is rejected
 * `max_iteration` - The number of iterations used for fitting samples
 * `max_reject` - The maximum number of pixels to reject during the iterative fitting
-* `min_npixesl` - The minimum number of pixels to calculate the limits after the iterative fitting
+* `min_npixels` - The minimum number of pixels to calculate the limits after the iterative fitting
 
 # Examples
 ```jldoctest
