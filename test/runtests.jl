@@ -176,13 +176,18 @@ end
     #= this test is useless right now because it doesn't actually
        modify the clims at all + issues with randn changes in 1.5 =#
     bkg = 30 .* randn(8192) .+ 1000
-    defects = rand(CartesianIndices(bkg), 500)
-    @. bkg[defects] = rand(Bool) ? 0 : 1e7
     data = bkg .+ 100 .* randn(8192) .+ 2500
+    defects = rand(CartesianIndices(bkg), 500)
+    data[defects] .= rand([0, 1e7], 500)
     cmin, cmax = zscale(data)
     # values calculated using IRAF
-    @test cmin ≈ 3215.963 atol = 1e-3
-    @test cmax ≈ 4176.060 atol = 1e-3
+    if VERSION ≥ v"1.5"
+        @test cmin ≈ 2827.440 atol = 1e-3
+        @test cmax ≈ 4172.194 atol = 1e-3
+    else
+        @test cmin ≈ 2823.715 atol = 1e-3
+        @test cmax ≈ 4185.414 atol = 1e-3
+    end
     @test cmin > minimum(data)
     @test cmax < maximum(data)
 
