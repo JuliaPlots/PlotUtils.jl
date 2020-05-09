@@ -3,8 +3,7 @@ This file contains code for calculating intervals for plotting purposes.
 These functions should, at minimum, take in some form of data input and
 return a tuple (min, max) of the limits corresponding to the function =#
 
-import Polynomials
-using Statistics: std, median
+using Statistics: mean, median, std
 
 """
     zscale(input::AbstractArray, 
@@ -44,7 +43,7 @@ function zscale(input::AbstractArray,
     # get samples from finite values of input
     values = float(filter(isfinite, input))
     stride = max(1, round(Int, length(values) / nsamples))
-    samples = values[1:stride:end][1:min(nsamples, end)]
+    samples = @view values[1:stride:end][1:min(nsamples, end)]
     sort!(samples)
 
     N = length(samples)
@@ -64,14 +63,16 @@ function zscale(input::AbstractArray,
     # get number of neighbors to mask if a pixel is bad
     ngrow = max(1, round(Int, N / 100) ÷ 2)
 
-    local fit
+    local β # line slope
     # iteratively fit samples and reject sigma-clipped outliers
     for _ in 1:max_iterations
         (ngood ≥ last_good || ngood < min_pix) && break
         
-        # linear fit using mask for weighting
-        fit = Polynomials.fit(x, samples, 1; weights = .!badmask)
-        flat = @. samples - fit(x)
+        # linear fit using mask
+        x_ = @view x[.!badmask]
+        y = @view samples[.!badmask]
+        α, β = fit_line(x_, y)
+        flat = @. samples - (α + β * x)
 
         # k-sigma rejection threshold
         threshold = k_rej * std(flat[.!badmask])
@@ -87,7 +88,7 @@ function zscale(input::AbstractArray,
     end
 
     if ngood ≥ min_pix
-        slope = contrast > 0 ? fit[1] / contrast : fit[1]
+        slope = contrast > 0 ? β / contrast : β
         center = (N - 1) ÷ 2
         m = median(samples)
         vmin = max(vmin, m - (center - 1) * slope)
@@ -109,4 +110,20 @@ function dilate_mask(mask, ngrow)
         out[idx] = any(mask[lower:upper])
     end
     return out
+end
+
+# simple linear regression, returns intercept, slope
+# https://en.wikipedia.org/wiki/Simple_linear_regression
+function fit_line(x, y)
+    mx = mean(x)
+    my = mean(y)
+    SSxy = sum(zip(x, y)) do (xi, yi)
+        (xi - mx) * (yi - my)
+    end
+    SSx = sum(x) do xi
+        (xi - mx)^2
+    end
+    β = SSxy / SSx
+    α = my - β * mx
+    return α, β
 end
