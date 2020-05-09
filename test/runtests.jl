@@ -91,7 +91,8 @@ end
 @testset "ticks" begin
     @test optimize_ticks(-1, 2) == ([-1.0,0.0,1.0,2.0], -1.0, 2.0)
     dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
-    @test optimize_datetime_ticks(dt1, dt2) == ([63113990400000, 63902908800000, 64691827200000, 65480745600000],
+    @test optimize_datetime_ticks(dt1, dt2) == (
+        [63113990400000, 63902908800000, 64691827200000, 65480745600000],
         ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"])
 
     @testset "small range" begin
@@ -173,8 +174,6 @@ end
 end
 
 @testset "zscale" begin
-    #= this test is useless right now because it doesn't actually
-       modify the clims at all + issues with randn changes in 1.5 =#
     bkg = 30 .* randn(8192) .+ 1000
     data = bkg .+ 100 .* randn(8192) .+ 2500
     defects = rand(CartesianIndices(bkg), 500)
