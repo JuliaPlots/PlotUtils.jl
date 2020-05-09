@@ -5,7 +5,6 @@ return a tuple (min, max) of the limits corresponding to the function =#
 
 import Polynomials
 using Statistics: std, median
-using ImageFiltering
 
 """
     zscale(input::AbstractArray, 
@@ -63,10 +62,7 @@ function zscale(input::AbstractArray,
     badmask = zeros(Bool, N)
 
     # get number of neighbors to mask if a pixel is bad
-    ngrow = max(1, round(Int, N / 100))
-    kernel = centered(ones(Bool, ngrow))
-    nleft = ngrow ÷ 2
-    nright = ngrow - nleft - 1
+    ngrow = max(1, round(Int, N / 100) ÷ 2)
 
     local fit
     # iteratively fit samples and reject sigma-clipped outliers
@@ -84,7 +80,7 @@ function zscale(input::AbstractArray,
         @. badmask[!(-threshold ≤ flat ≤ threshold)] = true
 
         # dialate mask
-        badmask .= imfilter(badmask, kernel, Fill(false))[axes(badmask)...] .> 0
+        badmask .= dilate_mask(badmask, ngrow)
 
         last_good = ngood
         ngood = sum(.!badmask)
@@ -99,4 +95,18 @@ function zscale(input::AbstractArray,
     end
 
     return vmin, vmax
+end
+
+# takes a mask and "convolves" it by a `true` kernel of width 2ngrow + 1
+function dilate_mask(mask, ngrow)
+    out = similar(mask)
+    idxs = CartesianIndices(mask)
+    mindx = idxs[1].I[1]
+    maxdx = idxs[end].I[1]
+    @inbounds for idx in idxs
+        lower = max(mindx, idx.I[1] - ngrow)
+        upper = min(maxdx, idx.I[1] + ngrow)
+        out[idx] = any(mask[lower:upper])
+    end
+    return out
 end
