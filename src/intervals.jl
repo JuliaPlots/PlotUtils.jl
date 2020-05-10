@@ -56,7 +56,8 @@ user parameter, `nsample_lines`.
 The pixels are ranked in brightness to form the function `I(i)`,
 where `i` is the rank of the pixel, and `I` is its value. Generally,
 the midpoint of this function (the median) is very near the peak
-of the image histogram.  There is a well defined slope about the midpoint, which is related to the width of the histogram.
+of the image histogram.  There is a well defined slope about the
+midpoint, which is related to the width of the histogram.
 
 At the ends of the `I(i)` function, there are a few very bright and
 dark pixels due to objects and defects in the field. To determine
@@ -66,7 +67,10 @@ the slope, a linear function is fit with iterative rejection:
 I(i) = intercept + slope * (i - midpoint)
 ```
 
-If more than half of the points are rejected, then there is no well defined slope, and the full range of the sample defines `z1` and `z2`. Otherwise, the endpoints of the linear function are used (provided they are within the original range of the sample):
+If more than half of the points are rejected, then there is no well
+defined slope, and the full range of the sample defines `z1` and
+`z2`. Otherwise, the endpoints of the linear function are used
+(provided they are within the original range of the sample):
 
 ```
 z1 = I(midpoint) + (slope / contrast) * (1 - midpoint)
