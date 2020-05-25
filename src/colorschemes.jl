@@ -25,7 +25,7 @@ abstract type ColorGradient <: AbstractColorList end
 Base.getindex(cg::ColorGradient, x::Union{AbstractFloat, AbstractVector{<:AbstractFloat}}) =
     get(cg, x)
 function Base.get(cg::ColorGradient, v::AbstractArray, rangescale = (0.0, 1.0))
-    rangescale == :extrema && (rangescale = extrema(x))
+    rangescale == :extrema && (rangescale = extrema(v))
     map(x -> get(cg, x, rangescale), v)
 end
 
