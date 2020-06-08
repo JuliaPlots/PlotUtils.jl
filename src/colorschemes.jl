@@ -306,7 +306,7 @@ function get_colorscheme(sym::Symbol)
     end
     sym = get(COLORSCHEME_ALIASES, sym, sym)
     if sym === :default || sym === :auto
-        generate_colorscheme()
+        _default_colorscheme
     elseif haskey(ColorSchemes.colorschemes, sym)
         ColorSchemes.colorschemes[sym]
     else
