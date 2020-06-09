@@ -40,8 +40,6 @@ export
 
 include("ticks.jl")
 
-function __init__()
-
-end
+const _default_colorscheme = generate_colorscheme()
 
 end # module
