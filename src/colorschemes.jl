@@ -29,6 +29,8 @@ function Base.get(cg::ColorGradient, v::AbstractArray, rangescale = (0.0, 1.0))
     map(x -> get(cg, x, rangescale), v)
 end
 
+Base.:(==)(cg1::ColorGradient, cg2::ColorGradient) = color_list(cg1) == color_list(cg2) && cg1.values == cg2.values
+Base.hash(cg::ColorGradient) = hash(color_list(cg)) ⊻ hash(cg.values)
 
 ## Continuous Color Gradient
 
