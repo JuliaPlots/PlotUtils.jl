@@ -98,7 +98,7 @@ function zscale(
     vmax = last(samples)
 
     # fit a line to the sorted samples
-    min_pix = max(min_npixels, Int(N * max_reject))
+    min_pix = max(min_npixels, round(Int, N * max_reject))
     x = 0:N - 1
 
     ngood = N
