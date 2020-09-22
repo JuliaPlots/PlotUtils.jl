@@ -1,6 +1,3 @@
-
-__precompile__()
-
 module PlotUtils
 
 using ColorSchemes
@@ -41,5 +38,10 @@ export
 include("ticks.jl")
 
 const _default_colorscheme = generate_colorscheme()
+
+if Base.VERSION >= v"1.4.2"
+    include("precompile.jl")
+    _precompile_()
+end
 
 end # module
