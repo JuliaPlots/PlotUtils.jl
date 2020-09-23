@@ -187,17 +187,13 @@ If `rev` is `true` colors are reversed.
 If `alpha` is set, it is applied to all colors.
 """
 function cgrad(
-    colors,
+    colors::ColorScheme,
     values;
     categorical = nothing,
     scale = nothing,
     rev = false,
     alpha = nothing,
 )
-    if colors === :default
-        colors = :inferno
-    end
-    colors = get_colorscheme(colors)
     if categorical !== nothing
         colors, values = prepare_categorical_cgrad_colors(colors, values)
     end
@@ -231,17 +227,16 @@ function cgrad(
     end
 end
 
-function cgrad(colors, n::Int; categorical = nothing, kwargs...)
+function cgrad(colors::ColorScheme, n::Int=length(colors); categorical = nothing, kwargs...)
     values = get_range(n + (categorical !== nothing))
     return cgrad(colors, values; categorical = categorical, kwargs...)
 end
 
-function cgrad(colors; kwargs...)
+function cgrad(colors, args...; kwargs...)
     if colors === :default
         colors = :inferno
     end
-    colors = get_colorscheme(colors)
-    return cgrad(colors, length(colors); kwargs...)
+    return cgrad(get_colorscheme(colors), args...; kwargs...)
 end
 
 cgrad(; kw...) = cgrad(DEFAULT_COLOR_GRADIENT[]; kw...)
