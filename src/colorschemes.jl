@@ -403,6 +403,7 @@ const COLORSCHEME_ALIASES = Dict{Symbol, Symbol}(
     :kg => :linear_ternary_green_0_46_c42_n256,
     :kgy => :linear_green_5_95_c69_n256,
     :kr => :linear_ternary_red_0_50_c52_n256,
+    :diverging => :diverging_bwr_40_95_c42_n256,
     :cyclic1 => :cyclic_mrybm_35_75_c68_n256,
     :cyclic2 => :cyclic_mygbm_30_95_c78_n256,
     :cyclic3 => :cyclic_wrwbw_40_90_c42_n256,
