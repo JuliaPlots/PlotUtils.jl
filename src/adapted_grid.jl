@@ -12,7 +12,7 @@ The parameter `max_recusions` computes how many times each interval is allowed t
 be refined while `max_curvature` specifies below which value of the curvature 
 an interval does not need to be refined further.
 """
-function adapted_grid(f, minmax::Tuple{T,T}; max_recursions = 7, max_curvature = 0.05) where {T<:Number}
+function adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.05)
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     elseif minmax[1] == minmax[2]
