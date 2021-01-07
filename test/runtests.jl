@@ -181,8 +181,8 @@ end
     data[defects] .= rand(rng, [0, 1e7], 500)
     cmin, cmax = zscale(data)
     # values calculated using IRAF
-    @test cmin ≈ 2823.715 atol = 1e-3
-    @test cmax ≈ 4185.414 atol = 1e-3
+    @test cmin ≈ 2841.586 atol = 1e-3
+    @test cmax ≈ 4171.648 atol = 1e-3
     @test cmin > minimum(data)
     @test cmax < maximum(data)
 
