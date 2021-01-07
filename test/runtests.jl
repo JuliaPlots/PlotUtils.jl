@@ -3,8 +3,9 @@ using Test
 using Statistics: mean
 using Dates
 using Random
+using StableRNGs
 
-Random.seed!(42)
+rng = StableRNG(42)
 
 # TODO: real tests
 
@@ -42,24 +43,24 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test length(color_list(grad)) == 3
     @test grad.values == [0,0.1,1]
 
-    cs = plot_color(rand(10))
+    cs = plot_color(rand(rng, 10))
     @test typeof(cs) == Vector{C}
     @test length(cs) == 10
 
-    cs = plot_color(rand(4, 4))
+    cs = plot_color(rand(rng, 4, 4))
     @test typeof(cs) == Matrix{C}
     @test length(cs) == 16
     @test size(cs) == (4, 4)
 
 
-    cs = plot_color(rand(10), 0.5)
+    cs = plot_color(rand(rng, 10), 0.5)
     @test typeof(cs) == Vector{C}
     @test length(cs) == 10
     for c in cs
         @test alpha(c) == 0.5
     end
 
-    cs = plot_color(rand(4, 4), 0.5)
+    cs = plot_color(rand(rng, 4, 4), 0.5)
     @test typeof(cs) == Matrix{C}
     @test length(cs) == 16
     @test size(cs) == (4, 4)
@@ -124,7 +125,7 @@ end
     end
 
     @testset "random ranges" begin
-        r = [minmax(rand(-100:100, 2)...) .* 10.0^i for _ = 1:10, i = -5:5]
+        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ = 1:10, i = -5:5]
         @testset "random range $x..$y" for (x, y) in r
             test_ticks(x, y, optimize_ticks(x, y)[1])
         end
@@ -174,19 +175,14 @@ end
 end
 
 @testset "zscale" begin
-    bkg = 30 .* randn(8192) .+ 1000
-    data = bkg .+ 100 .* randn(8192) .+ 2500
-    defects = rand(CartesianIndices(bkg), 500)
-    data[defects] .= rand([0, 1e7], 500)
+    bkg = 30 .* randn(rng, 8192) .+ 1000
+    data = bkg .+ 100 .* randn(rng, 8192) .+ 2500
+    defects = rand(rng, CartesianIndices(bkg), 500)
+    data[defects] .= rand(rng, [0, 1e7], 500)
     cmin, cmax = zscale(data)
     # values calculated using IRAF
-    if VERSION ≥ v"1.5"
-        @test cmin ≈ 2827.440 atol = 1e-3
-        @test cmax ≈ 4172.194 atol = 1e-3
-    else
-        @test cmin ≈ 2823.715 atol = 1e-3
-        @test cmax ≈ 4185.414 atol = 1e-3
-    end
+    @test cmin ≈ 2823.715 atol = 1e-3
+    @test cmax ≈ 4185.414 atol = 1e-3
     @test cmin > minimum(data)
     @test cmax < maximum(data)
 
