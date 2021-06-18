@@ -1,27 +1,29 @@
+const _logScales = [:ln, :log2, :log10]
+const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 
 # NOTE: This file was moved from Gadfly.jl, and the original author is Daniel Jones (@dcjones)
 
 # Find the smallest order of magnitude that is larger than xspan This is a
 # little opaque because I want to avoid assuming the log function is defined
 # over typeof(xspan)
-function bounding_order_of_magnitude(xspan::DT) where DT
+function bounding_order_of_magnitude(xspan::DT, base) where DT
     one_dt = convert(DT, one(DT))
 
     a = 1
     step = 1
-    while xspan < 10.0^a * one_dt
+    while xspan < base^a * one_dt
         a -= step
     end
 
     b = 1
     step = 1
-    while xspan > 10.0^b * one_dt
+    while xspan > base^b * one_dt
         b += step
     end
 
     while a + 1 < b
         c = div(a + b, 2)
-        if xspan < 10.0^c * one_dt
+        if xspan < base^c * one_dt
             b = c
         else
             a = c
@@ -131,12 +133,12 @@ function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
                            k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
                            granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
-                           strict_span=true, span_buffer = nothing) where T
-
+                           strict_span=true, span_buffer=nothing, scale=nothing) where T
+    
     Qv = [(Float64(q[1]), Float64(q[2])) for q in Q]
     optimize_ticks_typed(x_min, x_max, extend_ticks, Qv, k_min, k_max, k_ideal,
                          granularity_weight, simplicity_weight,
-                         coverage_weight, niceness_weight, strict_span, span_buffer)
+                         coverage_weight, niceness_weight, strict_span, span_buffer, scale)
 end
 
 function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
@@ -144,7 +146,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                            k_max, k_ideal,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
-                           strict_span, span_buffer) where T
+                           strict_span, span_buffer, scale) where T
     one_t = convert(T, one(T))
     if x_max - x_min < eps()*one_t
         R = typeof(1.0 * one_t)
@@ -152,21 +154,22 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     end
 
     n = length(Q)
+    is_log_scale = scale ∈ _logScales
+    base = is_log_scale ? _logScaleBases[scale] : 10.0
 
     # generalizing "order of magnitude"
     xspan = x_max - x_min
-    z = bounding_order_of_magnitude(xspan)
+    z = bounding_order_of_magnitude(xspan, base)
 
-    # find required significant digits for ticks with q*10^z spacing,
+    # find required significant digits for ticks with q*base^z spacing,
     # for q values specified in Q
-    x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)))
+    x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base)
     q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
     sigdigits(z) = max(1, x_digits - z + q_extra_digits)
 
     high_score = -Inf
     S_best = Array{typeof(1.0 * one_t)}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
-
 
     # we preallocate arrays that hold all required S arrays for every given
     # the k parameter, so we don't have to create them again and again, which
@@ -177,18 +180,21 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
         [Array{typeof(1.0 * one_t)}(undef, k) for k in k_min:2k_max]
     end
 
-    while 2k_max * 10.0^(z+1) * one_t > xspan
+    while 2k_max * base^(z+1) * one_t > xspan
         for (ik, k) in enumerate(k_min:2k_max)
             for (q, qscore) in Q
-                tickspan = q * 10.0^z * one_t
+                tickspan = q * base^z * one_t
                 span = (k - 1) * tickspan
                 if span < xspan
                     continue
                 end
 
-                stp = q*10.0^z
+                stp = q*base^z
                 if stp < eps()
                     continue
+                end
+                if is_log_scale && !isinteger(stp)
+                    continue  # prefer integer exponents for log scales
                 end
                 r = ceil(Int64, (x_max - span) / (stp * one_t))
 
@@ -201,8 +207,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         end
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
-                        S[k + 1] = round(S[k + 1], sigdigits = sigdigits(z))
-                        S[2 * k] = round(S[2 * k], sigdigits = sigdigits(z))
+                        S[k + 1] = round(S[k + 1], sigdigits=sigdigits(z), base=Int(base))
+                        S[2 * k] = round(S[2 * k], sigdigits=sigdigits(z), base=Int(base))
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
                         S = prealloc_Ss[ik]
@@ -211,8 +217,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         end
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
-                        S[1] = round(S[1], sigdigits = sigdigits(z))
-                        S[k] = round(S[k], sigdigits = sigdigits(z))
+                        S[1] = round(S[1], sigdigits=sigdigits(z), base=Int(base))
+                        S[k] = round(S[k], sigdigits=sigdigits(z), base=Int(base))
                         viewmin, viewmax = S[1], S[k]
                     end
                     if strict_span
@@ -258,7 +264,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     if strict_span && span > xspan
                         score -= 10000
                     end
-                    if  span >= 2.0*xspan
+                    if span >= 2.0*xspan
                         score -= 1000
                     end
 
@@ -286,7 +292,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                                        k_max, k_ideal,
                                        granularity_weight, simplicity_weight,
                                        coverage_weight, niceness_weight,
-                                       false, span_buffer)
+                                       false, span_buffer, scale)
         else
             R = typeof(1.0 * one_t)
             return R[x_min], x_min - one_t, x_min + one_t
