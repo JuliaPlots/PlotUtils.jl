@@ -148,7 +148,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                            coverage_weight::Float64, niceness_weight::Float64,
                            strict_span, span_buffer, scale) where T
     one_t = convert(T, one(T))
-    if x_max - x_min < eps()*one_t
+    if x_max - x_min < eps() * one_t
         R = typeof(1.0 * one_t)
         return R[x_min], x_min - one_t, x_min + one_t
     end
@@ -166,6 +166,12 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base)
     q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
     sigdigits(z) = max(1, x_digits - z + q_extra_digits)
+    ib = Int(base)
+    round_base = (
+        isinteger(base) ?
+        v -> round(v, sigdigits=sigdigits(z), base=ib) :
+        v -> round(v, sigdigits=sigdigits(z))
+    )
 
     high_score = -Inf
     S_best = Array{typeof(1.0 * one_t)}(undef, 1)
@@ -175,12 +181,12 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     # the k parameter, so we don't have to create them again and again, which
     # saves many allocations
     prealloc_Ss = if extend_ticks
-        [Array{typeof(1.0 * one_t)}(undef, Int(3 * k)) for k in k_min:2k_max]
+        [Array{typeof(1.0 * one_t)}(undef, Int(3k)) for k in k_min:2k_max]
     else
         [Array{typeof(1.0 * one_t)}(undef, k) for k in k_min:2k_max]
     end
 
-    while 2k_max * base^(z+1) * one_t > xspan
+    while 2k_max * base^(z + 1) * one_t > xspan
         for (ik, k) in enumerate(k_min:2k_max)
             for (q, qscore) in Q
                 tickspan = q * base^z * one_t
@@ -207,8 +213,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         end
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
-                        S[k + 1] = round(S[k + 1], sigdigits=sigdigits(z), base=Int(base))
-                        S[2 * k] = round(S[2 * k], sigdigits=sigdigits(z), base=Int(base))
+                        S[k + 1] = round_base(S[k + 1])
+                        S[2 * k] = round_base(S[2 * k])
                         viewmin, viewmax = S[k + 1], S[2 * k]
                     else
                         S = prealloc_Ss[ik]
@@ -217,8 +223,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         end
                         # round only those values that end up as viewmin and viewmax
                         # to save computation time
-                        S[1] = round(S[1], sigdigits=sigdigits(z), base=Int(base))
-                        S[k] = round(S[k], sigdigits=sigdigits(z), base=Int(base))
+                        S[1] = round_base(S[1])
+                        S[k] = round_base(S[k])
                         viewmin, viewmax = S[1], S[k]
                     end
                     if strict_span
@@ -252,8 +258,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0.0
 
                     # coverage
-                    effective_span = (length(S)-1) * tickspan
-                    c = 1.5 * xspan/effective_span
+                    effective_span = (length(S) - 1) * tickspan
+                    c = 1.5 * xspan / effective_span
 
                     score = granularity_weight * g +
                             simplicity_weight * s +
@@ -274,7 +280,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                             # could otherwise be mutated in the next runs
                             S = collect(S)
                         end
-                        (S_best, viewmin_best, viewmax_best) = (S, viewmin, viewmax)
+                        S_best, viewmin_best, viewmax_best = S, viewmin, viewmax
                         high_score = score
                     end
                     r += 1
