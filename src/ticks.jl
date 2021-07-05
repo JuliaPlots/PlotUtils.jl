@@ -142,20 +142,19 @@ function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
 end
 
 function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
-                           Q::Vector{Tuple{Float64,Float64}}, k_min,
-                           k_max, k_ideal,
+                           Q::Vector{Tuple{Float64,Float64}}, k_min, k_max, k_ideal,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
                            strict_span, span_buffer, scale) where T
     one_t = convert(T, one(T))
     if x_max - x_min < eps() * one_t
-        R = typeof(1.0 * one_t)
+        R = typeof(1. * one_t)
         return R[x_min], x_min - one_t, x_min + one_t
     end
 
     n = length(Q)
     is_log_scale = scale ∈ _logScales
-    base = is_log_scale ? _logScaleBases[scale] : 10.0
+    base = get(_logScaleBases, scale, 10.)
 
     # generalizing "order of magnitude"
     xspan = x_max - x_min
@@ -166,6 +165,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base)
     q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
     sigdigits(z) = max(1, x_digits - z + q_extra_digits)
+
     ib = Int(base)
     round_base = (
         isinteger(base) ?
@@ -174,16 +174,16 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     )
 
     high_score = -Inf
-    S_best = Array{typeof(1.0 * one_t)}(undef, 1)
+    S_best = Array{typeof(1. * one_t)}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
 
     # we preallocate arrays that hold all required S arrays for every given
     # the k parameter, so we don't have to create them again and again, which
     # saves many allocations
     prealloc_Ss = if extend_ticks
-        [Array{typeof(1.0 * one_t)}(undef, Int(3k)) for k in k_min:2k_max]
+        [Array{typeof(1. * one_t)}(undef, Int(3k)) for k in k_min:2k_max]
     else
-        [Array{typeof(1.0 * one_t)}(undef, k) for k in k_min:2k_max]
+        [Array{typeof(1. * one_t)}(undef, k) for k in k_min:2k_max]
     end
 
     while 2k_max * base^(z + 1) * one_t > xspan
@@ -208,7 +208,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     # Filter or expand ticks
                     if extend_ticks
                         S = prealloc_Ss[ik]
-                        for i in 0:(3*k - 1)
+                        for i in 0:(3k - 1)
                             S[i+1] = (r + i - k) * tickspan
                         end
                         # round only those values that end up as viewmin and viewmax
@@ -252,14 +252,14 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     has_zero = r <= 0 && abs(r) < k
 
                     # simplicity
-                    s = has_zero ? 1.0 : 0.0
+                    s = has_zero ? 1 : 0
 
                     # granularity
-                    g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0.0
+                    g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0
 
                     # coverage
                     effective_span = (length(S) - 1) * tickspan
-                    c = 1.5 * xspan / effective_span
+                    c = 1.5xspan / effective_span
 
                     score = granularity_weight * g +
                             simplicity_weight * s +
@@ -270,7 +270,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     if strict_span && span > xspan
                         score -= 10000
                     end
-                    if span >= 2.0*xspan
+                    if span >= 2xspan
                         score -= 1000
                     end
 
@@ -293,14 +293,12 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
     if isinf(high_score)
         if strict_span
             @warn("No strict ticks found")
-            return optimize_ticks_typed(x_min, x_max, extend_ticks,
-                                       Q, k_min,
-                                       k_max, k_ideal,
+            return optimize_ticks_typed(x_min, x_max, extend_ticks, Q, k_min, k_max, k_ideal,
                                        granularity_weight, simplicity_weight,
                                        coverage_weight, niceness_weight,
                                        false, span_buffer, scale)
         else
-            R = typeof(1.0 * one_t)
+            R = typeof(1. * one_t)
             return R[x_min], x_min - one_t, x_min + one_t
         end
     end
