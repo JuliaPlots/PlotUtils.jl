@@ -9,16 +9,16 @@ where the second derivative is approximated to be large. When an interval
 becomes "straight enough" it is no longer divided. Functions are evaluated at the end points of the intervals.
 
 The parameter `max_recusions` computes how many times each interval is allowed to
-be refined while `max_curvature` specifies below which value of the curvature 
+be refined while `max_curvature` specifies below which value of the curvature
 an interval does not need to be refined further.
 """
-function adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.05)
+function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.05)
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     elseif minmax[1] == minmax[2]
         x = minmax[1]
         return [x], [f(x)]
-    end    
+    end
 
     # Initial number of points
     n_points = 21
