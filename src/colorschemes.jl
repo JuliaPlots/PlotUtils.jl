@@ -62,7 +62,8 @@ function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0
     if x in v
         index = findfirst(==(x), v)
     else
-        i = findlast(t -> t < x, v)
+        xx = x # avoid boxing
+        i = findlast(t -> t < xx, v)
         r = (x - v[i]) / (v[i + 1] - v[i])
         index = (i + r - 1) / (length(v) - 1)
     end
