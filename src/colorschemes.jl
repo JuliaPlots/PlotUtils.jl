@@ -315,7 +315,7 @@ get_colorscheme(cs::ColorScheme) = cs
 
 
 function cvec(cs, n = 10; kw...)
-    cg = cgrad(cg; kw...)
+    cg = cgrad(cs; kw...)
     return RGBA{Float64}[cg[z] for z in get_range(n)]
 end
 
