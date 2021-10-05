@@ -191,18 +191,17 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
             for (q, qscore) in Q
                 tickspan = q * base^z * one_t
                 span = (k - 1) * tickspan
-                if span < xspan
-                    continue
-                end
+                span < xspan && continue
 
                 stp = q*base^z
-                if stp < eps()
-                    continue
-                end
+                stp < eps() && continue
+
                 if is_log_scale && !isinteger(stp)
                     continue  # prefer integer exponents for log scales
                 end
-                r = ceil(Int64, (x_max - span) / (stp * one_t))
+                r = (x_max - span) / (stp * one_t)
+                isfinite(r) || continue
+                r = ceil(Int64, r)
 
                 while r*stp * one_t <= x_min
                     # Filter or expand ticks

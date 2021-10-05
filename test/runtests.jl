@@ -131,9 +131,10 @@ end
         end
     end
 
-    # issue 86
-    let x = -1.0, y = 13.0
-        test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+    @testset "PlotUtils.jl/issues/86" begin 
+        let x = -1.0, y = 13.0
+            test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+        end
     end
 
     @testset "digits" begin
@@ -144,6 +145,11 @@ end
             ticks = optimize_ticks(x, y)[1]
             test_ticks(x, y, ticks)
         end
+    end
+
+    @testset "Plots.jl/issues/3859" begin
+        x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.e300])
+        test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
     end
 end
 
