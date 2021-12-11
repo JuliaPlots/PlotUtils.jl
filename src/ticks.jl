@@ -192,7 +192,8 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
 
                 has_nice_scale = true
                 if is_log_scale && !isinteger(stp)
-                    qscore = 0  # prefer integer exponents for log scales
+                    # try to favor integer exponents for log scales
+                    qscore = 0
                     has_nice_scale = false
                 end
                 r = (x_max - span) / stp
@@ -363,27 +364,27 @@ function optimize_ticks(x_min::DateTime, x_max::DateTime; extend_ticks::Bool=fal
                 end
 
                 # round x_min down
-                if scale === Day(1)
-                    first_tick = DateTime(year(x_min), month(x_min), day(x_min))
+                first_tick = if scale === Day(1)
+                    DateTime(year(x_min), month(x_min), day(x_min))
                 elseif scale === Hour(1)
-                    first_tick = DateTime(year(x_min), month(x_min), day(x_min),
+                    DateTime(year(x_min), month(x_min), day(x_min),
                                           hour(x_min))
                 elseif scale === Minute(1)
-                    first_tick = DateTime(year(x_min), month(x_min), day(x_min),
+                    DateTime(year(x_min), month(x_min), day(x_min),
                                           hour(x_min), minute(x_min))
                 elseif scale === Second(1)
-                    first_tick = DateTime(year(x_min), month(x_min), day(x_min),
+                    DateTime(year(x_min), month(x_min), day(x_min),
                                           hour(x_min), minute(x_min), second(x_min))
                 elseif scale === Millisecond(100)
-                    first_tick = DateTime(year(x_min), month(x_min), day(x_min),
+                    DateTime(year(x_min), month(x_min), day(x_min),
                                           hour(x_min), minute(x_min),
                                           second(x_min), millisecond(x_min) % 100)
                 elseif scale === Millisecond(10)
-                    first_tick = DateTime(year(x_min), month(x_min), day(x_min),
+                    DateTime(year(x_min), month(x_min), day(x_min),
                                           hour(x_min), minute(x_min),
                                           second(x_min), millisecond(x_min) % 10)
                 else
-                    first_tick = x_min
+                    x_min
                 end
                 push!(ticks, first_tick)
 
@@ -416,9 +417,7 @@ end
 
 
 # Generate ticks suitable for multiple scales.
-function multilevel_ticks(viewmin::T, viewmax::T;
-                          scales=[0.5, 5.0, 10.0]) where T
-
+function multilevel_ticks(viewmin::T, viewmax::T; scales=[0.5, 5.0, 10.0]) where T
     ticks = Dict()
     for scale in scales
         ticks[scale] = optimize_ticks(viewmin, viewmax,
@@ -426,17 +425,12 @@ function multilevel_ticks(viewmin::T, viewmax::T;
                                       k_max=max(3, round(Int, 10scale)),
                                       k_ideal=max(2, round(Int, 15scale)))[1]
     end
-
     return ticks
 end
 
 
-function multilevel_ticks(viewmin::Date, viewmax::Date;
-                          scales=[:year, :month, :day])
-    return multilevel_ticks(convert(DateTime, viewmin),
-                            convert(DateTime, viewmax),
-                            scales=scales)
-end
+multilevel_ticks(viewmin::Date, viewmax::Date; scales=[:year, :month, :day]) =
+    multilevel_ticks(convert(DateTime, viewmin), convert(DateTime, viewmax), scales=scales)
 
 
 function multilevel_ticks(viewmin::DateTime, viewmax::DateTime;
@@ -445,12 +439,12 @@ function multilevel_ticks(viewmin::DateTime, viewmax::DateTime;
     span = convert(Float64, Dates.toms(viewmax - viewmin))
     ticks = Dict()
     for scale in scales
-        if scale == :year
-            s = span / Dates.toms(Day(360))
+        s = if scale == :year
+            span / Dates.toms(Day(360))
         elseif scale == :month
-            s = span / Dates.toms(Day(90))
+            span / Dates.toms(Day(90))
         else
-            s = span / Dates.toms(Day(1))
+            span / Dates.toms(Day(1))
         end
 
         ticks[s/20] = optimize_ticks(viewmin, viewmax, scale=scale)[1]
