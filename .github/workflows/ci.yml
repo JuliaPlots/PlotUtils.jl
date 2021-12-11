@@ -19,16 +19,18 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.0'
-          - '1'
-          - 'nightly'
+          - '1.6' # LTS
+          - '1.7' # latest stable
         os:
           - ubuntu-latest
           - windows-latest
           - macos-latest
         arch:
           - x64
-          - x86
+          # - x86
+        include:
+          - version: 'nightly'
+            os: ubuntu-latest
 
     steps:
 
@@ -55,7 +57,7 @@ jobs:
 
       # Run tests
       - name: Run Graphical test
-        run:  julia --project -e 'using Pkg; Pkg.test(coverage=true);'
+        run:  julia --project -e 'using Pkg; Pkg.test(coverage=true)'
 
       # - name: Codecov
       #   uses: julia-actions/julia-uploadcodecov@latest
