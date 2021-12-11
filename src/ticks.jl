@@ -184,26 +184,25 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
         for (ik, k) in enumerate(k_min:2k_max)
             for (q, qscore) in Q
                 tickspan = q * base^z
+                tickspan < eps(F) && continue
                 span = (k - 1) * tickspan
                 span < xspan && continue
 
-                stp = tickspan
-                stp < eps(F) && continue
-
-                has_nice_scale = true
-                if is_log_scale && !isinteger(stp)
-                    # try to favor integer exponents for log scales
-                    qscore = 0
-                    has_nice_scale = false
-                end
-                r = (x_max - span) / stp
+                r = (x_max - span) / tickspan
                 isfinite(r) || continue
                 r = ceil(Int, r)
 
-                while r * stp <= x_min
+                has_nice_scale = true
+                if is_log_scale && !isinteger(tickspan)
+                    # try to favor integer exponents for log scales
+                    has_nice_scale = false
+                    qscore = 0
+                end
+
+                while r * tickspan <= x_min
+                    S = prealloc_Ss[ik]
                     # Filter or expand ticks
                     if extend_ticks
-                        S = prealloc_Ss[ik]
                         for i in 0:(3k - 1)
                             S[i+1] = (r + i - k) * tickspan
                         end
@@ -213,7 +212,6 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                         S[2k] = round_base(S[2k])
                         viewmin, viewmax = S[k + 1], S[2k]
                     else
-                        S = prealloc_Ss[ik]
                         for i in 0:(k - 1)
                             S[i+1] = (r + i) * tickspan
                         end
