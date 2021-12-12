@@ -135,8 +135,7 @@ function optimize_ticks(x_min::T, x_max::T; extend_ticks::Bool=false,
                            coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
                            strict_span=true, span_buffer=nothing, scale=nothing) where T
 
-    F = float(T)
-    Qv = [(F(q[1]), F(q[2])) for q in Q]
+    Qv = [(Float64(q[1]), Float64(q[2])) for q in Q]
     optimize_ticks_typed(x_min, x_max, extend_ticks, Qv, k_min, k_max, k_ideal,
                          granularity_weight, simplicity_weight,
                          coverage_weight, niceness_weight, strict_span, span_buffer, scale)
@@ -147,9 +146,11 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                            granularity_weight::Float64, simplicity_weight::Float64,
                            coverage_weight::Float64, niceness_weight::Float64,
                            strict_span, span_buffer, scale) where T
-    xspan = x_max - x_min
+    
     F = float(T)
-    xspan < eps(F) && return fallback_ticks(x_min, x_max, k_min, k_max)
+    if (xspan = x_max - x_min) < eps(F)
+        return fallback_ticks(x_min, x_max, k_min, k_max)
+    end
 
     n = length(Q)
     is_log_scale = scale ∈ _logScales
@@ -192,11 +193,12 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                 isfinite(r) || continue
                 r = ceil(Int, r)
 
-                has_nice_scale = true
                 if is_log_scale && !isinteger(tickspan)
                     # try to favor integer exponents for log scales
-                    has_nice_scale = false
+                    nice_scale = false
                     qscore = 0
+                else
+                    nice_scale = true
                 end
 
                 while r * tickspan <= x_min
@@ -245,7 +247,7 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
                     has_zero = r <= 0 && abs(r) < k
 
                     # simplicity
-                    s = has_zero && has_nice_scale ? 1 : 0
+                    s = has_zero && nice_scale ? 1 : 0
 
                     # granularity
                     g = 0 < length(S) < 2k_ideal ? 1 - abs(length(S) - k_ideal) / k_ideal : 0
@@ -299,14 +301,12 @@ function optimize_ticks_typed(x_min::T, x_max::T, extend_ticks,
 end
 
 
-function optimize_ticks(x_min::Date, x_max::Date; extend_ticks::Bool=false,
+optimize_ticks(x_min::Date, x_max::Date; extend_ticks::Bool=false,
                         k_min=nothing, k_max=nothing, scale=:auto,
                         granularity_weight=nothing, simplicity_weight=nothing,
                         coverage_weight=nothing, niceness_weight=nothing,
-                        strict_span=true, span_buffer = nothing)
-    return optimize_ticks(convert(DateTime, x_min), convert(DateTime, x_max),
-                          extend_ticks=extend_ticks, scale=scale)
-end
+                        strict_span=true, span_buffer = nothing) =
+optimize_ticks(convert(DateTime, x_min), convert(DateTime, x_max), extend_ticks=extend_ticks, scale=scale)
 
 
 function optimize_ticks(x_min::DateTime, x_max::DateTime; extend_ticks::Bool=false,
