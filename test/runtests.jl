@@ -7,8 +7,6 @@ using StableRNGs
 
 rng = StableRNG(42)
 
-# TODO: real tests
-
 # ----------------------
 # colors
 
@@ -89,18 +87,30 @@ function is_uniformly_spaced(v; tol = 1e-6)
     maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
 end
 
+function test_ticks(x, y, ticks)
+    @test issorted(ticks)
+    @test all(x .<= ticks .<= y)
+    if x < y
+        @test length(ticks) >= 2
+        @test is_uniformly_spaced(ticks)
+    end
+end
+
 @testset "ticks" begin
-    @test optimize_ticks(-1, 2) == ([-1.0,0.0,1.0,2.0], -1.0, 2.0)
-    dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
-    @test optimize_datetime_ticks(dt1, dt2) == (
-        [63113990400000, 63902908800000, 64691827200000, 65480745600000],
-        ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"])
+    @test optimize_ticks(-1, 2) == ([-1., 0., 1., 2.], -1., 2.)
+
+    @testset "dates" begin
+        dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
+        @test optimize_datetime_ticks(dt1, dt2) == (
+            [63113990400000, 63902908800000, 64691827200000, 65480745600000],
+            ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"])
+    end
 
     @testset "small range" begin
         @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
             y = x + i * eps(x)
             x, y = minmax(x, y)
-            ticks = PlotUtils.optimize_ticks(x, y)[1]
+            ticks, = PlotUtils.optimize_ticks(x, y)
             @test issorted(ticks)
             @test all(x .<= ticks .<= y)
             # Fails:
@@ -108,18 +118,9 @@ end
         end
     end
 
-    function test_ticks(x, y, ticks)
-        @test issorted(ticks)
-        @test all(x .<= ticks .<= y)
-        if x < y
-            @test length(ticks) >= 2
-            @test is_uniformly_spaced(ticks)
-        end
-    end
-
     @testset "fixed ranges" begin
         @testset "fixed range $x..$y" for (x, y) in [(2, 14),(14, 25),(16, 36),(57, 69)]
-            test_ticks(x, y, optimize_ticks(x, y)[1])
+            test_ticks(+x, +y, optimize_ticks(+x, +y)[1])
             test_ticks(-y, -x, optimize_ticks(-y, -x)[1])
         end
     end
@@ -131,25 +132,52 @@ end
         end
     end
 
-    @testset "PlotUtils.jl/issues/86" begin 
-        let x = -1.0, y = 13.0
-            test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
-        end
-    end
-
     @testset "digits" begin
         @testset "digits $((10^n) - 1)*10^$i" for n in 1:9, i in -9:9
             y0 = 10^n
             x0 = y0 - 1
             x, y = (x0, y0) .* 10.0^i
-            ticks = optimize_ticks(x, y)[1]
+            ticks, = optimize_ticks(x, y)
             test_ticks(x, y, ticks)
         end
     end
 
-    @testset "Plots.jl/issues/3859" begin
-        x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.e300])
-        test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+    @testset "types" begin
+        for T in (Int32, Int64, Float16, Float32, Float64)
+            x, y = T(1), T(10)
+            ticks, = optimize_ticks(x, y)
+            @test eltype(ticks) <: AbstractFloat
+            @test eltype(ticks) == (T <: AbstractFloat ? T : float(T))
+            test_ticks(x, y, ticks)
+        end
+    end
+
+    @testset "issues" begin
+        @testset "PlotUtils.jl/issues/86" begin 
+            let x = -1.0, y = 13.0
+                test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+            end
+        end
+
+        @testset "Plots.jl/issues/3859" begin
+            x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.e300])
+            test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+        end
+
+        @testset "PlotUtils.jl/issues/114" begin
+            let x = -.1eps(), y = .1eps()
+                test_ticks(x, y, optimize_ticks(x, y)[1])
+            end
+        end
+
+        @testset "PlotUtils.jl/issues/116" begin
+            let x = 4.5, y = 5.5
+                test_ticks(x, y, optimize_ticks(x, y, scale = :log10)[1])
+            end
+            let x = 2.5, y = 3.5
+                test_ticks(x, y, optimize_ticks(x, y, scale = :log2)[1])
+            end
+        end
     end
 end
 
