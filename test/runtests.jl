@@ -14,7 +14,6 @@ const C = RGBA{Float64}
 const C0 = RGBA{PlotUtils.Colors.N0f8}
 
 @testset "colors" begin
-
     @test plot_color(nothing) == C(0, 0, 0, 0)
     @test plot_color(false) == C(0, 0, 0, 0)
     @test_throws ErrorException plot_color(true)
@@ -37,9 +36,9 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test C0.(color_list(grad)) == C0[C(1, 0, 0, 0.5), C(0, 0, 1, 0.5)]
     @test grad.values == collect(range(0, stop = 1, length = 2))
 
-    grad = cgrad([:red,:blue], [0,0.1,1])
+    grad = cgrad([:red, :blue], [0, 0.1, 1])
     @test length(color_list(grad)) == 3
-    @test grad.values == [0,0.1,1]
+    @test grad.values == [0, 0.1, 1]
 
     cs = plot_color(rand(rng, 10))
     @test typeof(cs) == Vector{C}
@@ -49,7 +48,6 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test typeof(cs) == Matrix{C}
     @test length(cs) == 16
     @test size(cs) == (4, 4)
-
 
     cs = plot_color(rand(rng, 10), 0.5)
     @test typeof(cs) == Vector{C}
@@ -97,13 +95,14 @@ function test_ticks(x, y, ticks)
 end
 
 @testset "ticks" begin
-    @test optimize_ticks(-1, 2) == ([-1., 0., 1., 2.], -1., 2.)
+    @test optimize_ticks(-1, 2) == ([-1.0, 0.0, 1.0, 2.0], -1.0, 2.0)
 
     @testset "dates" begin
         dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
         @test optimize_datetime_ticks(dt1, dt2) == (
             [63113990400000, 63902908800000, 64691827200000, 65480745600000],
-            ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"])
+            ["2001-01-01", "2026-01-01", "2051-01-01", "2076-01-01"],
+        )
     end
 
     @testset "small range" begin
@@ -119,14 +118,14 @@ end
     end
 
     @testset "fixed ranges" begin
-        @testset "fixed range $x..$y" for (x, y) in [(2, 14),(14, 25),(16, 36),(57, 69)]
+        @testset "fixed range $x..$y" for (x, y) in [(2, 14), (14, 25), (16, 36), (57, 69)]
             test_ticks(+x, +y, optimize_ticks(+x, +y)[1])
             test_ticks(-y, -x, optimize_ticks(-y, -x)[1])
         end
     end
 
     @testset "random ranges" begin
-        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ = 1:10, i = -5:5]
+        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ in 1:10, i in -5:5]
         @testset "random range $x..$y" for (x, y) in r
             test_ticks(x, y, optimize_ticks(x, y)[1])
         end
@@ -153,7 +152,7 @@ end
     end
 
     @testset "issues" begin
-        @testset "PlotUtils.jl/issues/86" begin 
+        @testset "PlotUtils.jl/issues/86" begin
             let x = -1.0, y = 13.0
                 test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
             end
@@ -165,7 +164,7 @@ end
         end
 
         @testset "PlotUtils.jl/issues/114" begin
-            let x = -.1eps(), y = .1eps()
+            let x = -0.1eps(), y = 0.1eps()
                 test_ticks(x, y, optimize_ticks(x, y)[1])
             end
         end

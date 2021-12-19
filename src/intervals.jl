@@ -78,14 +78,14 @@ z2 = I(midpoint) + (slope / contrast) * (npoints - midpoint)
 ```
 """
 function zscale(
-        input::AbstractArray,
-        nsamples::Int = 1000;
-        contrast = 0.25,
-        max_reject = 0.5,
-        min_npixels = 5,
-        k_rej = 2.5,
-        max_iterations = 5,
-        )
+    input::AbstractArray,
+    nsamples::Int = 1000;
+    contrast = 0.25,
+    max_reject = 0.5,
+    min_npixels = 5,
+    k_rej = 2.5,
+    max_iterations = 5,
+)
 
     # get samples from finite values of input
     values = float(filter(isfinite, input))
@@ -99,7 +99,7 @@ function zscale(
 
     # fit a line to the sorted samples
     min_pix = max(min_npixels, round(Int, N * max_reject))
-    x = 0:N - 1
+    x = 0:(N - 1)
 
     ngood = N
     last_good = N + 1

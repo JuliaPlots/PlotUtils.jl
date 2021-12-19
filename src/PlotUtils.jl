@@ -8,8 +8,7 @@ using Printf
 import Base: getindex
 import Random: MersenneTwister
 
-export
-    ColorGradient,
+export ColorGradient,
     ColorPalette,
     cgrad,
     palette,
@@ -31,9 +30,7 @@ include("colorschemes.jl")
 include("adapted_grid.jl")
 include("intervals.jl")
 
-export
-    optimize_ticks,
-    optimize_datetime_ticks
+export optimize_ticks, optimize_datetime_ticks
 
 include("ticks.jl")
 
