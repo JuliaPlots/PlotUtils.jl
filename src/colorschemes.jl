@@ -174,9 +174,9 @@ end
 """
     cgrad(colors, [values]; categorical = nothing, scale = nothing, rev = false, alpha = nothing)
 
-Construct a Colorgradient with from `colors` and `values`.
+Construct a Colorgradient from `colors` and `values`.
 
-`colors` can be a symbol for Colorschemes.jl `ColorScheme`s, a `ColorScheme`, a vectors of colors, a `ColorGradient` or a `ColorPalettes`.
+`colors` can be a symbol for Colorschemes.jl `ColorScheme`s, a `ColorScheme`, a vector of colors, a `ColorGradient` or a `ColorPalette`.
 If `values` is an integer, it specifies the numbers of colors chosen equidistantly from the colorscheme specified by colors.
 Otherwise vectors are accepted.
 For continuous color gradients `values` indicate where between 0 and 1 the colors are positioned.
