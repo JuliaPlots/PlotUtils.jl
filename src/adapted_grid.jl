@@ -12,7 +12,12 @@ The parameter `max_recusions` computes how many times each interval is allowed t
 be refined while `max_curvature` specifies below which value of the curvature
 an interval does not need to be refined further.
 """
-function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.05)
+function adapted_grid(
+    @nospecialize(f),
+    minmax::Tuple{Number,Number};
+    max_recursions = 7,
+    max_curvature = 0.05,
+)
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     elseif minmax[1] == minmax[2]
@@ -25,22 +30,22 @@ function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recur
     n_intervals = n_points ÷ 2
     @assert isodd(n_points)
 
-    xs = collect(range(minmax[1]; stop=minmax[2], length=n_points))
+    xs = collect(range(minmax[1]; stop = minmax[2], length = n_points))
     # Move the first and last interior points a bit closer to the end points
     xs[2] = xs[1] + (xs[2] - xs[1]) * 0.25
-    xs[end-1] = xs[end] - (xs[end] - xs[end-1]) * 0.25
+    xs[end - 1] = xs[end] - (xs[end] - xs[end - 1]) * 0.25
 
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
     rng = MersenneTwister(1337)
     rand_factor = 0.05
-    for i in 2:length(xs)-1
-        xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i+1] - xs[i-1])
+    for i in 2:(length(xs) - 1)
+        xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
     end
 
     n_tot_refinements = zeros(Int, n_intervals)
 
     # Replace DomainErrors with NaNs
-    g = function(x)
+    g = function (x)
         local y
         try
             y = f(x)
@@ -71,21 +76,29 @@ function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recur
             if n_tot_refinements[interval] >= max_recursions
                 # Skip intervals that have been refined too much
                 active[interval] = false
-            elseif !all(isfinite.(fs[[p-1,p,p+1]]))
+            elseif !all(isfinite.(fs[[p - 1, p, p + 1]]))
                 active[interval] = true
             else
                 tot_w = 0.0
                 # Do a small convolution
-                for (q,w) in ((-1, 0.25), (0, 0.5), (1, 0.25))
+                for (q, w) in ((-1, 0.25), (0, 0.5), (1, 0.25))
                     interval == 1 && q == -1 && continue
                     interval == n_intervals && q == 1 && continue
                     tot_w += w
                     i = p + q
                     # Estimate integral of second derivative over interval, use that as a refinement indicator
                     # https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
-                    curvatures[interval] += abs(2 * ((fs[i+1] - fs[i]) / ((xs[i+1]-xs[i]) * (xs[i+1]-xs[i-1]))
-                                                    -(fs[i] - fs[i-1]) / ((xs[i]-xs[i-1]) * (xs[i+1]-xs[i-1])))
-                                                    * (xs[i+1] - xs[i-1])^2) / f_range * w
+                    curvatures[interval] +=
+                        abs(
+                            2 *
+                            (
+                                (fs[i + 1] - fs[i]) /
+                                ((xs[i + 1] - xs[i]) * (xs[i + 1] - xs[i - 1])) -
+                                (fs[i] - fs[i - 1]) /
+                                ((xs[i] - xs[i - 1]) * (xs[i + 1] - xs[i - 1]))
+                            ) *
+                            (xs[i + 1] - xs[i - 1])^2,
+                        ) / f_range * w
                 end
                 curvatures[interval] /= tot_w
                 # Only consider intervals with a high enough curvature
@@ -96,8 +109,8 @@ function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recur
         # This avoids computing the function in the end points
         curvatures[1] = curvatures[2]
         active[1] = active[2]
-        curvatures[end] = curvatures[end-1]
-        active[end] = active[end-1]
+        curvatures[end] = curvatures[end - 1]
+        active[end] = active[end - 1]
 
         if all(x -> x >= max_recursions, n_tot_refinements[active])
             break
@@ -107,9 +120,10 @@ function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recur
         interval_candidates = collect(1:n_intervals)[active]
         n_refinements = min(n_target_refinements, length(interval_candidates))
         perm = sortperm(curvatures[active])
-        intervals_to_refine = sort(interval_candidates[perm[length(perm) - n_refinements + 1:end]])
+        intervals_to_refine =
+            sort(interval_candidates[perm[(length(perm) - n_refinements + 1):end]])
         n_intervals_to_refine = length(intervals_to_refine)
-        n_new_points = 2*length(intervals_to_refine)
+        n_new_points = 2 * length(intervals_to_refine)
 
         # Do division of the intervals
         new_xs = zeros(eltype(xs), n_points + n_new_points)
@@ -126,13 +140,13 @@ function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recur
                     new_tot_refinements[interval + kk] = n_tot_refinements[interval] + 1
 
                     k += 1
-                    new_xs[i - 1 + k] = (xs[i] + xs[i-1]) / 2
-                    new_fs[i - 1 + k] = g(new_xs[i-1 + k])
+                    new_xs[i - 1 + k] = (xs[i] + xs[i - 1]) / 2
+                    new_fs[i - 1 + k] = g(new_xs[i - 1 + k])
 
                     new_xs[i + k] = xs[i]
                     new_fs[i + k] = fs[i]
 
-                    new_xs[i + 1 + k] = (xs[i+1] + xs[i]) / 2
+                    new_xs[i + 1 + k] = (xs[i + 1] + xs[i]) / 2
                     new_fs[i + 1 + k] = g(new_xs[i + 1 + k])
                     k += 1
                 else
@@ -155,7 +169,6 @@ function adapted_grid(@nospecialize(f), minmax::Tuple{Number, Number}; max_recur
 
     return xs, fs
 end
-
 
 # The following `tryrange` code was copied from Plots.jl
 # https://github.com/JuliaPlots/Plots.jl/blob/15dc61feb57cba1df524ce5d69f68c2c4ea5b942/src/series.jl#L399-L416

@@ -6,7 +6,8 @@ color_list(acl::AbstractColorList) = color_list(acl.colors)
 plot_color(cl::AbstractColorList) = cl
 
 # Interface
-Base.show(io::IO, m::MIME"image/svg+xml", acl::AbstractColorList) = show(io, m, color_list(acl))
+Base.show(io::IO, m::MIME"image/svg+xml", acl::AbstractColorList) =
+    show(io, m, color_list(acl))
 Base.length(acl::AbstractColorList) = length(color_list(acl))
 Base.getindex(acl::AbstractColorList, x) = getindex(color_list(acl), x)
 Base.size(acl::AbstractColorList) = size(color_list(acl))
@@ -17,19 +18,19 @@ Base.lastindex(acl::AbstractColorList) = lastindex(color_list(acl))
 Base.firstindex(acl::AbstractColorList) = firstindex(color_list(acl))
 Base.get(acl::AbstractColorList, args...) = get(get_colorscheme(acl), args...)
 
-
 ## ColorGradient
 
 abstract type ColorGradient <: AbstractColorList end
 
-Base.getindex(cg::ColorGradient, x::Union{AbstractFloat, AbstractVector{<:AbstractFloat}}) =
+Base.getindex(cg::ColorGradient, x::Union{AbstractFloat,AbstractVector{<:AbstractFloat}}) =
     get(cg, x)
 function Base.get(cg::ColorGradient, v::AbstractArray, rangescale = (0.0, 1.0))
     rangescale == :extrema && (rangescale = extrema(v))
     map(x -> get(cg, x, rangescale), v)
 end
 
-Base.:(==)(cg1::ColorGradient, cg2::ColorGradient) = color_list(cg1) == color_list(cg2) && cg1.values == cg2.values
+Base.:(==)(cg1::ColorGradient, cg2::ColorGradient) =
+    color_list(cg1) == color_list(cg2) && cg1.values == cg2.values
 Base.hash(cg::ColorGradient) = hash(color_list(cg)) ⊻ hash(cg.values)
 
 ## Continuous Color Gradient
@@ -121,7 +122,6 @@ function prepare_continuous_cgrad_colors(c, v)
     return ColorScheme(plot_color(c)), v
 end
 
-
 ## Categorical Color Gradient
 
 struct CategoricalColorGradient <: ColorGradient
@@ -167,7 +167,6 @@ function prepare_categorical_cgrad_colors(c, v)
     c = ColorScheme(plot_color(c[get_range(length(v) - 1)]))
     return c, v
 end
-
 
 ## cgrad
 
@@ -228,7 +227,12 @@ function cgrad(
     end
 end
 
-function cgrad(colors::ColorScheme, n::Int=length(colors); categorical = nothing, kwargs...)
+function cgrad(
+    colors::ColorScheme,
+    n::Int = length(colors);
+    categorical = nothing,
+    kwargs...,
+)
     values = get_range(n + (categorical !== nothing))
     return cgrad(colors, values; categorical = categorical, kwargs...)
 end
@@ -249,11 +253,11 @@ end
 function get_rangescale(rangescale)
     rangescale == :clamp && return (0.0, 1.0)
     rangescale == :extrema && return extrema(x)
-    (rangescale isa NTuple{2, Number}) ||
-    error("rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).")
+    (rangescale isa NTuple{2,Number}) || error(
+        "rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).",
+    )
     return rangescale
 end
-
 
 ## ColorPalette
 
@@ -308,17 +312,17 @@ function get_colorscheme(sym::Symbol)
     elseif haskey(ColorSchemes.colorschemes, sym)
         ColorSchemes.colorschemes[sym]
     else
-        error("Unknown ColorScheme `:$sym`. Check https://juliagraphics.github.io/ColorSchemes.jl/stable/ for available ColorSchemes.")
+        error(
+            "Unknown ColorScheme `:$sym`. Check https://juliagraphics.github.io/ColorSchemes.jl/stable/ for available ColorSchemes.",
+        )
     end
 end
 get_colorscheme(cs::ColorScheme) = cs
-
 
 function cvec(cs, n = 10; kw...)
     cg = cgrad(cs; kw...)
     return RGBA{Float64}[cg[z] for z in get_range(n)]
 end
-
 
 color_list(c) = get_colorscheme(c).colors
 color_list(v::AbstractVector) = plot_color.(v)
@@ -331,23 +335,20 @@ to_rgb(cs::ColorScheme) = ColorScheme(to_rgb.(cs.colors))
 to_rgb(cg::ColorGradient) = ColorGradient(to_rgb(cg.colors))
 to_rgb(cp::ColorPalette) = ColorPalette(to_rgb(cp.colors))
 
-
 # allows passing a ColorGradient to rgba_string and get a useful response by picking the first color - introduced because the plotly backend to Plots uses this functionality
-rgba_string(cg::T) where {T <: Union{ColorScheme, ColorGradient, ColorPalette}} =
+rgba_string(cg::T) where {T<:Union{ColorScheme,ColorGradient,ColorPalette}} =
     rgba_string(cg[1])
-
 
 is_colorscheme(sym) =
     sym in keys(ColorSchemes.colorschemes) ||
-    sym in keys(COLORSCHEME_ALIASES) || sym in keys(MISC_COLORSCHEMES)
-
+    sym in keys(COLORSCHEME_ALIASES) ||
+    sym in keys(MISC_COLORSCHEMES)
 
 const DEFAULT_COLOR_GRADIENT = Ref(cgrad(ColorSchemes.colorschemes[:inferno]))
 
-
 ## Compat
 
-const COLORSCHEME_ALIASES = Dict{Symbol, Symbol}(
+const COLORSCHEME_ALIASES = Dict{Symbol,Symbol}(
     # colorbrewer
     :Spectral => :Spectral_11,
     :RdYlGn => :RdYlGn_11,
@@ -429,25 +430,19 @@ const TEST_COLORS = RGBA{Float64}[
     darken(colorant"red", 0.2),
 ]
 
-const MISC_COLORSCHEMES = Dict{Symbol, ColorScheme}(
+const MISC_COLORSCHEMES = Dict{Symbol,ColorScheme}(
     :blues => ColorScheme(RGBA{Float64}[colorant"lightblue", colorant"darkblue"]),
     :reds => ColorScheme(RGBA{Float64}[colorant"lightpink", colorant"darkred"]),
     :greens => ColorScheme(RGBA{Float64}[colorant"lightgreen", colorant"darkgreen"]),
-    :redsblues => ColorScheme(RGBA{Float64}[
-        colorant"darkred",
-        RGB(0.8, 0.85, 0.8),
-        colorant"darkblue",
-    ]),
-    :bluesreds => ColorScheme(RGBA{Float64}[
-        colorant"darkblue",
-        RGB(0.8, 0.85, 0.8),
-        colorant"darkred",
-    ]),
-    :heat => ColorScheme(RGBA{Float64}[
-        colorant"lightyellow",
-        colorant"orange",
-        colorant"darkred",
-    ]),
+    :redsblues => ColorScheme(
+        RGBA{Float64}[colorant"darkred", RGB(0.8, 0.85, 0.8), colorant"darkblue"],
+    ),
+    :bluesreds => ColorScheme(
+        RGBA{Float64}[colorant"darkblue", RGB(0.8, 0.85, 0.8), colorant"darkred"],
+    ),
+    :heat => ColorScheme(
+        RGBA{Float64}[colorant"lightyellow", colorant"orange", colorant"darkred"],
+    ),
     :grays => ColorScheme(RGBA{Float64}[RGB(0.05, 0.05, 0.05), RGB(0.95, 0.95, 0.95)]),
     :rainbow => ColorScheme(RAINBOW_COLORS),
     :lightrainbow => ColorScheme(map(lighten, RAINBOW_COLORS)),

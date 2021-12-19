@@ -1,5 +1,5 @@
 
-invisible() = RGBA{Float64}(0.,0.,0.,0.)
+invisible() = RGBA{Float64}(0.0, 0.0, 0.0, 0.0)
 
 # the one-arg cases, meant for single colors
 plot_color(s::AbstractString) = parse(RGBA{Float64}, s)
@@ -22,7 +22,9 @@ plot_color(x, ::Nothing) = plot_color(x)
 # alpha override
 plot_color(x, α::Number) = RGBA{Float64}(convert(RGB, plot_color(x)), α)
 plot_color(c::Colorant, α::Number) = RGBA{Float64}(red(c), green(c), blue(c), α)
-plot_color(s::Symbol, α::Number) = (is_colorscheme(s) ? cgrad(s, alpha=α) : RGBA{Float64}(convert(RGB, plot_color(s)), α))
+plot_color(s::Symbol, α::Number) = (
+    is_colorscheme(s) ? cgrad(s, alpha = α) : RGBA{Float64}(convert(RGB, plot_color(s)), α)
+)
 
 function plot_color(cs::AbstractArray)
     a = Array{RGBA{Float64}}(undef, size(cs)...)
@@ -40,8 +42,7 @@ function plot_color(cs::AbstractArray, α::Number)
     end
     a
 end
-    # map!(c -> plot_color(c,α), a, cs))
-
+# map!(c -> plot_color(c,α), a, cs))
 
 # convenience conversions from numeric arrays to gradient values
 # note: we need the first version because of dispatch
@@ -50,12 +51,12 @@ end
 #     zmin, zmax = extrema(zs)
 #     RGBA{Float64}[grad[(z-zmin)/(zmax-zmin)] for z in zs]
 # end
-function plot_color(zs::AbstractArray{T}) where T<:Number
+function plot_color(zs::AbstractArray{T}) where {T<:Number}
     grad = cgrad()
     zmin, zmax = extrema(zs[isfinite.(zs)])
     a = Array{RGBA{Float64}}(undef, size(zs)...)
     for i in eachindex(zs)
-        a[i] = grad[(zs[i]-zmin)/(zmax-zmin)]
+        a[i] = grad[(zs[i] - zmin) / (zmax - zmin)]
     end
     a
 end
@@ -64,7 +65,7 @@ end
 #     cs = plot_color(zs)
 #     RGBA{Float64}[RGBA{Float64}(convert(RGB, c), α) for c in cs]
 # end
-function plot_color(zs::AbstractArray{T}, α::Number) where T<:Number
+function plot_color(zs::AbstractArray{T}, α::Number) where {T<:Number}
     cs = plot_color(zs)
     a = Array{RGBA{Float64}}(undef, size(zs)...)
     for i in eachindex(zs)
