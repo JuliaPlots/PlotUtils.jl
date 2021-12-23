@@ -153,7 +153,7 @@ end
 
     @testset "issues" begin
         @testset "PlotUtils.jl/issues/86" begin
-            let x = -1.0, y = 13.0
+            let x = -1., y = 13.
                 test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
             end
         end
@@ -164,7 +164,7 @@ end
         end
 
         @testset "PlotUtils.jl/issues/114" begin
-            let x = -0.1eps(), y = 0.1eps()
+            let x = -.1eps(), y = .1eps()
                 test_ticks(x, y, optimize_ticks(x, y)[1])
             end
         end
@@ -175,6 +175,26 @@ end
             end
             let x = 2.5, y = 3.5
                 test_ticks(x, y, optimize_ticks(x, y, scale = :log2)[1])
+            end
+        end
+
+        @testset "PlotUtils.jl/issues/129" begin
+            # invalid float input
+            let x = NaN, y = 1.
+                ticks, = optimize_ticks(x, y)
+                @test isnan(ticks[1])
+                @test ticks[2] === y
+                ticks, = optimize_ticks(x, y, k_min = 5)
+                @test isnan(ticks[1])
+                @test ticks[2] === y
+            end
+            let x = 0f0, y = Inf32
+                ticks, = optimize_ticks(x, y)
+                @test ticks[1] === x 
+                @test isinf(ticks[2])
+                ticks, = optimize_ticks(x, y, k_min = 5)
+                @test ticks[1] === x 
+                @test isinf(ticks[2])
             end
         end
     end

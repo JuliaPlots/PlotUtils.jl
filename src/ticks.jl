@@ -7,14 +7,12 @@ const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 # little opaque because I want to avoid assuming the log function is defined
 # over typeof(xspan)
 function bounding_order_of_magnitude(xspan::T, base::T) where {T}
-    a = 1
-    step = 1
+    a = step = 1
     while xspan < base^a
         a -= step
     end
 
-    b = 1
-    step = 1
+    b = step = 1
     while xspan > base^b
         b += step
     end
@@ -35,8 +33,13 @@ float_digit_range(T) = floor(Int, log10(floatmin(T))):ceil(Int, log10(floatmax(T
 postdecimal_digits(x) =
     first(i for i in float_digit_range(typeof(x)) if x == floor(x; digits = i))
 
-fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} =
-    collect(T, range(x_min, x_max; length = k_min)), x_min, x_max
+fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (
+    if k_min != 2 && isfinite(x_min) && isfinite(x_max)
+        collect(T, range(x_min, x_max; length = k_min)), x_min, x_max
+    else
+        T[x_min, x_max], x_min, x_max
+    end
+)
 
 # Empty catchall
 optimize_ticks() = Any[]
