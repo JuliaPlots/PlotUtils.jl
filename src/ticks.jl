@@ -566,8 +566,9 @@ end
 # Choose "round" (full seconds/minutes/hours/days/months/years) DateTime ticks
 # between x_min and x_max:
 function optimize_datetime_ticks(a_min, a_max; k_min = 2, k_max = 4)
-    x_min = DateTime(Dates.UTM(Int(round(a_min))))
-    x_max = DateTime(Dates.UTM(Int(round(a_max))))
+    # Int64 is needed here for 32bit systems
+    x_min = DateTime(Dates.UTM(Int64(round(a_min))))
+    x_max = DateTime(Dates.UTM(Int64(round(a_max))))
 
     Δt = x_max - x_min
     if Δt > Dates.Day(365k_min)
