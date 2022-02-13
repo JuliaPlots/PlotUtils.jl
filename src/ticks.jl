@@ -161,11 +161,11 @@ function optimize_ticks(
     Qs = F[q[2] for q in Q]
 
     base_untyped = F(get(_logScaleBases, scale, 10.0))
-    base = isinteger(base_untyped) ? Int(base_untyped) : base_untyped
+    base = isinteger(base_untyped) && base_untyped != 10.0 ? Int(base_untyped) : nothing
     is_log_scale = scale ∈ _logScales
 
     for i in 1:2
-        strict_span_sub = i == 1 ? strict_span : false
+        sspan = i == 1 ? strict_span : false
         high_score, best, min_best, max_best = optimize_ticks_typed(
             F(x_min),
             F(x_max),
@@ -179,14 +179,14 @@ function optimize_ticks(
             F(simplicity_weight),
             F(coverage_weight),
             F(niceness_weight),
-            strict_span_sub,
+            sspan,
             span_buffer,
             is_log_scale,
             base,
         )
 
         if isinf(high_score)
-            if strict_span_sub
+            if sspan
                 @warn "No strict ticks found"
             else
                 return fallback_ticks(x_min, x_max, k_min, k_max)
@@ -196,8 +196,6 @@ function optimize_ticks(
         end
     end
 end
-
-round_base(v, z::Int, num_digits::Int, base) = round(v, sigdigits = max(1, num_digits - z), base = base)
 
 function optimize_ticks_typed(
     x_min::F,
@@ -212,22 +210,22 @@ function optimize_ticks_typed(
     simplicity_weight::F,
     coverage_weight::F,
     niceness_weight::F,
-    strict_span,
+    strict_span::Bool,
     span_buffer,
-    is_log_scale,
-    base,
+    is_log_scale::Bool,
+    base::Union{Nothing,Integer},
 ) where {F<:AbstractFloat}
-    base_float = F(base)
+    base_float = F(base === nothing ? 10 : base)
     xspan = x_max - x_min
 
     # generalizing "order of magnitude"
-    z = bounding_order_of_magnitude(xspan, base_float)
+    z::Int = bounding_order_of_magnitude(xspan, base_float)
 
     # find required significant digits for ticks with q * base^z spacing,
     # for q values specified in Qv
-    num_digits = (
+    num_digits::Int = (
         bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base_float) +
-        maximum(postdecimal_digits.(Qv))
+        maximum(postdecimal_digits(q) for q in Qv)
     )
 
     high_score = -Inf
@@ -242,45 +240,46 @@ function optimize_ticks_typed(
     len_S_best = length(S_best)
     @inbounds begin
         while 2k_max * base_float^(z + 1) > xspan
-            for (ik, k) in enumerate(k_min:(2k_max))
+            sigdigits::Int = max(1, num_digits - z)
+            for k in k_min:(2k_max)
+                S = prealloc_Ss[k - k_min + 1]
                 for (q, qscore) in zip(Qv, Qs)
                     tickspan = q * base_float^z
                     tickspan < eps(F) && continue
                     span = (k - 1) * tickspan
                     span < xspan && continue
 
-                    r = (x_max - span) / tickspan
-                    isfinite(r) || continue
-                    r = ceil(Int, r)
+                    r_float = (x_max - span) / tickspan
+                    isfinite(r_float) || continue
+                    r = ceil(Int, r_float)
 
                     # try to favor integer exponents for log scales
                     if is_log_scale && !isinteger(tickspan)
                         nice_scale = false
-                        qscore = 0
+                        qscore = 0.
                     else
                         nice_scale = true
                     end
 
                     while r * tickspan <= x_min
-                        S = prealloc_Ss[ik]
                         # Filter or expand ticks
                         if extend_ticks
                             for i in 0:(3k - 1)
                                 S[i + 1] = (r + i - k) * tickspan
                             end
-                            # round only those values that end up as viewmin and viewmax
-                            # to save computation time
-                            viewmin = S[k + 1] = round_base(S[k + 1], z, num_digits, base)
-                            viewmax = S[2k] = round_base(S[2k], z, num_digits, base)
+                            imin = k + 1
+                            imax = 2k
                         else
                             for i in 0:(k - 1)
                                 S[i + 1] = (r + i) * tickspan
                             end
-                            # round only those values that end up as viewmin and viewmax
-                            # to save computation time
-                            viewmin = S[1] = round_base(S[1], z, num_digits, base)
-                            viewmax = S[k] = round_base(S[k], z, num_digits, base)
+                            imin = 1
+                            imax = k
                         end
+                        # round only those values that end up as viewmin and viewmax to save computation time
+                        S[imin] = viewmin = round(S[imin], sigdigits = sigdigits, base = base)
+                        S[imax] = viewmax = round(S[imax], sigdigits = sigdigits, base = base)
+
                         if strict_span
                             viewmin = max(viewmin, x_min)
                             viewmax = min(viewmax, x_max)
@@ -298,11 +297,9 @@ function optimize_ticks_typed(
                                     S[counter] = S[i]
                                 end
                             end
-                            len_S_view = counter
-                            S_view = view(S, 1:len_S_view)
+                            len = counter
                         else
-                            len_S_view = length(S)
-                            S_view = view(S, 1:len_S_view)
+                            len = length(S)
                         end
 
                         # evaluate quality of ticks
@@ -312,11 +309,11 @@ function optimize_ticks_typed(
                         s = has_zero && nice_scale ? 1 : 0
 
                         # granularity
-                        g = 0 < len_S_view < 2k_ideal ? 1 - abs(len_S_view - k_ideal) / k_ideal : F(0)
+                        g = 0 < len < 2k_ideal ? 1 - abs(len - k_ideal) / k_ideal : F(0)
 
                         # coverage
-                        c = if len_S_view > 1
-                            effective_span = (len_S_view - 1) * tickspan
+                        c = if len > 1
+                            effective_span = (len - 1) * tickspan
                             1.5xspan / effective_span
                         else
                             F(0)
@@ -336,10 +333,10 @@ function optimize_ticks_typed(
                             score -= 1000
                         end
 
-                        if score > high_score && (k_min <= len_S_view <= k_max)
+                        if score > high_score && (k_min <= len <= k_max)
                             viewmin_best, viewmax_best = viewmin, viewmax
-                            high_score, len_S_best = score, len_S_view
-                            copyto!(S_best, S_view)
+                            high_score, len_S_best = score, len
+                            copyto!(S_best, view(S, 1:len))
                         end
                         r += 1
                     end
