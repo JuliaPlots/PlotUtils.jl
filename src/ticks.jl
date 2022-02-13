@@ -212,8 +212,8 @@ function optimize_ticks_typed(
     end
 
     high_score = -Inf
-    # create an initial view for S_best for type stability, this will not be used otherwise
-    S_best = Vector{F}(undef, 1)
+    # preallocate S_best
+    S_best = Vector{F}(undef, k_max)
     viewmin_best, viewmax_best = x_min, x_max
 
     # we preallocate arrays that hold all required S arrays for every given
