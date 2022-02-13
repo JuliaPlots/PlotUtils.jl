@@ -150,55 +150,56 @@ end
             test_ticks(x, y, ticks)
         end
     end
+end
 
-    @testset "issues" begin
-        @testset "PlotUtils.jl/issues/86" begin
-            let x = -1.0, y = 13.0
-                test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
-            end
-        end
-
-        @testset "Plots.jl/issues/3859" begin
-            x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.e300])
+@testset "issues" begin
+    @testset "PlotUtils.jl/issues/86" begin
+        let x = -1.0, y = 13.0
             test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
         end
+    end
 
-        @testset "PlotUtils.jl/issues/114" begin
-            let x = -0.1eps(), y = 0.1eps()
-                test_ticks(x, y, optimize_ticks(x, y)[1])
-            end
+    @testset "Plots.jl/issues/3859" begin
+        x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.e300])
+        test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
+    end
+
+    @testset "PlotUtils.jl/issues/114" begin
+        let x = -0.1eps(), y = 0.1eps()
+            test_ticks(x, y, optimize_ticks(x, y)[1])
         end
+    end
 
-        @testset "PlotUtils.jl/issues/116" begin
-            let x = 4.5, y = 5.5
-                test_ticks(x, y, optimize_ticks(x, y, scale = :log10)[1])
-            end
-            let x = 2.5, y = 3.5
-                test_ticks(x, y, optimize_ticks(x, y, scale = :log2)[1])
-            end
+    @testset "PlotUtils.jl/issues/116" begin
+        let x = 4.5, y = 5.5
+            test_ticks(x, y, optimize_ticks(x, y, scale = :log10)[1])
         end
+        let x = 2.5, y = 3.5
+            test_ticks(x, y, optimize_ticks(x, y, scale = :log2)[1])
+        end
+    end
 
-        @testset "PlotUtils.jl/issues/129" begin
-            # invalid float input
-            let x = NaN, y = 1.0
-                ticks, = optimize_ticks(x, y)
-                @test isnan(ticks[1])
-                @test ticks[2] === y
-                ticks, = optimize_ticks(x, y, k_min = 5)
-                @test isnan(ticks[1])
-                @test ticks[2] === y
-            end
-            let x = 0.0f0, y = Inf32
-                ticks, = optimize_ticks(x, y)
-                @test ticks[1] === x
-                @test isinf(ticks[2])
-                ticks, = optimize_ticks(x, y, k_min = 5)
-                @test ticks[1] === x
-                @test isinf(ticks[2])
-            end
+    @testset "PlotUtils.jl/issues/129" begin
+        # invalid float input
+        let x = NaN, y = 1.0
+            ticks, = optimize_ticks(x, y)
+            @test isnan(ticks[1])
+            @test ticks[2] === y
+            ticks, = optimize_ticks(x, y, k_min = 5)
+            @test isnan(ticks[1])
+            @test ticks[2] === y
+        end
+        let x = 0.0f0, y = Inf32
+            ticks, = optimize_ticks(x, y)
+            @test ticks[1] === x
+            @test isinf(ticks[2])
+            ticks, = optimize_ticks(x, y, k_min = 5)
+            @test ticks[1] === x
+            @test isinf(ticks[2])
         end
     end
 end
+
 
 # ----------------------
 # adapted grid
