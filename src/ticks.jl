@@ -321,11 +321,6 @@ function optimize_ticks_typed(
                     end
 
                     if score > high_score && (k_min <= len_S_view <= k_max)
-                        # if strict_span
-                        #     # make S a copy because it is a view and
-                        #     # could otherwise be mutated in the next runs
-                        #     S = collect(S_view)
-                        # end
                         viewmin_best, viewmax_best = viewmin, viewmax
                         # overwrite S_best with S_view
                         copy!(S_best, S_view)
@@ -362,7 +357,7 @@ function optimize_ticks_typed(
         end
     end
 
-    return collect(S_best), viewmin_best, viewmax_best
+    return S_best, viewmin_best, viewmax_best
 end
 
 optimize_ticks(
