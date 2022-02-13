@@ -231,7 +231,7 @@ function optimize_ticks_typed(
 
                 r = (x_max - span) / tickspan
                 isfinite(r) || continue
-                r = ceil(Int, r)
+                r = ceil(r)
 
                 # try to favor integer exponents for log scales
                 if is_log_scale && !isinteger(tickspan)
