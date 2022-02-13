@@ -228,21 +228,18 @@ function optimize_ticks_typed(
         maximum(postdecimal_digits(q) for q in Qv)
     )
 
-    high_score = -Inf
-    S_best = Vector{F}(undef, k_max)
     viewmin_best, viewmax_best = x_min, x_max
+    high_score = -Inf
 
-    # we preallocate arrays that hold all required S arrays for every given
-    # the k parameter, so we don't have to create them again and again, which
-    # saves many allocations
-    prealloc_Ss = [Vector{F}(undef, extend_ticks ? Int(3k) : k) for k in k_min:(2k_max)]
-
+    S_best = Vector{F}(undef, k_max)
     len_S_best = length(S_best)
+
+    S = Vector{F}(undef, extend_ticks ? 6k_max : 2k_max)
+
     @inbounds begin
         while 2k_max * base_float^(z + 1) > xspan
             sigdigits::Int = max(1, num_digits - z)
             for k in k_min:(2k_max)
-                S = prealloc_Ss[k - k_min + 1]
                 for (q, qscore) in zip(Qv, Qs)
                     tickspan = q * base_float^z
                     tickspan < eps(F) && continue
