@@ -234,7 +234,7 @@ function optimize_ticks_typed(
     S_best = Vector{F}(undef, k_max)
     len_S_best = length(S_best)
 
-    S = Vector{F}(undef, extend_ticks ? 6k_max : 2k_max)
+    S = Vector{F}(undef, extend_ticks ? 4k_max : 2k_max)
 
     @inbounds begin
         while 2k_max * base_float^(z + 1) > xspan
@@ -290,7 +290,7 @@ function optimize_ticks_typed(
 
                             # we do this because it saves allocations and leaves S type stable
                             counter = 0
-                            for i in 1:length(S)
+                            for i in 1:imax
                                 if (viewmin - buf) <= S[i] <= (viewmax + buf)
                                     counter += 1
                                     S[counter] = S[i]
@@ -298,7 +298,7 @@ function optimize_ticks_typed(
                             end
                             len = counter
                         else
-                            len = length(S)
+                            len = imax
                         end
 
                         # evaluate quality of ticks
