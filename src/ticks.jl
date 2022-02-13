@@ -185,7 +185,8 @@ function optimize_ticks_typed(
     span_buffer,
     scale,
 ) where {F}
-    if (xspan = x_max - x_min) < eps(F)
+    xspan = x_max - x_min
+    if xspan < eps(F)
         return fallback_ticks(x_min, x_max, k_min, k_max)
     end
 
@@ -203,10 +204,12 @@ function optimize_ticks_typed(
     sigdigits(z) = max(1, x_digits - z + q_extra_digits)
 
     ib = Int(base)
-    round_base = (
-        isinteger(base) ? v -> round(v, sigdigits = sigdigits(z), base = ib) :
-        v -> round(v, sigdigits = sigdigits(z))
-    )
+    round_base = let z_ = z
+        (
+            isinteger(base) ? v -> round(v, sigdigits = sigdigits(z_), base = ib) :
+            v -> round(v, sigdigits = sigdigits(z_))
+        )
+    end
 
     high_score = -Inf
     # create an initial view for S_best for type stability, this will not be used otherwise
