@@ -256,7 +256,7 @@ function optimize_ticks_typed(
                     # try to favor integer exponents for log scales
                     if is_log_scale && !isinteger(tickspan)
                         nice_scale = false
-                        qscore = 0.
+                        qscore = 0.0
                     else
                         nice_scale = true
                     end
@@ -277,8 +277,10 @@ function optimize_ticks_typed(
                             imax = k
                         end
                         # round only those values that end up as viewmin and viewmax to save computation time
-                        S[imin] = viewmin = round(S[imin], sigdigits = sigdigits, base = base)
-                        S[imax] = viewmax = round(S[imax], sigdigits = sigdigits, base = base)
+                        S[imin] =
+                            viewmin = round(S[imin], sigdigits = sigdigits, base = base)
+                        S[imax] =
+                            viewmax = round(S[imax], sigdigits = sigdigits, base = base)
 
                         if strict_span
                             viewmin = max(viewmin, x_min)
