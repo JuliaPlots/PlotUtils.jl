@@ -185,8 +185,7 @@ function optimize_ticks_typed(
     span_buffer,
     scale,
 ) where {F}
-    xspan = x_max - x_min
-    if xspan < eps(F)
+    if (xspan = x_max - x_min) < eps(F)
         return fallback_ticks(x_min, x_max, k_min, k_max)
     end
 
