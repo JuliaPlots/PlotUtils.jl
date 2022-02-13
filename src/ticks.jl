@@ -209,13 +209,14 @@ function optimize_ticks_typed(
     )
 
     high_score = -Inf
-    S_best = Array{F}(undef, 1)
+    # create an initial view for S_best for type stability, this will not be used otherwise
+    S_best = Vector{F}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
 
     # we preallocate arrays that hold all required S arrays for every given
-    # the k parameter, so we don't have to create them again and again, which
+    # k parameter, so we don't have to create them again and again, which
     # saves many allocations
-    prealloc_Ss = [Array{F}(undef, extend_ticks ? Int(3k) : k) for k in k_min:(2k_max)]
+    prealloc_Ss = [Vector{F}(undef, extend_ticks ? Int(3k) : k) for k in k_min:(2k_max)]
 
     while 2k_max * base^(z + 1) > xspan
         for (ik, k) in enumerate(k_min:(2k_max))
@@ -276,10 +277,14 @@ function optimize_ticks_typed(
                                 S[counter] = S[i]
                             end
                         end
-                        S = view(S, 1:counter)
+                        S_view = view(S, 1:counter)
+                    else
+                        # for type stability no matter if strict_span == true or not
+                        # we always continue with a view
+                        S_view = view(S, 1:length(S))
                     end
 
-                    len_S = length(S)
+                    len_S_view = length(S_view)
 
                     # evaluate quality of ticks
                     has_zero = r <= 0 && abs(r) < k
@@ -288,11 +293,11 @@ function optimize_ticks_typed(
                     s = has_zero && nice_scale ? 1 : 0
 
                     # granularity
-                    g = 0 < len_S < 2k_ideal ? 1 - abs(len_S - k_ideal) / k_ideal : F(0)
+                    g = 0 < len_S_view < 2k_ideal ? 1 - abs(len_S_view - k_ideal) / k_ideal : F(0)
 
                     # coverage
-                    c = if len_S > 1
-                        effective_span = (len_S - 1) * tickspan
+                    c = if len_S_view > 1
+                        effective_span = (len_S_view - 1) * tickspan
                         1.5xspan / effective_span
                     else
                         F(0)
@@ -312,13 +317,15 @@ function optimize_ticks_typed(
                         score -= 1000
                     end
 
-                    if score > high_score && (k_min <= len_S <= k_max)
-                        if strict_span
-                            # make S a copy because it is a view and
-                            # could otherwise be mutated in the next runs
-                            S = collect(S)
-                        end
-                        S_best, viewmin_best, viewmax_best = S, viewmin, viewmax
+                    if score > high_score && (k_min <= len_S_view <= k_max)
+                        # if strict_span
+                        #     # make S a copy because it is a view and
+                        #     # could otherwise be mutated in the next runs
+                        #     S = collect(S_view)
+                        # end
+                        viewmin_best, viewmax_best = viewmin, viewmax
+                        # overwrite S_best with S_view
+                        copy!(S_best, S_view)
                         high_score = score
                     end
                     r += 1
@@ -352,7 +359,7 @@ function optimize_ticks_typed(
         end
     end
 
-    return S_best, viewmin_best, viewmax_best
+    return collect(S_best), viewmin_best, viewmax_best
 end
 
 optimize_ticks(
