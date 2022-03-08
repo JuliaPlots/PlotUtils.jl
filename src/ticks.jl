@@ -219,11 +219,11 @@ function optimize_ticks_typed(
     xspan = x_max - x_min
 
     # generalizing "order of magnitude"
-    z::Int = bounding_order_of_magnitude(xspan, base_float)
+    z = bounding_order_of_magnitude(xspan, base_float)
 
     # find required significant digits for ticks with q * base^z spacing,
     # for q values specified in Qv
-    num_digits::Int = (
+    num_digits = (
         bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base_float) +
         maximum(postdecimal_digits(q) for q in Qv)
     )
@@ -238,7 +238,7 @@ function optimize_ticks_typed(
 
     @inbounds begin
         while 2k_max * base_float^(z + 1) > xspan
-            sigdigits::Int = max(1, num_digits - z)
+            sigdigits = max(1, num_digits - z)
             for k in k_min:(2k_max)
                 for (q, qscore) in zip(Qv, Qs)
                     tickspan = q * base_float^z

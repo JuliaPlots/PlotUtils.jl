@@ -250,3 +250,10 @@ end
     @test cmin == 0
     @test cmax == 999
 end
+
+@testset "allocations" begin
+    # PlotUtils.jl/pull/136
+    stats = @timed PlotUtils.optimize_ticks(0.1123, 100.132)
+    @test stats.bytes < 1_000  # ~ 816
+    @test stats.time < 5e-3  # ~ 1.35ms
+end
