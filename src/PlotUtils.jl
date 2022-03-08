@@ -38,6 +38,8 @@ const _default_colorscheme = generate_colorscheme()
 
 if Base.VERSION >= v"1.4.2"
     include("precompile.jl")
+    # optimize_ticks(0., 100.)
+    # optimize_ticks(0, 100)
     _precompile_()
 end
 
