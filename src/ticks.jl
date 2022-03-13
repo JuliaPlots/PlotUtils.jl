@@ -141,9 +141,9 @@ function optimize_ticks(
     x_max::T;
     extend_ticks::Bool = false,
     Q = [(1.0, 1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
-    k_min::Int = 2,
-    k_max::Int = 10,
-    k_ideal::Int = 5,
+    k_min::Integer = 2,
+    k_max::Integer = 10,
+    k_ideal::Integer = 5,
     granularity_weight::Float64 = 1 / 4,
     simplicity_weight::Float64 = 1 / 6,
     coverage_weight::Float64 = 1 / 3,
@@ -202,8 +202,8 @@ function optimize_ticks_typed(
     x_min::F,
     x_max::F,
     extend_ticks,
-    Qv::AbstractVector,
-    Qs::AbstractVector,
+    Qv,
+    Qs,
     k_min,
     k_max,
     k_ideal,
@@ -211,9 +211,9 @@ function optimize_ticks_typed(
     simplicity_weight::F,
     coverage_weight::F,
     niceness_weight::F,
-    strict_span::Bool,
+    strict_span,
     span_buffer,
-    is_log_scale::Bool,
+    is_log_scale,
     base_float::F,
     base::Integer,
 ) where {F<:AbstractFloat}
@@ -235,7 +235,7 @@ function optimize_ticks_typed(
     S_best = Vector{F}(undef, k_max)
     len_S_best = length(S_best)
 
-    S = Vector{F}(undef, extend_ticks ? 4k_max : 2k_max)
+    S = Vector{F}(undef, (extend_ticks ? 4 : 2) * k_max)
 
     @inbounds begin
         while 2k_max * base_float^(z + 1) > xspan
@@ -252,12 +252,7 @@ function optimize_ticks_typed(
                     r = ceil(Int, r_float)
 
                     # try to favor integer exponents for log scales
-                    if is_log_scale && !isinteger(tickspan)
-                        nice_scale = false
-                        qscore = 0.0
-                    else
-                        nice_scale = true
-                    end
+                    (nice_scale = !is_log_scale || isinteger(tickspan)) || (qscore = F(0))
 
                     while r * tickspan <= x_min
                         # Filter or expand ticks
