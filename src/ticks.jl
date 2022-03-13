@@ -160,8 +160,8 @@ function optimize_ticks(
     Qv = F[q[1] for q in Q]
     Qs = F[q[2] for q in Q]
 
-    base_untyped = F(get(_logScaleBases, scale, 10.0))
-    base = isinteger(base_untyped) && base_untyped != 10.0 ? Int(base_untyped) : nothing
+    base_float = F(get(_logScaleBases, scale, 10.0))
+    base = isinteger(base_float) ? Int(base_float) : 10
     is_log_scale = scale ∈ _logScales
 
     for i in 1:2
@@ -182,6 +182,7 @@ function optimize_ticks(
             sspan,
             span_buffer,
             is_log_scale,
+            base_float,
             base,
         )
 
@@ -213,9 +214,9 @@ function optimize_ticks_typed(
     strict_span::Bool,
     span_buffer,
     is_log_scale::Bool,
-    base::Union{Nothing,Integer},
+    base_float::F,
+    base::Integer,
 ) where {F<:AbstractFloat}
-    base_float = F(base === nothing ? 10 : base)
     xspan = x_max - x_min
 
     # generalizing "order of magnitude"

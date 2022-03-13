@@ -176,6 +176,9 @@ end
             let x = 2.5, y = 3.5
                 test_ticks(x, y, optimize_ticks(x, y, scale = :log2)[1])
             end
+            let x = .5, y = 1.5
+                test_ticks(x, y, optimize_ticks(x, y, scale = :ln)[1])
+            end
         end
 
         @testset "PlotUtils.jl/issues/129" begin
