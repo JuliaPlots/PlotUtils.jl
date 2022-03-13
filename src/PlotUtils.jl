@@ -36,11 +36,13 @@ include("ticks.jl")
 
 const _default_colorscheme = generate_colorscheme()
 
-if Base.VERSION >= v"1.4.2"
-    include("precompile.jl")
-    # optimize_ticks(0., 100.)
-    # optimize_ticks(0, 100)
-    _precompile_()
+# NOTE: allocation issues, see comments on github.com/JuliaPlots/PlotUtils.jl/pull/136
+# try to restore on 1.8 after proper regression analysis
+@static if false
+    if Base.VERSION >= v"1.4.2"
+        include("precompile.jl")
+        _precompile_()
+    end
 end
 
 end # module

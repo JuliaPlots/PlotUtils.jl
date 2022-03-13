@@ -1,6 +1,5 @@
 function _precompile_()
     ccall(:jl_generating_output, Cint, ()) == 1 || return nothing
-    #=
     @assert precompile(
         Tuple{
             Core.kwftype(typeof(optimize_ticks)),
@@ -12,7 +11,6 @@ function _precompile_()
     )
     @assert precompile(optimize_ticks, (Int, Int))
     @assert precompile(optimize_datetime_ticks, (Int, Int))
-    =#
     for C in (RGB, RGBA), T in (Colors.FixedPointNumbers.N0f8, Float32, Float64)
         @assert precompile(cgrad, (ColorScheme{Vector{C{T}},String,String},))
         for V in (Vector{Float64}, typeof(get_range(3)))
