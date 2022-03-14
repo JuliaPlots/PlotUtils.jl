@@ -3,7 +3,7 @@
     adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7)
 
 Computes a grid `x` on the interval [minmax[1], minmax[2]] so that `plot(f, x)` gives a smooth "nice" plot.
-The method used is to create an initial uniform grid (21 points) and refine intervals
+The method used is to create an initial uniform grid (31 points) and refine intervals
 where the second derivative is approximated to be large.
 When an interval becomes "straight enough" it is no longer divided.
 Functions are evaluated at the end points of the intervals.
