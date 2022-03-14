@@ -1,22 +1,22 @@
 
 """
-    adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7)
+    adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.01, n_points = 31)
 
-Computes a grid `x` on the interval [minmax[1], minmax[2]] so that
-`plot(f, x)` gives a smooth "nice" plot.
-The method used is to create an initial uniform grid (21 points) and refine intervals
-where the second derivative is approximated to be large. When an interval
-becomes "straight enough" it is no longer divided. Functions are evaluated at the end points of the intervals.
+Computes a grid `x` on the interval [minmax[1], minmax[2]] so that `plot(f, x)` gives a smooth "nice" plot.
+The method used is to create an uniform grid with `n_points` initial points and refine intervals
+where the second derivative is approximated to be large.
+When an interval becomes "straight enough" it is no longer divided.
+Functions are evaluated at the end points of the intervals.
 
-The parameter `max_recusions` computes how many times each interval is allowed to
-be refined while `max_curvature` specifies below which value of the curvature
-an interval does not need to be refined further.
+The parameter `max_recusions` computes how many times each interval is allowed to be refined
+while `max_curvature` specifies below which value of the curvature an interval does not need to be refined further.
 """
 function adapted_grid(
     @nospecialize(f),
     minmax::Tuple{Number,Number};
     max_recursions = 7,
-    max_curvature = 0.05,
+    max_curvature = 0.01,
+    n_points = 31,
 )
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
@@ -25,27 +25,25 @@ function adapted_grid(
         return [x], [f(x)]
     end
 
-    # Initial number of points
-    n_points = 21
-    n_intervals = n_points ÷ 2
     @assert isodd(n_points)
+    n_intervals = n_points ÷ 2
 
     xs = collect(range(minmax[1]; stop = minmax[2], length = n_points))
     # Move the first and last interior points a bit closer to the end points
-    xs[2] = xs[1] + (xs[2] - xs[1]) * 0.25
-    xs[end - 1] = xs[end] - (xs[end] - xs[end - 1]) * 0.25
+    xs[2] = xs[1] + (xs[2] - xs[1]) / 4
+    xs[end - 1] = xs[end] - (xs[end] - xs[end - 1]) / 4
 
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
     rng = MersenneTwister(1337)
     rand_factor = 0.05
     for i in 2:(length(xs) - 1)
-        xs[i] += rand_factor * 2 * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
+        xs[i] += 2rand_factor * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
     end
 
     n_tot_refinements = zeros(Int, n_intervals)
 
     # Replace DomainErrors with NaNs
-    g = function (x)
+    g = x -> begin
         local y
         try
             y = f(x)
@@ -67,13 +65,11 @@ function adapted_grid(
         min_f, max_f = any(isfinite_f) ? extrema(fs[isfinite_f]) : (0.0, 0.0)
         f_range = max_f - min_f
         # Guard against division by zero later
-        if f_range == 0 || !isfinite(f_range)
-            f_range = one(f_range)
-        end
+        (f_range == 0 || !isfinite(f_range)) && (f_range = one(f_range))
         # Skip first and last interval
         for interval in 1:n_intervals
-            p = 2 * interval
-            if n_tot_refinements[interval] >= max_recursions
+            p = 2interval
+            if n_tot_refinements[interval] ≥ max_recursions
                 # Skip intervals that have been refined too much
                 active[interval] = false
             elseif !all(isfinite.(fs[[p - 1, p, p + 1]]))
@@ -88,16 +84,13 @@ function adapted_grid(
                     i = p + q
                     # Estimate integral of second derivative over interval, use that as a refinement indicator
                     # https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
+                    δx = xs[i + 1] - xs[i - 1]
                     curvatures[interval] +=
                         abs(
-                            2 *
-                            (
-                                (fs[i + 1] - fs[i]) /
-                                ((xs[i + 1] - xs[i]) * (xs[i + 1] - xs[i - 1])) -
-                                (fs[i] - fs[i - 1]) /
-                                ((xs[i] - xs[i - 1]) * (xs[i + 1] - xs[i - 1]))
-                            ) *
-                            (xs[i + 1] - xs[i - 1])^2,
+                            2(
+                                (fs[i + 1] - fs[i]) / ((xs[i + 1] - xs[i]) * δx) -
+                                (fs[i] - fs[i - 1]) / ((xs[i] - xs[i - 1]) * δx)
+                            ) * δx^2,
                         ) / f_range * w
                 end
                 curvatures[interval] /= tot_w
@@ -112,9 +105,7 @@ function adapted_grid(
         curvatures[end] = curvatures[end - 1]
         active[end] = active[end - 1]
 
-        if all(x -> x >= max_recursions, n_tot_refinements[active])
-            break
-        end
+        all(x -> x ≥ max_recursions, n_tot_refinements[active]) && break
 
         n_target_refinements = n_intervals ÷ 2
         interval_candidates = collect(1:n_intervals)[active]
@@ -129,8 +120,7 @@ function adapted_grid(
         new_xs = zeros(eltype(xs), n_points + n_new_points)
         new_fs = zeros(eltype(fs), n_points + n_new_points)
         new_tot_refinements = zeros(Int, n_intervals + n_intervals_to_refine)
-        k = 0
-        kk = 0
+        k = kk = 0
         for i in 1:n_points
             if iseven(i) # This is a point in an interval
                 interval = i ÷ 2
