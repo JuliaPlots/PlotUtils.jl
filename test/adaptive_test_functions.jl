@@ -1,5 +1,6 @@
 # This is not run by runtests.jl. Only intended to be checked manually.
 using Plots
+
 const test_funcs = [
     (x -> 2, 0, 1),
     (x -> x, -1, 1),
@@ -24,11 +25,26 @@ const test_funcs = [
     (x -> sin(x) / x, -6, 6),
     (x -> tan(x^3 - x + 1) + 1 / (x + 3exp(x)), -2, 2),
 ]
-##
-plots = [plot(func...) for func in test_funcs]
-pitchfork = plot(x -> sqrt(x), 0, 10)
-plot!(pitchfork, x -> -sqrt(x), 0, 10)
-plot!(pitchfork, x -> 0, -10, 0)
-plot!(pitchfork, x -> 0, 0, 10, linestyle = :dash)
-push!(plots, pitchfork)
-display.(plots)
+
+main() = begin
+    plots = [plot(func...) for func in test_funcs]
+
+    pitchfork = plot(x -> sqrt(x), 0, 10)
+    plot!(pitchfork, x -> -sqrt(x), 0, 10)
+    plot!(pitchfork, x -> 0, -10, 0)
+    plot!(pitchfork, x -> 0, 0, 10, linestyle = :dash)
+    push!(plots, pitchfork)
+
+    np = length(plots)
+    m = ceil(Int, √(np)) + 1
+    n, r = divrem(np, m)
+    r == 0 || (n += 1)
+    append!(plots, [plot() for _ in 1:(m * n - np)])
+
+    @assert length(plots) == m * n
+
+    png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "grid")
+    return
+end
+
+main()
