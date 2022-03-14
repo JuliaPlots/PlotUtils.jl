@@ -2,22 +2,25 @@
 """
     adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7)
 
-Computes a grid `x` on the interval [minmax[1], minmax[2]] so that
-`plot(f, x)` gives a smooth "nice" plot.
+Computes a grid `x` on the interval [minmax[1], minmax[2]] so that `plot(f, x)` gives a smooth "nice" plot.
 The method used is to create an initial uniform grid (21 points) and refine intervals
-where the second derivative is approximated to be large. When an interval
-becomes "straight enough" it is no longer divided. Functions are evaluated at the end points of the intervals.
+where the second derivative is approximated to be large.
+When an interval becomes "straight enough" it is no longer divided.
+Functions are evaluated at the end points of the intervals.
 
-The parameter `max_recusions` computes how many times each interval is allowed to
-be refined while `max_curvature` specifies below which value of the curvature
-an interval does not need to be refined further.
+The parameter `max_recusions` computes how many times each interval is allowed to be refined
+while `max_curvature` specifies below which value of the curvature an interval does not need to be refined further.
+
+The parameter `n_points` is the initial number of points.
 """
 function adapted_grid(
     @nospecialize(f),
     minmax::Tuple{Number,Number};
     max_recursions = 7,
-    max_curvature = 0.05,
+    max_curvature = 0.01,
+    n_points = 31
 )
+
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     elseif minmax[1] == minmax[2]
@@ -25,10 +28,9 @@ function adapted_grid(
         return [x], [f(x)]
     end
 
-    # Initial number of points
-    n_points = 21
-    n_intervals = n_points ÷ 2
     @assert isodd(n_points)
+    n_intervals = n_points ÷ 2
+    # @show n_points
 
     xs = collect(range(minmax[1]; stop = minmax[2], length = n_points))
     # Move the first and last interior points a bit closer to the end points
@@ -45,7 +47,7 @@ function adapted_grid(
     n_tot_refinements = zeros(Int, n_intervals)
 
     # Replace DomainErrors with NaNs
-    g = function (x)
+    g = x -> begin
         local y
         try
             y = f(x)
@@ -72,8 +74,8 @@ function adapted_grid(
         end
         # Skip first and last interval
         for interval in 1:n_intervals
-            p = 2 * interval
-            if n_tot_refinements[interval] >= max_recursions
+            p = 2interval
+            if n_tot_refinements[interval] ≥ max_recursions
                 # Skip intervals that have been refined too much
                 active[interval] = false
             elseif !all(isfinite.(fs[[p - 1, p, p + 1]]))
@@ -112,9 +114,7 @@ function adapted_grid(
         curvatures[end] = curvatures[end - 1]
         active[end] = active[end - 1]
 
-        if all(x -> x >= max_recursions, n_tot_refinements[active])
-            break
-        end
+        all(x -> x ≥ max_recursions, n_tot_refinements[active]) && break
 
         n_target_refinements = n_intervals ÷ 2
         interval_candidates = collect(1:n_intervals)[active]
@@ -129,8 +129,7 @@ function adapted_grid(
         new_xs = zeros(eltype(xs), n_points + n_new_points)
         new_fs = zeros(eltype(fs), n_points + n_new_points)
         new_tot_refinements = zeros(Int, n_intervals + n_intervals_to_refine)
-        k = 0
-        kk = 0
+        k = kk = 0
         for i in 1:n_points
             if iseven(i) # This is a point in an interval
                 interval = i ÷ 2
@@ -166,6 +165,7 @@ function adapted_grid(
         n_points = n_points + n_new_points
         n_intervals = n_points ÷ 2
     end
+    # @show n_points
 
     return xs, fs
 end
