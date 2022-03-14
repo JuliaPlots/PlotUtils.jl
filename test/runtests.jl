@@ -207,7 +207,7 @@ end
 @testset "adapted grid" begin
     let f = sin, int = (0, π)
         xs, fs = adapted_grid(f, int)
-        for i in 1:length(xs) - 1
+        for i in 1:(length(xs) - 1)
             for λ in 0:0.1:1
                 # test that `f` is well approximated by a line
                 # in the interval `(xs[i], xs[i+1])`

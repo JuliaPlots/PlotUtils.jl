@@ -65,9 +65,7 @@ function adapted_grid(
         min_f, max_f = any(isfinite_f) ? extrema(fs[isfinite_f]) : (0.0, 0.0)
         f_range = max_f - min_f
         # Guard against division by zero later
-        if f_range == 0 || !isfinite(f_range)
-            f_range = one(f_range)
-        end
+        (f_range == 0 || !isfinite(f_range)) && (f_range = one(f_range))
         # Skip first and last interval
         for interval in 1:n_intervals
             p = 2interval
@@ -86,16 +84,13 @@ function adapted_grid(
                     i = p + q
                     # Estimate integral of second derivative over interval, use that as a refinement indicator
                     # https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
+                    δx = xs[i + 1] - xs[i - 1]
                     curvatures[interval] +=
                         abs(
-                            2 *
-                            (
-                                (fs[i + 1] - fs[i]) /
-                                ((xs[i + 1] - xs[i]) * (xs[i + 1] - xs[i - 1])) -
-                                (fs[i] - fs[i - 1]) /
-                                ((xs[i] - xs[i - 1]) * (xs[i + 1] - xs[i - 1]))
-                            ) *
-                            (xs[i + 1] - xs[i - 1])^2,
+                            2(
+                                (fs[i + 1] - fs[i]) / ((xs[i + 1] - xs[i]) * δx) -
+                                (fs[i] - fs[i - 1]) / ((xs[i] - xs[i - 1]) * δx)
+                            ) * δx^2,
                         ) / f_range * w
                 end
                 curvatures[interval] /= tot_w
