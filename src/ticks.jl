@@ -29,9 +29,12 @@ function bounding_order_of_magnitude(xspan::T, base::T) where {T}
     return b
 end
 
-float_digit_range(T) = floor(Int, log10(floatmin(T))):ceil(Int, log10(floatmax(T)))
-postdecimal_digits(x) =
-    first(i for i in float_digit_range(typeof(x)) if x == floor(x; digits = i))
+function postdecimal_digits(x::T) where {T}
+    for i in floor(Int, log10(floatmin(T))):ceil(Int, log10(floatmax(T)))
+        x == floor(x; digits = i) && return i
+    end
+    return 0
+end
 
 fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (
     if k_min != 2 && isfinite(x_min) && isfinite(x_max)
@@ -138,9 +141,9 @@ function optimize_ticks(
     x_max::T;
     extend_ticks::Bool = false,
     Q = [(1.0, 1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
-    k_min::Int = 2,
-    k_max::Int = 10,
-    k_ideal::Int = 5,
+    k_min::Integer = 2,
+    k_max::Integer = 10,
+    k_ideal::Integer = 5,
     granularity_weight::Float64 = 1 / 4,
     simplicity_weight::Float64 = 1 / 6,
     coverage_weight::Float64 = 1 / 3,
@@ -150,30 +153,57 @@ function optimize_ticks(
     scale = nothing,
 ) where {T}
     F = float(T)
-    Qv = [(F(q[1]), F(q[2])) for q in Q]
-    optimize_ticks_typed(
-        F(x_min),
-        F(x_max),
-        extend_ticks,
-        Qv,
-        k_min,
-        k_max,
-        k_ideal,
-        F(granularity_weight),
-        F(simplicity_weight),
-        F(coverage_weight),
-        F(niceness_weight),
-        strict_span,
-        span_buffer,
-        scale,
-    )
+    if x_max - x_min < eps(F)
+        return fallback_ticks(x_min, x_max, k_min, k_max)
+    end
+
+    Qv = F[q[1] for q in Q]
+    Qs = F[q[2] for q in Q]
+
+    base_float = F(get(_logScaleBases, scale, 10.0))
+    base = isinteger(base_float) ? Int(base_float) : 10
+    is_log_scale = scale ∈ _logScales
+
+    for i in 1:2
+        sspan = i == 1 ? strict_span : false
+        high_score, best, min_best, max_best = optimize_ticks_typed(
+            F(x_min),
+            F(x_max),
+            extend_ticks,
+            Qv,
+            Qs,
+            k_min,
+            k_max,
+            k_ideal,
+            F(granularity_weight),
+            F(simplicity_weight),
+            F(coverage_weight),
+            F(niceness_weight),
+            sspan,
+            span_buffer,
+            is_log_scale,
+            base_float,
+            base,
+        )
+
+        if isinf(high_score)
+            if sspan
+                @warn "No strict ticks found"
+            else
+                return fallback_ticks(x_min, x_max, k_min, k_max)
+            end
+        else
+            return best, min_best, max_best
+        end
+    end
 end
 
 function optimize_ticks_typed(
     x_min::F,
     x_max::F,
     extend_ticks,
-    Q::AbstractVector,
+    Qv,
+    Qs,
     k_min,
     k_max,
     k_ideal,
@@ -183,176 +213,135 @@ function optimize_ticks_typed(
     niceness_weight::F,
     strict_span,
     span_buffer,
-    scale,
-) where {F}
-    if (xspan = x_max - x_min) < eps(F)
-        return fallback_ticks(x_min, x_max, k_min, k_max)
-    end
-
-    n = length(Q)
-    is_log_scale = scale ∈ _logScales
-    base = F(get(_logScaleBases, scale, 10.0))
+    is_log_scale,
+    base_float::F,
+    base::Integer,
+) where {F<:AbstractFloat}
+    xspan = x_max - x_min
 
     # generalizing "order of magnitude"
-    z = bounding_order_of_magnitude(xspan, base)
+    z = bounding_order_of_magnitude(xspan, base_float)
 
     # find required significant digits for ticks with q * base^z spacing,
-    # for q values specified in Q
-    x_digits = bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base)
-    q_extra_digits = maximum(postdecimal_digits(q[1]) for q in Q)
-    sigdigits(z) = max(1, x_digits - z + q_extra_digits)
-
-    ib = Int(base)
-    round_base = (
-        isinteger(base) ? v -> round(v, sigdigits = sigdigits(z), base = ib) :
-        v -> round(v, sigdigits = sigdigits(z))
+    # for q values specified in Qv
+    num_digits = (
+        bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base_float) +
+        maximum(postdecimal_digits(q) for q in Qv)
     )
 
-    high_score = -Inf
-    S_best = Array{F}(undef, 1)
     viewmin_best, viewmax_best = x_min, x_max
+    high_score = -Inf
 
-    # we preallocate arrays that hold all required S arrays for every given
-    # the k parameter, so we don't have to create them again and again, which
-    # saves many allocations
-    prealloc_Ss = [Array{F}(undef, extend_ticks ? Int(3k) : k) for k in k_min:(2k_max)]
+    S_best = Vector{F}(undef, k_max)
+    len_S_best = length(S_best)
 
-    while 2k_max * base^(z + 1) > xspan
-        for (ik, k) in enumerate(k_min:(2k_max))
-            for (q, qscore) in Q
-                tickspan = q * base^z
-                tickspan < eps(F) && continue
-                span = (k - 1) * tickspan
-                span < xspan && continue
+    S = Vector{F}(undef, (extend_ticks ? 4 : 2) * k_max)
 
-                r = (x_max - span) / tickspan
-                isfinite(r) || continue
-                r = ceil(Int, r)
+    @inbounds begin
+        while 2k_max * base_float^(z + 1) > xspan
+            sigdigits = max(1, num_digits - z)
+            for k in k_min:(2k_max)
+                for (q, qscore) in zip(Qv, Qs)
+                    tickspan = q * base_float^z
+                    tickspan < eps(F) && continue
+                    span = (k - 1) * tickspan
+                    span < xspan && continue
 
-                # try to favor integer exponents for log scales
-                if is_log_scale && !isinteger(tickspan)
-                    nice_scale = false
-                    qscore = 0
-                else
-                    nice_scale = true
-                end
+                    r_float = (x_max - span) / tickspan
+                    isfinite(r_float) || continue
+                    r = ceil(Int, r_float)
 
-                while r * tickspan <= x_min
-                    S = prealloc_Ss[ik]
-                    # Filter or expand ticks
-                    if extend_ticks
-                        for i in 0:(3k - 1)
-                            S[i + 1] = (r + i - k) * tickspan
-                        end
-                        # round only those values that end up as viewmin and viewmax
-                        # to save computation time
-                        S[k + 1] = round_base(S[k + 1])
-                        S[2k] = round_base(S[2k])
-                        viewmin, viewmax = S[k + 1], S[2k]
-                    else
-                        for i in 0:(k - 1)
-                            S[i + 1] = (r + i) * tickspan
-                        end
-                        # round only those values that end up as viewmin and viewmax
-                        # to save computation time
-                        S[1] = round_base(S[1])
-                        S[k] = round_base(S[k])
-                        viewmin, viewmax = S[1], S[k]
-                    end
-                    if strict_span
-                        viewmin = max(viewmin, x_min)
-                        viewmax = min(viewmax, x_max)
-                        buf = something(span_buffer, 0) * (viewmax - viewmin)
+                    # try to favor integer exponents for log scales
+                    (nice_scale = !is_log_scale || isinteger(tickspan)) || (qscore = F(0))
 
-                        # filter the S array while reusing its own memory to do so
-                        # this works because S is sorted, and we will only overwrite
-                        # values that are not needed anymore going forward in the loop
-
-                        # we do this because it saves allocations and leaves S type stable
-                        counter = 0
-                        @inbounds for i in 1:length(S)
-                            if (viewmin - buf) <= S[i] <= (viewmax + buf)
-                                counter += 1
-                                S[counter] = S[i]
+                    while r * tickspan <= x_min
+                        # Filter or expand ticks
+                        if extend_ticks
+                            for i in 0:(3k - 1)
+                                S[i + 1] = (r + i - k) * tickspan
                             end
+                            imin = k + 1
+                            imax = 2k
+                        else
+                            for i in 0:(k - 1)
+                                S[i + 1] = (r + i) * tickspan
+                            end
+                            imin = 1
+                            imax = k
                         end
-                        S = view(S, 1:counter)
-                    end
+                        # round only those values that end up as viewmin and viewmax to save computation time
+                        S[imin] =
+                            viewmin = round(S[imin], sigdigits = sigdigits, base = base)
+                        S[imax] =
+                            viewmax = round(S[imax], sigdigits = sigdigits, base = base)
 
-                    len_S = length(S)
-
-                    # evaluate quality of ticks
-                    has_zero = r <= 0 && abs(r) < k
-
-                    # simplicity
-                    s = has_zero && nice_scale ? 1 : 0
-
-                    # granularity
-                    g = 0 < len_S < 2k_ideal ? 1 - abs(len_S - k_ideal) / k_ideal : F(0)
-
-                    # coverage
-                    c = if len_S > 1
-                        effective_span = (len_S - 1) * tickspan
-                        1.5xspan / effective_span
-                    else
-                        F(0)
-                    end
-
-                    score =
-                        granularity_weight * g +
-                        simplicity_weight * s +
-                        coverage_weight * c +
-                        niceness_weight * qscore
-
-                    # strict limits on coverage
-                    if strict_span && span > xspan
-                        score -= 10000
-                    end
-                    if span >= 2xspan
-                        score -= 1000
-                    end
-
-                    if score > high_score && (k_min <= len_S <= k_max)
                         if strict_span
-                            # make S a copy because it is a view and
-                            # could otherwise be mutated in the next runs
-                            S = collect(S)
+                            viewmin = max(viewmin, x_min)
+                            viewmax = min(viewmax, x_max)
+                            buf = something(span_buffer, 0) * (viewmax - viewmin)
+
+                            # filter the S array while reusing its own memory to do so
+                            # this works because S is sorted, and we will only overwrite
+                            # values that are not needed anymore going forward in the loop
+
+                            # we do this because it saves allocations and leaves S type stable
+                            counter = 0
+                            for i in 1:imax
+                                if (viewmin - buf) <= S[i] <= (viewmax + buf)
+                                    counter += 1
+                                    S[counter] = S[i]
+                                end
+                            end
+                            len = counter
+                        else
+                            len = imax
                         end
-                        S_best, viewmin_best, viewmax_best = S, viewmin, viewmax
-                        high_score = score
+
+                        # evaluate quality of ticks
+                        has_zero = r <= 0 && abs(r) < k
+
+                        # simplicity
+                        s = has_zero && nice_scale ? 1 : 0
+
+                        # granularity
+                        g = 0 < len < 2k_ideal ? 1 - abs(len - k_ideal) / k_ideal : F(0)
+
+                        # coverage
+                        c = if len > 1
+                            effective_span = (len - 1) * tickspan
+                            1.5xspan / effective_span
+                        else
+                            F(0)
+                        end
+
+                        score =
+                            granularity_weight * g +
+                            simplicity_weight * s +
+                            coverage_weight * c +
+                            niceness_weight * qscore
+
+                        # strict limits on coverage
+                        if strict_span && span > xspan
+                            score -= 10000
+                        end
+                        if span >= 2xspan
+                            score -= 1000
+                        end
+
+                        if score > high_score && (k_min <= len <= k_max)
+                            viewmin_best, viewmax_best = viewmin, viewmax
+                            high_score, len_S_best = score, len
+                            copyto!(S_best, view(S, 1:len))
+                        end
+                        r += 1
                     end
-                    r += 1
                 end
             end
-        end
-        z -= 1
-    end
-
-    if isinf(high_score)
-        if strict_span
-            @warn "No strict ticks found"
-            return optimize_ticks_typed(
-                x_min,
-                x_max,
-                extend_ticks,
-                Q,
-                k_min,
-                k_max,
-                k_ideal,
-                granularity_weight,
-                simplicity_weight,
-                coverage_weight,
-                niceness_weight,
-                false,
-                span_buffer,
-                scale,
-            )
-        else
-            return fallback_ticks(x_min, x_max, k_min, k_max)
+            z -= 1
         end
     end
-
-    return S_best, viewmin_best, viewmax_best
+    resize!(S_best, len_S_best)
+    return high_score, S_best, viewmin_best, viewmax_best
 end
 
 optimize_ticks(
