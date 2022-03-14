@@ -207,8 +207,7 @@ end
 @testset "adapted grid" begin
     let f = sin, int = (0, π)
         xs, fs = adapted_grid(f, int)
-        l = length(xs) - 1
-        for i in 1:l
+        for i in 1:length(xs) - 1
             for λ in 0:0.1:1
                 # test that `f` is well approximated by a line
                 # in the interval `(xs[i], xs[i+1])`
@@ -233,6 +232,7 @@ end
     let f = x -> p(2(x - 3)), int = (-5, 5)  # JuliaPlots/Plots.jl/issues/4106
         xs, fs = adapted_grid(f, int)
         @test count(fs .> 1.5) > 10
+        @test fs |> extrema |> collect |> diff |> first > 1.9
     end
 
     let f = sinc, int = (0, 40)  # JuliaPlots/Plots.jl/issues/3894
