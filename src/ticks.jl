@@ -340,8 +340,8 @@ function optimize_ticks_typed(
             z -= 1
         end
     end
-
-    return high_score, S_best[1:len_S_best], viewmin_best, viewmax_best
+    resize!(S_best, len_S_best)
+    return high_score, S_best, viewmin_best, viewmax_best
 end
 
 optimize_ticks(
