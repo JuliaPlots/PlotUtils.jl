@@ -204,31 +204,41 @@ end
     end
 end
 
-# ----------------------
-# adapted grid
-
 @testset "adapted grid" begin
-    f = sin
-    int = (0, π)
-    xs, fs = adapted_grid(f, int)
-    l = length(xs) - 1
-    for i in 1:l
-        for λ in 0:0.1:1
-            # test that `f` is well approximated by a line
-            # in the interval `(xs[i], xs[i+1])`
-            x = λ * xs[i] + (1 - λ) * xs[i + 1]
-            y = λ * fs[i] + (1 - λ) * fs[i + 1]
-            @test y ≈ f(x) atol = 1e-2
+    let f = sin, int = (0, π)
+        xs, fs = adapted_grid(f, int)
+        l = length(xs) - 1
+        for i in 1:l
+            for λ in 0:0.1:1
+                # test that `f` is well approximated by a line
+                # in the interval `(xs[i], xs[i+1])`
+                x = λ * xs[i] + (1 - λ) * xs[i + 1]
+                y = λ * fs[i] + (1 - λ) * fs[i + 1]
+                @test y ≈ f(x) atol = 1e-2
+            end
         end
     end
 
-    int = (2, 2)
-    xs, fs = adapted_grid(f, int)
-    @test xs == [2]
-    @test fs == [f(2)]
+    let f = sin, int = (2, 2)
+        xs, fs = adapted_grid(f, int)
+        @test xs == [2]
+        @test fs == [f(2)]
+    end
 
-    int = (2, 1)
-    @test_throws ArgumentError adapted_grid(f, int)
+    let f = sin, int = (2, 1)
+        @test_throws ArgumentError adapted_grid(f, int)
+    end
+
+    p(x) = (x < 0.0 || x > 1.0 ? 0.0 : 1.0 + x)
+    let f = x -> p(2(x - 3)), int = (-5, 5)  # JuliaPlots/Plots.jl/issues/4106
+        xs, fs = adapted_grid(f, int)
+        @test count(fs .> 1.5) > 10
+    end
+
+    let f = sinc, int = (0, 40)  # JuliaPlots/Plots.jl/issues/3894
+        xs, fs = adapted_grid(f, int)
+        @test length(xs) > 400
+    end
 end
 
 @testset "zscale" begin

@@ -18,9 +18,8 @@ function adapted_grid(
     minmax::Tuple{Number,Number};
     max_recursions = 7,
     max_curvature = 0.01,
-    n_points = 31
+    n_points = 31,
 )
-
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     elseif minmax[1] == minmax[2]
@@ -30,7 +29,6 @@ function adapted_grid(
 
     @assert isodd(n_points)
     n_intervals = n_points ÷ 2
-    # @show n_points
 
     xs = collect(range(minmax[1]; stop = minmax[2], length = n_points))
     # Move the first and last interior points a bit closer to the end points
@@ -165,7 +163,6 @@ function adapted_grid(
         n_points = n_points + n_new_points
         n_intervals = n_points ÷ 2
     end
-    # @show n_points
 
     return xs, fs
 end
