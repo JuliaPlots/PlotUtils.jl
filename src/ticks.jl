@@ -6,7 +6,7 @@ const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 # Find the smallest order of magnitude that is larger than xspan This is a
 # little opaque because I want to avoid assuming the log function is defined
 # over typeof(xspan)
-function bounding_order_of_magnitude(xspan::T) where {T}
+function bounding_order_of_magnitude(xspan::T, base::T) where {T}
     one_dt = oneunit(T)
 
     a = step = 1
@@ -21,7 +21,7 @@ function bounding_order_of_magnitude(xspan::T) where {T}
 
     while a + 1 < b
         c = div(a + b, 2)
-        if xspan < base^c
+        if xspan < base^c * one_dt
             b = c
         else
             a = c
@@ -41,8 +41,9 @@ struct Ticks{T} <: AbstractRange{T}
     u::UnitRange{Int64}
     q::Int
     z::Int
+    base::T
     step::Float64
-    Ticks{T}(u, q, z) where {T} = new(u, q, z, q * 10.0^z)
+    Ticks{T}(u, q, z; base = 10.0) where {T} = new(u, q, z, base, q * float(base)^z)
 end
 
 fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (
@@ -54,10 +55,11 @@ fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (
 )
 
 Base.size(t::Ticks) = size(t.u)
+Base.length(t::Ticks) = Base.length(t.u)
 Base.step(t::Ticks{T}) where {T} = t.step * oneunit(T)
 Base.getindex(t::Ticks{T}, i::Integer) where {T} =
     round(t.u[i] * t.step; digits = -t.z) * oneunit(T)
-_ticks_str(t::Ticks) = "($(t.q*t.u))*10^$(t.z)"
+_ticks_str(t::Ticks) = "($(t.q*t.u))*$(t.base)^$(t.z)"
 Base.show(io::IO, t::Ticks{<:AbstractFloat}) = print(io, _ticks_str(t))
 Base.show(io::IO, t::Ticks{T}) where {T} = print(io, _ticks_str(t), " * ", oneunit(T))
 
@@ -186,8 +188,14 @@ function optimize_ticks(
     niceness_weight::Float64 = 1 / 4,
     strict_span = true,
     span_buffer = nothing,
+    scale = nothing,
 ) where {T}
     Qv = [(Int(q[1]), Float64(q[2])) for q in Q]
+
+    base_float = Float64(get(_logScaleBases, scale, 10.0))
+    base = isinteger(base_float) ? Int(base_float) : 10
+    is_log_scale = scale ∈ _logScales
+
     optimize_ticks_typed(
         x_min,
         x_max,
@@ -202,6 +210,9 @@ function optimize_ticks(
         niceness_weight,
         strict_span,
         span_buffer,
+        is_log_scale,
+        base_float,
+        base,
     )
 end
 
@@ -219,47 +230,30 @@ function optimize_ticks_typed(
     niceness_weight::Float64,
     strict_span,
     span_buffer,
+    is_log_scale,
+    base_float::Float64,
+    base::Integer,
 ) where {T}
     one_t = oneunit(T)
-    if x_max - x_min < eps() * one_t
+
+    xspan = x_max - x_min
+    if xspan < eps(T) * one_t
         R = typeof(1.0 * one_t)
         return R[x_min], x_min - one_t, x_min + one_t
     end
-end
-
-function optimize_ticks_typed(
-    x_min::F,
-    x_max::F,
-    extend_ticks,
-    Qv,
-    Qs,
-    k_min,
-    k_max,
-    k_ideal,
-    granularity_weight::F,
-    simplicity_weight::F,
-    coverage_weight::F,
-    niceness_weight::F,
-    strict_span,
-    span_buffer,
-    is_log_scale,
-    base_float::F,
-    base::Integer,
-) where {F<:AbstractFloat}
-    xspan = x_max - x_min
 
     # generalizing "order of magnitude"
-    xspan = x_max - x_min
-    z = bounding_order_of_magnitude(xspan / minimum(q[1] for q in Q))
+    z = bounding_order_of_magnitude(xspan / minimum(q[1] for q in Q), base_float)
 
     high_score = -Inf
     best_ticks = nothing
 
-    max_q_exponent = ceil(Int, log10(maximum(q[1] for q in Q)))
-    while 2k_max * 10.0^(z + max_q_exponent) * one_t > xspan
+    max_q_exponent = ceil(Int, log(base, maximum(q[1] for q in Q)))
+    count = 0
+    while 2k_max * base_float^z + max_q_exponent * one_t > xspan
         for (ik, k) in enumerate(k_min:(2k_max))
             for (q, qscore) in Q
-                stp = q * 10.0^z
+                stp = q * base_float^z
                 if stp < eps()
                     continue
                 end
@@ -273,8 +267,12 @@ function optimize_ticks_typed(
                 r = ceil(Int64, (x_max - span) / tickspan)
 
                 while r * tickspan <= x_min
+                    @show r * tickspan
+                    @show x_min
+                    count += 1
+                    count > 100_000 && error("Potential infinite loop in `optimize_ticks_typed`.")
                     u = extend_ticks ? ((r - k):(r + 2k - 1)) : (r:(r + k - 1))
-                    ticks = Ticks{T}(u, q, z)
+                    ticks = Ticks{T}(u, q, z; base)
 
                     if strict_span
                         viewmin = max(r * tickspan, x_min)
@@ -296,7 +294,7 @@ function optimize_ticks_typed(
                     s = has_zero && nice_scale ? 1 : 0
 
                     # granularity
-                    g = 0 < len < 2k_ideal ? 1 - abs(len - k_ideal) / k_ideal : F(0)
+                    g = 0 < nticks < 2k_ideal ? 1 - abs(nticks - k_ideal) / k_ideal : 0.0
 
                     # granularity
                     g = 0 < nticks < 2k_ideal ? 1 - abs(nticks - k_ideal) / k_ideal : 0.0
