@@ -114,7 +114,7 @@ end
             ticks, = optimize_ticks(x, y)
             @test issorted(ticks)
             @test allunique(ticks)
-            if (x,y) ∈ [(1.0,1.0+eps()), (1.0-eps(),1.0)] # known failures
+            if (x, y) ∈ [(1.0, 1.0 + eps()), (1.0 - eps(), 1.0)] # known failures
                 @test_broken all(x .<= ticks .<= y)
             else
                 @test all(x .<= ticks .<= y)
