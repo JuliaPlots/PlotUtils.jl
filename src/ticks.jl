@@ -6,7 +6,7 @@ const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 # Find the smallest order of magnitude that is larger than xspan This is a
 # little opaque because I want to avoid assuming the log function is defined
 # over typeof(xspan)
-function bounding_order_of_magnitude(xspan::T, base::T) where {T}
+function bounding_order_of_magnitude(xspan::T, base::F) where {T,F<:AbstractFloat}
     one_dt = oneunit(T)
 
     a = step = 1
@@ -41,7 +41,7 @@ struct Ticks{T} <: AbstractRange{T}
     u::UnitRange{Int64}
     q::Int
     z::Int
-    base::T
+    base::Float64
     step::Float64
     Ticks{T}(u, q, z; base = 10.0) where {T} = new(u, q, z, base, q * float(base)^z)
 end
@@ -190,8 +190,8 @@ function optimize_ticks(
     span_buffer = nothing,
     scale = nothing,
 ) where {T}
-    F = float(T)
-    if x_max - x_min < eps(F)
+    F = typeof(float(one(T)))
+    if x_max - x_min < eps(F) * oneunit(T)
         return fallback_ticks(x_min, x_max, k_min, k_max)
     end
     Qv = Int.(getindex.(Q, 1))
@@ -204,8 +204,8 @@ function optimize_ticks(
     for i in 1:2
         sspan = (i == 1) ? strict_span : false
         high_score, best, min_best, max_best = optimize_ticks_typed(
-        F(x_min),
-        F(x_max),
+        float(x_min),
+        float(x_max),
         extend_ticks,
         Qv,
         Qs,
@@ -240,21 +240,21 @@ function optimize_ticks_typed(
     x_max::F,
     extend_ticks,
     Qv::Vector{Int},
-    Qs::Vector{F},
+    Qs::Vector{F1},
     k_min,
     k_max,
     k_ideal,
-    granularity_weight::F,
-    simplicity_weight::F,
-    coverage_weight::F,
-    niceness_weight::F,
+    granularity_weight::F1,
+    simplicity_weight::F1,
+    coverage_weight::F1,
+    niceness_weight::F1,
     strict_span,
     span_buffer,
     is_log_scale,
-    base_float::F,
+    base_float::F1,
     base::Integer,
-) where {F}
-    one_t = oneunit(eltype(Qv))
+) where {F, F1 <: AbstractFloat}
+    one_t = oneunit(F)
 
     xspan = x_max - x_min
 
@@ -279,9 +279,9 @@ function optimize_ticks_typed(
                     span = (k - 1) * tickspan
                     span < xspan && continue
 
-                    r_float = (x_max - span) / stp
+                    r_float = (x_max - span) / tickspan
                     isfinite(r_float) || continue
-                    r = ceil(Int, r_float) * one_t
+                    r = ceil(Int64, r_float)
 
                     # try to favor integer exponents for log scales
                     (nice_scale = !is_log_scale || isinteger(tickspan)) || (qscore = F(0))
@@ -347,32 +347,13 @@ function optimize_ticks_typed(
         end
     end
 
-    if best_ticks === nothing
-        if strict_span
-            @warn("No strict ticks found")
-            return optimize_ticks_typed(
-                x_min,
-                x_max,
-                extend_ticks,
-                Q,
-                k_min,
-                k_max,
-                k_ideal,
-                granularity_weight,
-                simplicity_weight,
-                coverage_weight,
-                niceness_weight,
-                false,
-                span_buffer,
-            )
-        else
-            R = typeof(1.0 * one_t)
-            return R[x_min], x_min - one_t, x_min + one_t
-        end
+    if best_ticks !== nothing
+        viewmin = min(first(best_ticks), x_min)
+        viewmax = max(last(best_ticks), x_max)
+    else
+        viewmin = x_min
+        viewmax = x_max
     end
-
-    viewmin = min(first(best_ticks), x_min)
-    viewmax = max(last(best_ticks), x_max)
     return high_score, best_ticks, viewmin, viewmax
 end
 

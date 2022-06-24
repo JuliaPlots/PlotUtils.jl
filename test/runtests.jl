@@ -111,7 +111,7 @@ end
         @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
             y = x + i * eps(x)
             x, y = minmax(x, y)
-            ticks, = optimize_ticks(x, y)
+            ticks, _ = optimize_ticks(x, y)
             @test issorted(ticks)
             @test allunique(ticks)
             if (x, y) ∈ [(1.0, 1.0 + eps()), (1.0 - eps(), 1.0)] # known failures
@@ -144,7 +144,7 @@ end
             y0 = 10^n
             x0 = y0 - 1
             x, y = (x0, y0) .* 10.0^i
-            ticks, = optimize_ticks(x, y)
+            ticks, _ = optimize_ticks(x, y)
             test_ticks(x, y, ticks)
         end
     end
@@ -155,7 +155,7 @@ end
     @testset "types" begin
         for T in (Int32, Int64, Float16, Float32, Float64)
             x, y = T(1), T(10)
-            ticks, = optimize_ticks(x, y)
+            ticks, _ = optimize_ticks(x, y)
             @test eltype(ticks) <: AbstractFloat
             @test eltype(ticks) == (T <: AbstractFloat ? T : float(T))
             test_ticks(x, y, ticks)
@@ -195,18 +195,18 @@ end
         @testset "PlotUtils.jl/issues/129" begin
             # invalid float input
             let x = NaN, y = 1.0
-                ticks, = @test_logs warn_ticks optimize_ticks(x, y)
+                ticks, _ = @test_logs warn_ticks optimize_ticks(x, y)
                 @test isnan(ticks[1])
                 @test ticks[2] === y
-                ticks, = @test_logs warn_ticks optimize_ticks(x, y, k_min = 5)
+                ticks, _ = @test_logs warn_ticks optimize_ticks(x, y, k_min = 5)
                 @test isnan(ticks[1])
                 @test ticks[2] === y
             end
             let x = 0.0f0, y = Inf32
-                ticks, = @test_logs warn_ticks optimize_ticks(x, y)
+                ticks, _ = @test_logs warn_ticks optimize_ticks(x, y)
                 @test ticks[1] === x
                 @test isinf(ticks[2])
-                ticks, = @test_logs warn_ticks optimize_ticks(x, y, k_min = 5)
+                ticks, _ = @test_logs warn_ticks optimize_ticks(x, y, k_min = 5)
                 @test ticks[1] === x
                 @test isinf(ticks[2])
             end
