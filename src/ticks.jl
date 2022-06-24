@@ -32,7 +32,7 @@ end
 function postdecimal_digits(x::T) where {T}
     counter = 0
     isinteger(x) && return 0
-    while !(trunc(x, digits=0) ≈ x)
+    while !(trunc(x, digits = 0) ≈ x)
         x *= 10
         counter += 1
     end
