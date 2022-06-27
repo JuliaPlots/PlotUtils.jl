@@ -189,12 +189,12 @@ If `alpha` is set, it is applied to all colors.
 function cgrad(
     colors::ColorScheme,
     values;
-    categorical = nothing,
+    categorical::Union{Nothing, Bool} = nothing,
     scale = nothing,
     rev = false,
     alpha = nothing,
 )
-    if categorical !== nothing
+    if categorical !== nothing || !categorical
         colors, values = prepare_categorical_cgrad_colors(colors, values)
     end
 
@@ -220,7 +220,7 @@ function cgrad(
         values
     end
 
-    if categorical !== nothing
+    if categorical !== nothing || !categorical
         return CategoricalColorGradient(colors, values)
     else
         return ContinuousColorGradient(colors, values)
