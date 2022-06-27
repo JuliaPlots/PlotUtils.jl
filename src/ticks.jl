@@ -32,9 +32,10 @@ end
 function postdecimal_digits(x::T) where {T}
     counter = 0
     isinteger(x) && return 0
-    while trunc(x, digits = 0) != x
-        x *= 10
+    y = x
+    while !isinteger(y)
         counter += 1
+        y = x * 10^counter
     end
     return counter
 end
