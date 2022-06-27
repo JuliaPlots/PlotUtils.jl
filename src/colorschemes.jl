@@ -189,7 +189,7 @@ If `alpha` is set, it is applied to all colors.
 function cgrad(
     colors::ColorScheme,
     values;
-    categorical::Union{Nothing, Bool} = nothing,
+    categorical::Union{Nothing,Bool} = nothing,
     scale = nothing,
     rev = false,
     alpha = nothing,
