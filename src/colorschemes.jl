@@ -194,7 +194,7 @@ function cgrad(
     rev = false,
     alpha = nothing,
 )
-    if categorical !== nothing || !categorical
+    if categorical !== nothing && categorical
         colors, values = prepare_categorical_cgrad_colors(colors, values)
     end
 
@@ -220,7 +220,7 @@ function cgrad(
         values
     end
 
-    if categorical !== nothing || !categorical
+    if categorical !== nothing && categorical
         return CategoricalColorGradient(colors, values)
     else
         return ContinuousColorGradient(colors, values)
