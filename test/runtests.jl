@@ -277,7 +277,7 @@ end
 @testset "Decimal digits" begin
     @test PlotUtils.postdecimal_digits(1.245) == 3
     @test PlotUtils.postdecimal_digits(11.234) == 3
-    @test PlotUtils.postdecimal_digits(1/3) == 16
+    @test PlotUtils.postdecimal_digits(1 / 3) == 16
     @test PlotUtils.postdecimal_digits(1.234e-2) == 5
     @test PlotUtils.postdecimal_digits(1.234f-3) == 6
     @test PlotUtils.postdecimal_digits(0.284882f0) == 6
