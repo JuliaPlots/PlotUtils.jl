@@ -30,14 +30,12 @@ function bounding_order_of_magnitude(xspan::T, base::T) where {T}
 end
 
 function postdecimal_digits(x::T) where {T}
-    counter = 0
     isinteger(x) && return 0
-    y = x
-    while !isinteger(y)
-        counter += 1
-        y = x * 10^counter
+    max = ceil(Int, log10(floatmax(T)))
+    for i in 0:max
+        x == floor(x; digits = i) && return i
     end
-    return counter
+    return max
 end
 
 fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (

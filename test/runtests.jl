@@ -284,5 +284,8 @@ end
     @test PlotUtils.postdecimal_digits(0.5517515f0) == 7
     @test PlotUtils.postdecimal_digits(0.1578114989219891) == 16
     @test PlotUtils.postdecimal_digits(0.35722002265961517) == 17
-    @test_broken PlotUtils.postdecimal_digits(0.046297550780936114) == 18
+    @test PlotUtils.postdecimal_digits(0.046297550780936114) == 18
+    @test PlotUtils.postdecimal_digits(2.5e-22) == 25
+    @test PlotUtils.postdecimal_digits(floatmin(Float64)) == 309
+    @test PlotUtils.postdecimal_digits(floatmin(Float32)) == 39
 end
