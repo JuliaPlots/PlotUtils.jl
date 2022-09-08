@@ -1,9 +1,11 @@
 module PlotUtils
 
+using SnoopPrecompile
 using ColorSchemes
-using Dates
 using Reexport
 using Printf
+using Dates
+
 @reexport using Colors
 import Base: getindex
 import Random: MersenneTwister
@@ -36,13 +38,20 @@ include("ticks.jl")
 
 const _default_colorscheme = generate_colorscheme()
 
-# NOTE: allocation issues, see comments on github.com/JuliaPlots/PlotUtils.jl/pull/136
-# try to restore on 1.8 after proper regression analysis
-@static if false
-    if Base.VERSION >= v"1.4.2"
-        include("precompile.jl")
-        _precompile_()
+if VERSION ≥ v"1.8.0"
+    @precompile_all_calls begin
+        for T in (Int, Float64)
+            optimize_ticks(-one(T), one(T))
+            optimize_ticks(-one(T), one(T); k_min = 2, k_max = 10)
+            adapted_grid(sin, (-one(T), one(T)))
+            zscale(one(T):10)
+            cgrad([:red, :blue], T[0, 1])
+        end
+        cgrad()
+        cgrad([:red, :blue])
+        palette(:viridis)
+        optimize_datetime_ticks(Dates.value(DateTime(2_000)), Dates.value(DateTime(2_100)))
     end
 end
 
-end # module
+end
