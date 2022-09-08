@@ -46,13 +46,9 @@ if VERSION ≥ v"1.8.0"
             adapted_grid(sin, (-one(T), one(T)))
             zscale(one(T):10)
             cgrad([:red, :blue], T[0, 1])
-            plot_color(T[0, 1])
         end
         cgrad()
         cgrad([:red, :blue])
-        plot_color(colorant"red")
-        plot_color(:red)
-        plot_color("red")
         palette(:viridis)
         optimize_datetime_ticks(Dates.value(DateTime(2_000)), Dates.value(DateTime(2_100)))
     end
