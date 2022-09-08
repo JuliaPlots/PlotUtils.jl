@@ -40,9 +40,9 @@ const _default_colorscheme = generate_colorscheme()
 
 if VERSION ≥ v"1.8.0"
     @precompile_all_calls begin
-        for T ∈ (Int, Float64)
+        for T in (Int, Float64)
             optimize_ticks(-one(T), one(T))
-            optimize_ticks(-one(T), one(T); k_min=2, k_max=10)
+            optimize_ticks(-one(T), one(T); k_min = 2, k_max = 10)
             adapted_grid(sin, (-one(T), one(T)))
             zscale(one(T):10)
             cgrad([:red, :blue], T[0, 1])
@@ -50,9 +50,9 @@ if VERSION ≥ v"1.8.0"
         end
         cgrad()
         cgrad([:red, :blue])
+        plot_color(colorant"red")
         plot_color(:red)
         plot_color("red")
-        plot_color(colorant"red")
         palette(:viridis)
         optimize_datetime_ticks(Dates.value(DateTime(2_000)), Dates.value(DateTime(2_100)))
     end

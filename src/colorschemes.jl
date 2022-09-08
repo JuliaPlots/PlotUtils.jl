@@ -246,9 +246,7 @@ end
 
 cgrad(; kw...) = cgrad(DEFAULT_COLOR_GRADIENT[]; kw...)
 
-function default_cgrad(cg; kw...)
-    DEFAULT_COLOR_GRADIENT[] = cgrad(cg; kw...)
-end
+default_cgrad(cg; kw...) = DEFAULT_COLOR_GRADIENT[] = cgrad(cg; kw...)
 
 function get_rangescale(rangescale)
     rangescale == :clamp && return (0.0, 1.0)
