@@ -1,4 +1,4 @@
-const _logScales = [:ln, :log2, :log10]
+const _logScales = (:ln, :log2, :log10)
 const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 
 # NOTE: This file was moved from Gadfly.jl, and the original author is Daniel Jones (@dcjones)
