@@ -9,7 +9,9 @@ plot_color(s::Symbol) =
     catch e
         is_colorscheme(s) ? cgrad(s) : rethrow(e)
     end
-plot_color(b::Bool) = b ? error("plot_color(true) not allowed.") : invisible()
+plot_color(b::Val{true}) = error("plot_color(true) not allowed.")
+plot_color(b::Val{false}) = invisible()
+plot_color(b::Bool) = plot_color(Val(b))
 plot_color(::Nothing) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
 # plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
