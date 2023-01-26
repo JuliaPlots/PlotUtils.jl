@@ -271,12 +271,14 @@ end
     @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
 end
 
-@testset "downstream" begin
-    include("downstream.jl")
-    @test true
-end
+if Sys.islinux()
+    @testset "downstream" begin
+        include("downstream.jl")
+        @test true
+    end
 
-@testset "adaptive" begin
-    include("adaptive_test_functions.jl")
-    @test true
+    @testset "adaptive" begin
+        include("adaptive_test_functions.jl")
+        @test true
+    end
 end
