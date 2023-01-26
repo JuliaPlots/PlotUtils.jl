@@ -29,6 +29,9 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test typeof(grad) == PlotUtils.ContinuousColorGradient
     @test plot_color(grad) === grad
 
+    # JuliaPlots/Plots.jl/issues/4270
+    @test get(grad, BigFloat(1), (-0.00033546262790251185, 1.0)) isa RGBA{BigFloat}
+
     grad = cgrad([:red, "blue"])
     @test color_list(grad) == C[colorant"red", colorant"blue"]
     @test grad.values == collect(range(0, stop = 1, length = 2))
@@ -269,4 +272,20 @@ end
     stats = @timed optimize_ticks(0.1123, 100.132)
     @test stats.bytes < 1_000  # ~ 736 (on 1.8)
     @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
+end
+
+if Sys.islinux()
+    @testset "downstream" begin
+        withenv("GKSwstype" => "nul") do
+            include("downstream.jl")
+        end
+        @test true
+    end
+
+    @testset "adaptive" begin
+        withenv("GKSwstype" => "nul") do
+            include("adaptive_test_functions.jl")
+        end
+        @test true
+    end
 end

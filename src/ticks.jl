@@ -382,8 +382,10 @@ function optimize_ticks(
         x_max += Second(1)
     end
 
-    if year(x_max) - year(x_min) <= 1 && scale != :year
-        if year(x_max) == year(x_min) && month(x_max) - month(x_min) <= 1 && scale != :month
+    if year(x_max) - year(x_min) <= 1 && scale !== :year
+        if year(x_max) == year(x_min) &&
+           month(x_max) - month(x_min) <= 1 &&
+           scale !== :month
             ticks = DateTime[]
 
             scales = [
@@ -397,7 +399,7 @@ function optimize_ticks(
             ]
 
             # ticks on week boundries
-            if x_min + Day(7) < x_max || scale == :week
+            if x_min + Day(7) < x_max || scale === :week
                 push!(ticks, x_min)
                 while true
                     next_month = Date(year(ticks[end]), month(ticks[end])) + Month(1)
@@ -411,7 +413,7 @@ function optimize_ticks(
                 end
             else
                 scale = nothing
-                if scale != :auto
+                if scale !== :auto
                     # TODO: manually setting scale with :day, :minute, etc
                 end
 
@@ -538,9 +540,9 @@ function multilevel_ticks(
     span = convert(Float64, Dates.toms(viewmax - viewmin))
     ticks = Dict()
     for scale in scales
-        s = if scale == :year
+        s = if scale === :year
             span / Dates.toms(Day(360))
-        elseif scale == :month
+        elseif scale === :month
             span / Dates.toms(Day(90))
         else
             span / Dates.toms(Day(1))
