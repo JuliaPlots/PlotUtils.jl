@@ -276,14 +276,14 @@ end
 
 if Sys.islinux()
     @testset "downstream" begin
-        withenv("GKSwstype" => "nul")
+        withenv("GKSwstype" => "nul") do
             include("downstream.jl")
         end
         @test true
     end
 
     @testset "adaptive" begin
-        withenv("GKSwstype" => "nul")
+        withenv("GKSwstype" => "nul") do
             include("adaptive_test_functions.jl")
         end
         @test true
