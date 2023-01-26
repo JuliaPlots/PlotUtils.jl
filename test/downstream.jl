@@ -9,9 +9,13 @@ Plots_toml = joinpath(Plots_jl, "Project.toml")
 # clone and checkout the latest stable version of Plots
 depot = joinpath(first(DEPOT_PATH), "registries", "General", "P", "Plots", "Versions.toml")
 stable = maximum(VersionNumber.(keys(TOML.parse(read(depot, String)))))
-for i ∈ 1:6
+for i in 1:6
     try
-        global repo = Pkg.GitTools.ensure_clone(stdout, Plots_jl, "https://github.com/JuliaPlots/Plots.jl")
+        global repo = Pkg.GitTools.ensure_clone(
+            stdout,
+            Plots_jl,
+            "https://github.com/JuliaPlots/Plots.jl",
+        )
         break
     catch err
         @warn err
@@ -28,16 +32,16 @@ plotutils_version = Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.tom
 toml = TOML.parse(read(Plots_toml, String))
 toml["compat"]["PlotUtils"] = string(plotutils_version)
 open(Plots_toml, "w") do io
-  TOML.print(io, toml)
+    TOML.print(io, toml)
 end
-Pkg.develop(path=Plots_jl)
+Pkg.develop(path = Plots_jl)
 Pkg.status(["PlotUtils", "Plots"])
 
 # test basic plots creation & display
 using Plots, Test
 
-@time for i ∈ 1:length(Plots._examples)
-  i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
-  Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
-  show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
+@time for i in 1:length(Plots._examples)
+    i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
+    Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
+    show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
 end
