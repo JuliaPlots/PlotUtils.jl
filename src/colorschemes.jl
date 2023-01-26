@@ -25,7 +25,7 @@ abstract type ColorGradient <: AbstractColorList end
 Base.getindex(cg::ColorGradient, x::Union{AbstractFloat,AbstractVector{<:AbstractFloat}}) =
     get(cg, x)
 function Base.get(cg::ColorGradient, v::AbstractArray, rangescale = (0.0, 1.0))
-    rangescale == :extrema && (rangescale = extrema(v))
+    rangescale === :extrema && (rangescale = extrema(v))
     map(x -> get(cg, x, rangescale), v)
 end
 
@@ -193,9 +193,9 @@ function cgrad(
     rev && (colors = reverse(colors))
     values = if scale in (:log, :log10) || scale isa typeof(log10)
         log10.(ColorSchemes.remap(values, 0, 1, 1, 10))
-    elseif scale == :log2 || scale isa typeof(log2)
+    elseif scale === :log2 || scale isa typeof(log2)
         log2.(ColorSchemes.remap(values, 0, 1, 1, 2))
-    elseif scale == :ln || scale isa typeof(log)
+    elseif scale === :ln || scale isa typeof(log)
         log.(ColorSchemes.remap(values, 0, 1, 1, ℯ))
     elseif scale in (:exp, :exp10) || scale isa typeof(exp10) || scale isa typeof(exp)
         ColorSchemes.remap(exp10.(values), 1, 10, 0, 1)
@@ -233,8 +233,8 @@ cgrad(; kw...) = cgrad(DEFAULT_COLOR_GRADIENT[]; kw...)
 default_cgrad(cg; kw...) = DEFAULT_COLOR_GRADIENT[] = cgrad(cg; kw...)
 
 function get_rangescale(rangescale)
-    rangescale == :clamp && return (0.0, 1.0)
-    rangescale == :extrema && return extrema(x)
+    rangescale === :clamp && return (0.0, 1.0)
+    rangescale === :extrema && return extrema(x)
     (rangescale isa NTuple{2,Number}) || error(
         "rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).",
     )
