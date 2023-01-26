@@ -383,7 +383,9 @@ function optimize_ticks(
     end
 
     if year(x_max) - year(x_min) <= 1 && scale !== :year
-        if year(x_max) == year(x_min) && month(x_max) - month(x_min) <= 1 && scale !== :month
+        if year(x_max) == year(x_min) &&
+           month(x_max) - month(x_min) <= 1 &&
+           scale !== :month
             ticks = DateTime[]
 
             scales = [
