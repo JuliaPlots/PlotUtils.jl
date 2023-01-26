@@ -29,6 +29,9 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test typeof(grad) == PlotUtils.ContinuousColorGradient
     @test plot_color(grad) === grad
 
+    # JuliaPlots/Plots.jl/issues/4270
+    @test get(grad, BigFloat(1), (-0.00033546262790251185, 1.0)) isa RGBA{BigFloat}
+
     grad = cgrad([:red, "blue"])
     @test color_list(grad) == C[colorant"red", colorant"blue"]
     @test grad.values == collect(range(0, stop = 1, length = 2))
