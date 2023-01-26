@@ -270,3 +270,5 @@ end
     @test stats.bytes < 1_000  # ~ 736 (on 1.8)
     @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
 end
+
+include("downstream.jl")
