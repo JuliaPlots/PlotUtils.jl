@@ -271,4 +271,7 @@ end
     @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
 end
 
-include("downstream.jl")
+@testset "downstream" begin
+    include("downstream.jl")
+    @test true
+end

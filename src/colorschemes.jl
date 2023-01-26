@@ -54,21 +54,12 @@ Base.show(io::IO, m::MIME"image/svg+xml", cg::ContinuousColorGradient) =
 function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
     isfinite(x) || return invisible()
     rangescale = get_rangescale(rangescale)
-    allunique(rangescale) || return cg.colors[1]
+    allunique(rangescale) || return first(cg.colors)
     x = clamp(x, rangescale...)
     if rangescale != (0.0, 1.0)
         x = ColorSchemes.remap(x, rangescale..., 0, 1)
     end
-    c, v = cg.colors, cg.values
-    if x in v
-        index = findfirst(==(x), v)
-    else
-        xx = x # avoid boxing
-        i = findlast(t -> t < xx, v)
-        r = (x - v[i]) / (v[i + 1] - v[i])
-        index = (i + r - 1) / (length(v) - 1)
-    end
-    return c[index]
+    get(cg.colors, x)
 end
 
 Base.reverse(cg::ContinuousColorGradient) =
@@ -80,10 +71,9 @@ function ColorSchemes.getinverse(cg::ContinuousColorGradient, c)
     z = getinverse(to_rgb(get_colorscheme(cg)), to_rgb(c))
     cr = get_range(cg.colors)
     if z in cr
-        i = findfirst(==(z), cr)
-        return cg.values[i]
+        cg.values[findfirst(==(z), cr)]
     else
-        i = findlast(x -> x < z, cr)
+        i = findlast(<(z), cr)
         ColorSchemes.remap(z, cr[i], cr[i + 1], cg.values[i], cg.values[i + 1])
     end
 end
@@ -100,18 +90,16 @@ function prepare_continuous_cgrad_colors(c, v)
         values = [0.0]
         for i in 2:nv
             inds = findall(x -> value_range[i - 1] < x < value_range[i], color_range)
-            if !isempty(inds)
-                append!(
-                    values,
-                    ColorSchemes.remap(
-                        color_range[inds],
-                        value_range[i - 1],
-                        value_range[i],
-                        v[i - 1],
-                        v[i],
-                    ),
-                )
-            end
+            isempty(inds) || append!(
+                values,
+                ColorSchemes.remap(
+                    color_range[inds],
+                    value_range[i - 1],
+                    value_range[i],
+                    v[i - 1],
+                    v[i],
+                ),
+            )
             push!(values, v[i])
         end
         colors = c[sort(unique([value_range; color_range]))]
@@ -119,7 +107,7 @@ function prepare_continuous_cgrad_colors(c, v)
     else
         color_list(c), v
     end
-    return ColorScheme(plot_color(c)), v
+    ColorScheme(plot_color(c)), v
 end
 
 ## Categorical Color Gradient
@@ -147,7 +135,7 @@ function Base.get(cg::CategoricalColorGradient, x::AbstractFloat, rangescale = (
     if rangescale != (0.0, 1.0)
         x = ColorSchemes.remap(x, rangescale..., 0, 1)
     end
-    return cg.colors[x == 0 ? 1 : findlast(z -> z < x, cg.values)]
+    cg.colors[x == 0 ? 1 : findlast(<(x), cg.values)]
 end
 
 Base.reverse(cg::CategoricalColorGradient) =
@@ -157,7 +145,7 @@ Base.reverse(cg::CategoricalColorGradient) =
 function ColorSchemes.getinverse(cg::CategoricalColorGradient, c)
     alpha(c) == 0 && return NaN
     i = findfirst(==(c), color_list(cg))
-    return (cg.values[i] + cg.values[i + 1]) / 2
+    (cg.values[i] + cg.values[i + 1]) / 2
 end
 
 function prepare_categorical_cgrad_colors(c, v)
@@ -165,7 +153,7 @@ function prepare_categorical_cgrad_colors(c, v)
     0 in v || pushfirst!(v, 0)
     1 in v || push!(v, 1)
     c = ColorScheme(plot_color(c[get_range(length(v) - 1)]))
-    return c, v
+    c, v
 end
 
 ## cgrad
@@ -202,9 +190,7 @@ function cgrad(
         rgbs = convert.(RGB, colors.colors)
         colors = ColorScheme(RGBA.(rgbs, alpha))
     end
-    if rev
-        colors = reverse(colors)
-    end
+    rev && (colors = reverse(colors))
     values = if scale in (:log, :log10) || scale isa typeof(log10)
         log10.(ColorSchemes.remap(values, 0, 1, 1, 10))
     elseif scale == :log2 || scale isa typeof(log2)
@@ -221,9 +207,9 @@ function cgrad(
     end
 
     if categorical !== nothing && categorical
-        return CategoricalColorGradient(colors, values)
+        CategoricalColorGradient(colors, values)
     else
-        return ContinuousColorGradient(colors, values)
+        ContinuousColorGradient(colors, values)
     end
 end
 
@@ -234,14 +220,12 @@ function cgrad(
     kwargs...,
 )
     values = get_range(n + (categorical !== nothing))
-    return cgrad(colors, values; categorical = categorical, kwargs...)
+    cgrad(colors, values; categorical = categorical, kwargs...)
 end
 
 function cgrad(colors, args...; kwargs...)
-    if colors === :default
-        colors = :inferno
-    end
-    return cgrad(get_colorscheme(colors), args...; kwargs...)
+    colors === :default && (colors = :inferno)
+    cgrad(get_colorscheme(colors), args...; kwargs...)
 end
 
 cgrad(; kw...) = cgrad(DEFAULT_COLOR_GRADIENT[]; kw...)
@@ -254,7 +238,7 @@ function get_rangescale(rangescale)
     (rangescale isa NTuple{2,Number}) || error(
         "rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).",
     )
-    return rangescale
+    rangescale
 end
 
 ## ColorPalette
@@ -281,16 +265,14 @@ function palette(cs; rev = false, alpha = nothing)
         rgbs = convert.(RGB, cs.colors)
         cs = ColorScheme(RGBA.(rgbs, alpha))
     end
-    if rev
-        cs = reverse(cs)
-    end
-    return ColorPalette(cs)
+    rev && (cs = reverse(cs))
+    ColorPalette(cs)
 end
 
 function palette(cs, n; kwargs...)
     cs = get_colorscheme(cs)
     z = get_range(n)
-    return palette(cs[z]; kwargs...)
+    palette(cs[z]; kwargs...)
 end
 
 ## Utils
@@ -301,9 +283,7 @@ get_range(cs) = get_range(length(cs))
 get_colorscheme(v::AbstractVector{<:Colorant}) = ColorScheme(v)
 get_colorscheme(v::AbstractVector) = ColorScheme(parse.(Colorant, v))
 function get_colorscheme(sym::Symbol)
-    if haskey(MISC_COLORSCHEMES, sym)
-        return MISC_COLORSCHEMES[sym]
-    end
+    haskey(MISC_COLORSCHEMES, sym) && return MISC_COLORSCHEMES[sym]
     sym = get(COLORSCHEME_ALIASES, sym, sym)
     if sym === :default || sym === :auto
         _default_colorscheme
@@ -319,7 +299,7 @@ get_colorscheme(cs::ColorScheme) = cs
 
 function cvec(cs, n = 10; kw...)
     cg = cgrad(cs; kw...)
-    return RGBA{Float64}[cg[z] for z in get_range(n)]
+    RGBA{Float64}[cg[z] for z in get_range(n)]
 end
 
 color_list(c) = get_colorscheme(c).colors
