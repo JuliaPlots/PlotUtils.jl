@@ -275,3 +275,8 @@ end
     include("downstream.jl")
     @test true
 end
+
+@testset "adaptive" begin
+    include("adaptive_test_functions.jl")
+    @test true
+end
