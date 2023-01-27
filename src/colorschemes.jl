@@ -51,6 +51,17 @@ plot_color(cg::ContinuousColorGradient, α::Number) =
 Base.show(io::IO, m::MIME"image/svg+xml", cg::ContinuousColorGradient) =
     show(io, m, cg[get_range(100)])
 
+function sample_color(cg::ContinuousColorGradient, x::AbstractFloat)
+    c, v = cg.colors, cg.values
+    if (index = findfirst(==(x), v)) === nothing
+        nm1 = length(v) - 1
+        i = min(nm1, findlast(<(x), v))
+        r = (x - v[i]) / (v[i + 1] - v[i])
+        index = (i + r - 1) / nm1
+    end
+    c[index]
+end
+
 function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
     isfinite(x) || return invisible()
     rangescale = get_rangescale(rangescale)
@@ -59,7 +70,7 @@ function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0
     if rangescale != (0.0, 1.0)
         x = ColorSchemes.remap(x, rangescale..., 0, 1)
     end
-    get(cg.colors, x)
+    sample_color(cg, x)  # specialize for x (boxing issues ?)
 end
 
 Base.reverse(cg::ContinuousColorGradient) =
@@ -70,10 +81,10 @@ function ColorSchemes.getinverse(cg::ContinuousColorGradient, c)
     alpha(c) == 0 && return NaN
     z = getinverse(to_rgb(get_colorscheme(cg)), to_rgb(c))
     cr = get_range(cg.colors)
-    if z in cr
-        cg.values[findfirst(==(z), cr)]
+    if (index = findfirst(==(z), cr)) !== nothing
+        cg.values[index]
     else
-        i = findlast(<(z), cr)
+        i = min(length(cr) - 1, findlast(<(z), cr))
         ColorSchemes.remap(z, cr[i], cr[i + 1], cg.values[i], cg.values[i + 1])
     end
 end
