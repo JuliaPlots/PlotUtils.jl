@@ -75,8 +75,17 @@ end
 @testset "gradients" begin
     grad = cgrad(:inferno)
     @test length(grad) == 256
-    @test RGB(grad.colors[1]) == RGB(0.001462, 0.000466, 0.013866)
-    @test RGB(grad.colors[end]) == RGB(0.988362, 0.998364, 0.644924)
+    @test RGB(grad.colors[1]) ≈ RGB(0.001462, 0.000466, 0.013866)
+    @test RGB(grad.colors[end]) ≈ RGB(0.988362, 0.998364, 0.644924)
+end
+
+@testset "sampling" begin
+    # github.com/MakieOrg/Makie.jl/issues/2635
+    cmap = cgrad([:black, :white, :orange], [0, 0.2, 1])
+    # sample ouside the given values
+    @test RGB(get(cmap, 0.15)) ≈ RGB(0.75, 0.75, 0.75)
+    @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
+    @test RGB(get(cmap, 0.8)) ≈ RGB(1.0, 0.73529411, 0.25)
 end
 
 # ----------------------

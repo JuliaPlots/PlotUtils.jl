@@ -51,6 +51,19 @@ plot_color(cg::ContinuousColorGradient, α::Number) =
 Base.show(io::IO, m::MIME"image/svg+xml", cg::ContinuousColorGradient) =
     show(io, m, cg[get_range(100)])
 
+function sample_color(cg::ContinuousColorGradient, x::AbstractFloat)
+    c, v = cg.colors, cg.values
+    index = if x in v
+        findfirst(==(x), v)
+    else
+        nm1 = length(v) - 1
+        i = min(nm1, findlast(<(x), v))
+        r = (x - v[i]) / (v[i + 1] - v[i])
+        (i + r - 1) / nm1
+    end
+    c[index]
+end
+
 function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0.0, 1.0))
     isfinite(x) || return invisible()
     rangescale = get_rangescale(rangescale)
@@ -59,7 +72,7 @@ function Base.get(cg::ContinuousColorGradient, x::AbstractFloat, rangescale = (0
     if rangescale != (0.0, 1.0)
         x = ColorSchemes.remap(x, rangescale..., 0, 1)
     end
-    get(cg.colors, x)
+    sample_color(cg, x)  # specialize for x (boxing issues ?)
 end
 
 Base.reverse(cg::ContinuousColorGradient) =
