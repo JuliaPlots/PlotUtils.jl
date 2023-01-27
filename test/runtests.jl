@@ -30,7 +30,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test plot_color(grad) === grad
 
     # JuliaPlots/Plots.jl/issues/4270
-    @test get(grad, BigFloat(1), (-0.00033546262790251185, 1.0)) isa RGBA{BigFloat}
+    @test get(grad, BigFloat(1), (-0.0003354626279, 1.0)) isa RGBA{BigFloat}
 
     grad = cgrad([:red, "blue"])
     @test color_list(grad) == C[colorant"red", colorant"blue"]
@@ -86,6 +86,14 @@ end
     @test RGB(get(cmap, 0.15)) ≈ RGB(0.75, 0.75, 0.75)
     @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
     @test RGB(get(cmap, 0.8)) ≈ RGB(1.0, 0.73529411, 0.25)
+end
+
+@testset "reverse" begin
+    cmap = reverse(cgrad([:black, :white, :orange], [0, 0.2, 1]))
+    # sample ouside the given values
+    @test RGB(get(cmap, 0.15)) ≈ RGB(1.0, 0.71323529, 0.1875)
+    @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
+    @test RGB(get(cmap, 0.75)) ≈ RGB(1.0, 0.97794117, 0.9375)
 end
 
 # ----------------------

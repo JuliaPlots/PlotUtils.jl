@@ -84,7 +84,7 @@ function ColorSchemes.getinverse(cg::ContinuousColorGradient, c)
     if (index = findfirst(==(z), cr)) !== nothing
         cg.values[index]
     else
-        i = findlast(<(z), cr)
+        i = min(length(cr) - 1, findlast(<(z), cr))
         ColorSchemes.remap(z, cr[i], cr[i + 1], cg.values[i], cg.values[i + 1])
     end
 end
