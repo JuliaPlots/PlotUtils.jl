@@ -3,6 +3,7 @@ module PlotUtils
 using SnoopPrecompile
 using ColorSchemes
 using Reexport
+using DelimitedFiles
 using Printf
 using Dates
 
