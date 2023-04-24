@@ -1,6 +1,6 @@
 module PlotUtils
 
-using SnoopPrecompile
+using PrecompileTools
 using ColorSchemes
 using Reexport
 using Printf
@@ -39,7 +39,7 @@ include("ticks.jl")
 const _default_colorscheme = generate_colorscheme()
 
 if VERSION ≥ v"1.8.0"
-    @precompile_all_calls begin
+    @compile_workload begin
         for T in (Int, Float64)
             optimize_ticks(-one(T), one(T))
             optimize_ticks(-one(T), one(T); k_min = 2, k_max = 10)
