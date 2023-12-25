@@ -36,25 +36,27 @@ function postdecimal_digits(x::T) where {T}
     return 0
 end
 
-fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (
+function fallback_ticks(x_min::T, x_max::T, k_min, k_max, strict_span) where {T}
+    if !strict_span && x_min ≈ x_max
+        x_min, x_max = prevfloat(x_min), nextfloat(x_max)
+    end
     if k_min != 2 && isfinite(x_min) && isfinite(x_max)
         collect(T, range(x_min, x_max; length = k_min)), x_min, x_max
     else
         T[x_min, x_max], x_min, x_max
     end
-)
+end
 
 # Empty catchall
 optimize_ticks() = Any[]
 
 """
-    optimize_ticks(xmin, xmax; extend_ticks::Bool=false,
-                           Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
-                           k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
-                           granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
-                           coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
-                           strict_span=true, span_buffer = nothing
-        )
+optimize_ticks(xmin, xmax; extend_ticks::Bool = false,
+               Q = [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
+               k_min = 2, k_max = 10, k_ideal = 5,
+               granularity_weight = 1/4, simplicity_weight = 1/6,
+               coverage_weight = 1/3, niceness_weight = 1/4,
+               strict_span = true, span_buffer = nothing)
 
 Find some reasonable values for tick marks.
 
@@ -152,11 +154,9 @@ function optimize_ticks(
     span_buffer = nothing,
     scale = nothing,
 ) where {T}
-    F = float(T)
-    if x_max - x_min < eps(F)
-        return fallback_ticks(x_min, x_max, k_min, k_max)
-    end
+    x_min ≈ x_max && return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
 
+    F = float(T)
     Qv = F[q[1] for q in Q]
     Qs = F[q[2] for q in Q]
 
@@ -190,7 +190,7 @@ function optimize_ticks(
             if sspan
                 @warn "No strict ticks found"
             else
-                return fallback_ticks(x_min, x_max, k_min, k_max)
+                return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
             end
         else
             return best, min_best, max_best

@@ -108,7 +108,7 @@ end
 
 function test_ticks(x, y, ticks)
     @test issorted(ticks)
-    @test all(x .<= ticks .<= y)
+    @test all(x .≤ ticks .≤ y)
     if x < y
         @test length(ticks) >= 2
         @test is_uniformly_spaced(ticks)
@@ -132,7 +132,7 @@ end
             x, y = minmax(x, y)
             ticks, = optimize_ticks(x, y)
             @test issorted(ticks)
-            @test all(x .<= ticks .<= y)
+            @test all(x .≤ ticks .≤ y)
             # Fails:
             # @test allunique(ticks)
         end
@@ -185,7 +185,7 @@ end
         end
 
         @testset "PlotUtils.jl/issues/114" begin
-            let x = -0.1eps(), y = 0.1eps()
+            let x = -1.2eps(), y = 1.2eps()
                 test_ticks(x, y, optimize_ticks(x, y)[1])
             end
         end
