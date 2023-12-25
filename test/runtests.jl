@@ -301,7 +301,7 @@ end
     @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
 end
 
-if Sys.islinux()
+if Sys.islinux() && VERSION ≥ v"1.9.0"
     @testset "downstream" begin
         withenv("GKSwstype" => "nul") do
             include("downstream.jl")

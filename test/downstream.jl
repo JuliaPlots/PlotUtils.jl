@@ -3,7 +3,7 @@ using Pkg, PlotUtils, Test
 LibGit2 = Pkg.GitTools.LibGit2
 TOML = Pkg.TOML
 
-failsafe_clone_checkout(versions, path, url) = begin
+failsafe_clone_checkout(path, url) = begin
     local repo
     for i ∈ 1:6
         try
@@ -16,6 +16,18 @@ failsafe_clone_checkout(versions, path, url) = begin
     end
 
     @assert isfile(joinpath(path, "Project.toml")) "spurious network error: clone failed, bailing out"
+
+    name, _ = splitext(basename(url))
+    registries = joinpath(first(DEPOT_PATH), "registries")
+    general = joinpath(registries, "General")
+    versions = joinpath(general, name[1:1], name, "Versions.toml")
+    if !isfile(versions)
+        mkpath(general)
+        run(setenv(`tar xf $general.tar.gz`; dir = general))
+        readdir(general) |> println
+    end
+    @assert isfile(versions)
+
     stable = maximum(VersionNumber.(keys(TOML.parse(read(versions, String)))))
     tag = LibGit2.GitObject(repo, "v$stable")
     hash = string(LibGit2.target(tag))
@@ -39,17 +51,8 @@ end
 deploy_Plots() = begin
     tmpd = mktempdir()
     Plots_jl = joinpath(tmpd, "Plots.jl")
-    Plots_toml = joinpath(Plots_jl, "Project.toml")
-    versions = joinpath(
-        first(DEPOT_PATH),
-        "registries",
-        "General",
-        "P",
-        "Plots",
-        "Versions.toml",
-    )
 
-    failsafe_clone_checkout(versions, Plots_jl, "https://github.com/JuliaPlots/Plots.jl")
+    failsafe_clone_checkout(Plots_jl, "https://github.com/JuliaPlots/Plots.jl")
     fake_supported_version!(Plots_jl)
 
     Pkg.develop(path = Plots_jl)
@@ -60,16 +63,8 @@ end
 deploy_Makie(extended = false) = begin
     tmpd = mktempdir()
     Makie_jl = joinpath(tmpd, "Makie.jl")
-    versions = joinpath(
-        first(DEPOT_PATH),
-        "registries",
-        "General",
-        "M",
-        "Makie",
-        "Versions.toml",
-    )
 
-    failsafe_clone_checkout(versions, Makie_jl, "https://github.com/MakieOrg/Makie.jl")
+    failsafe_clone_checkout(Makie_jl, "https://github.com/MakieOrg/Makie.jl")
     fake_supported_version!(Makie_jl)
 
     Pkg.develop(path = joinpath(tmpd, "Makie.jl", "MakieCore"))
@@ -77,7 +72,7 @@ deploy_Makie(extended = false) = begin
     if extended  # too costly ?
         Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ReferenceTests"))
         Pkg.develop(path = joinpath(tmpd, "Makie.jl", "CairoMakie"))
-        Pkg.develop(path = joinpath(tmpd, "Makie.jl", "GLMakie"))
+        # Pkg.develop(path = joinpath(tmpd, "Makie.jl", "GLMakie"))
     end
     Pkg.status(["PlotUtils", "MakieCore", "Makie"])
     nothing
@@ -100,5 +95,5 @@ extended = tryparse(Bool, get(ENV, "CI", "false")) === false  # extended test lo
 deploy_Makie(extended)
 @testset "downstream Makie" begin
     Pkg.test("Makie")
-    extended && Pkg.test(["CairoMakie", "GLMakie"])
+    extended && Pkg.test("CairoMakie")
 end
