@@ -304,16 +304,16 @@ end
 end
 
 if Sys.islinux() && VERSION ≥ v"1.9.0"
-    @testset "downstream" begin
+    @testset "adaptive" begin
         withenv("GKSwstype" => "nul") do
-            include("downstream.jl")
+            include("adaptive_test_functions.jl")
         end
         @test true
     end
 
-    @testset "adaptive" begin
+    @testset "downstream" begin
         withenv("GKSwstype" => "nul") do
-            include("adaptive_test_functions.jl")
+            include("downstream.jl")
         end
         @test true
     end
