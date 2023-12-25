@@ -90,7 +90,7 @@ using Plots
     end
 end
 
-extended = tryparse(Bool, get(ENV, "CI", "false")) === false  # extended test locally
+extended = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
 
 deploy_Makie(extended)
 @testset "downstream Makie" begin
