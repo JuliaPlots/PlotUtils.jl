@@ -24,7 +24,6 @@ failsafe_clone_checkout(path, url) = begin
     if !isfile(versions)
         mkpath(general)
         run(setenv(`tar xf $general.tar.gz`; dir = general))
-        readdir(general) |> println
     end
     @assert isfile(versions)
 
@@ -48,7 +47,7 @@ fake_supported_version!(path) = begin
     nothing
 end
 
-deploy_Plots() = begin
+develop_stable_Plots() = begin
     tmpd = mktempdir()
     Plots_jl = joinpath(tmpd, "Plots.jl")
 
@@ -60,7 +59,7 @@ deploy_Plots() = begin
     nothing
 end
 
-deploy_Makie(extended = false) = begin
+develop_stable_Makie(extended = false) = begin
     tmpd = mktempdir()
     Makie_jl = joinpath(tmpd, "Makie.jl")
 
@@ -78,21 +77,23 @@ deploy_Makie(extended = false) = begin
     nothing
 end
 
-deploy_Plots()
+develop_stable_Plots()
 using Plots
 
 @testset "downstream Plots" begin
     # test basic plots creation & display (Plots tests are too long to run)
-    true && @time for i ∈ 1:length(Plots._examples)
-        i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
-        Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
-        show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
+    withenv("GKSwstype" => "nul") do
+        @time for i ∈ 1:length(Plots._examples)
+            i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
+            Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
+            show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
+        end
     end
 end
 
 extended = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
 
-deploy_Makie(extended)
+develop_stable_Makie(extended)
 @testset "downstream Makie" begin
     Pkg.test("Makie")
     extended && Pkg.test("CairoMakie")

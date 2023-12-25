@@ -225,7 +225,9 @@ end
     end
 
     @testset "PlotUtils.jl/issues/155" begin
-        palette(:tab10, 1)
+        for n ∈ 1:10
+            @test length(palette(:tab10, n)) == n
+        end
     end
 
     @testset "PlotUtils.jl/issues/156" begin
@@ -303,12 +305,9 @@ end
     @test stats.time < 1e-3  # ~ 0.22ms (on 1.9)
 end
 
-if Sys.islinux() && VERSION ≥ v"1.9.0"
+if Sys.islinux() && VERSION ≥ v"1.9.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
     @testset "downstream" begin
-        withenv("GKSwstype" => "nul") do
-            include("downstream.jl")
-        end
-        @test true
+        include("downstream.jl")
     end
     @testset "adaptive" begin  # NOTE: must be ran after downstream test (for Plots)
         withenv("GKSwstype" => "nul") do
