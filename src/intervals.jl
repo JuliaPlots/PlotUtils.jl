@@ -112,7 +112,7 @@ function zscale(
 
     local β # line slope
     # iteratively fit samples and reject sigma-clipped outliers
-    for _ in 1:max_iterations
+    for _ ∈ 1:max_iterations
         (ngood ≥ last_good || ngood < min_pix) && break
 
         # linear fit using mask
@@ -156,7 +156,7 @@ function dilate_mask(mask, ngrow)
     idxs = CartesianIndices(mask)
     mindx = idxs[1].I[1]
     maxdx = idxs[end].I[1]
-    @inbounds for idx in idxs
+    @inbounds for idx ∈ idxs
         lower = max(mindx, idx.I[1] - ngrow)
         upper = min(maxdx, idx.I[1] + ngrow)
         # output will only be true if there are no falses in the input section

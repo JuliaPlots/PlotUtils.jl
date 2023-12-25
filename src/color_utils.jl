@@ -41,12 +41,12 @@ function getpctrange(n::Integer)
     n > 0 || error()
     n == 1 && return zeros(1)
     zs = [0.0, 1.0]
-    for i in 3:n
+    for i ∈ 3:n
         sorted = sort(zs)
         diffs = diff(sorted)
         widestj = 0
         widest = 0.0
-        for (j, d) in enumerate(diffs)
+        for (j, d) ∈ enumerate(diffs)
             if d > widest
                 widest = d
                 widestj = j
@@ -61,7 +61,7 @@ function get_zvalues(n::Integer)
     offsets = getpctrange(ceil(Int, n / 4) + 1) / 4
     offsets = vcat(offsets[1], offsets[3:end])
     zvalues = Float64[]
-    for offset in offsets
+    for offset ∈ offsets
         append!(zvalues, offset .+ [0.0, 0.5, 0.25, 0.75])
     end
     vcat(zvalues[1], 1.0, zvalues[2:(n - 1)])
@@ -85,7 +85,7 @@ isdark(c::Colorant)::Bool = lightness_level(c) < 0.5
 islight(c::Colorant)::Bool = !isdark(c)
 
 Base.convert(::Type{RGB}, h::Unsigned) =
-    RGB([(x & 0x0000FF) / 0xFF for x in (h >> 16, h >> 8, h)]...)
+    RGB([(x & 0x0000FF) / 0xFF for x ∈ (h >> 16, h >> 8, h)]...)
 
 make255(x)::Int = round(Int, 255 * x)
 

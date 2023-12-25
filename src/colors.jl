@@ -14,7 +14,7 @@ plot_color(b::Val{false}) = invisible()
 plot_color(b::Bool) = plot_color(Val(b))
 plot_color(::Nothing) = invisible()
 plot_color(c::Colorant) = convert(RGBA{Float64}, c)
-# plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c in cs]
+# plot_color(cs::AbstractVector) = RGBA{Float64}[plot_color(c) for c ∈ cs]
 # plot_color(cs::AbstractArray) = map(plot_color, cs)
 
 # no alpha override
@@ -29,16 +29,16 @@ plot_color(s::Symbol, α::Number) = (
 
 function plot_color(cs::AbstractArray)
     a = Array{RGBA{Float64}}(undef, size(cs)...)
-    for i in eachindex(cs)
+    for i ∈ eachindex(cs)
         a[i] = plot_color(cs[i])
     end
     a
 end
 
-# plot_color(cs::AbstractVector, α::Number) = RGBA{Float64}[plot_color(c,α) for c in cs]
+# plot_color(cs::AbstractVector, α::Number) = RGBA{Float64}[plot_color(c,α) for c ∈ cs]
 function plot_color(cs::AbstractArray, α::Number)
     a = Array{RGBA{Float64}}(undef, size(cs)...)
-    for i in eachindex(cs)
+    for i ∈ eachindex(cs)
         a[i] = plot_color(cs[i], α)
     end
     a
@@ -50,13 +50,13 @@ end
 # function plot_color(zs::AbstractVector{T}) where T<:Number
 #     grad = cgrad()
 #     zmin, zmax = extrema(zs)
-#     RGBA{Float64}[grad[(z-zmin)/(zmax-zmin)] for z in zs]
+#     RGBA{Float64}[grad[(z-zmin)/(zmax-zmin)] for z ∈ zs]
 # end
 function plot_color(zs::AbstractArray{T}) where {T<:Number}
     grad = cgrad()
     zmin, zmax = extrema(zs[isfinite.(zs)])
     a = Array{RGBA{Float64}}(undef, size(zs)...)
-    for i in eachindex(zs)
+    for i ∈ eachindex(zs)
         a[i] = grad[(zs[i] - zmin) / (zmax - zmin)]
     end
     a
@@ -64,12 +64,12 @@ end
 
 # function plot_color(zs::AbstractVector{T}, α::Number) where T<:Number
 #     cs = plot_color(zs)
-#     RGBA{Float64}[RGBA{Float64}(convert(RGB, c), α) for c in cs]
+#     RGBA{Float64}[RGBA{Float64}(convert(RGB, c), α) for c ∈ cs]
 # end
 function plot_color(zs::AbstractArray{T}, α::Number) where {T<:Number}
     cs = plot_color(zs)
     a = Array{RGBA{Float64}}(undef, size(zs)...)
-    for i in eachindex(zs)
+    for i ∈ eachindex(zs)
         a[i] = RGBA{Float64}(convert(RGB, cs[i]), α)
     end
     a
