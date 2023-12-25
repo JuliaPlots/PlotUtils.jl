@@ -110,7 +110,7 @@ function test_ticks(x, y, ticks)
     @test issorted(ticks)
     @test all(x .≤ ticks .≤ y)
     if x < y
-        @test length(ticks) >= 2
+        @test length(ticks) ≥ 2
         @test is_uniformly_spaced(ticks)
     end
 end
@@ -228,7 +228,7 @@ end
     end
 
     @testset "PlotUtils.jl/issues/156" begin
-        for c ∈ cgrad([:black, RGBA{Float64}(1,1,1,1)], 5; categorical=true)
+        for c ∈ cgrad([:black, RGBA{Float64}(1, 1, 1, 1)], 5; categorical = true)
             @test 0 ≤ alpha(c) ≤ 1
         end
     end

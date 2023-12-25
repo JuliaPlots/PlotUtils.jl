@@ -254,7 +254,7 @@ function optimize_ticks_typed(
                     # try to favor integer exponents for log scales
                     (nice_scale = !is_log_scale || isinteger(tickspan)) || (qscore = F(0))
 
-                    while r * tickspan <= x_min
+                    while r * tickspan ≤ x_min
                         # Filter or expand ticks
                         if extend_ticks
                             for i ∈ 0:(3k - 1)
@@ -287,7 +287,7 @@ function optimize_ticks_typed(
                             # we do this because it saves allocations and leaves S type stable
                             counter = 0
                             for i ∈ 1:imax
-                                if (viewmin - buf) <= S[i] <= (viewmax + buf)
+                                if (viewmin - buf) ≤ S[i] ≤ (viewmax + buf)
                                     counter += 1
                                     S[counter] = S[i]
                                 end
@@ -298,7 +298,7 @@ function optimize_ticks_typed(
                         end
 
                         # evaluate quality of ticks
-                        has_zero = r <= 0 && abs(r) < k
+                        has_zero = r ≤ 0 && abs(r) < k
 
                         # simplicity
                         s = has_zero && nice_scale ? 1 : 0
@@ -324,11 +324,11 @@ function optimize_ticks_typed(
                         if strict_span && span > xspan
                             score -= 10000
                         end
-                        if span >= 2xspan
+                        if span ≥ 2xspan
                             score -= 1000
                         end
 
-                        if score > high_score && (k_min <= len <= k_max)
+                        if score > high_score && (k_min ≤ len ≤ k_max)
                             viewmin_best, viewmax_best = viewmin, viewmax
                             high_score, len_S_best = score, len
                             copyto!(S_best, view(S, 1:len))
@@ -382,10 +382,8 @@ function optimize_ticks(
         x_max += Second(1)
     end
 
-    if year(x_max) - year(x_min) <= 1 && scale ≢ :year
-        if year(x_max) == year(x_min) &&
-           month(x_max) - month(x_min) <= 1 &&
-           scale ≢ :month
+    if year(x_max) - year(x_min) ≤ 1 && scale ≢ :year
+        if year(x_max) == year(x_min) && month(x_max) - month(x_min) ≤ 1 && scale ≢ :month
             ticks = DateTime[]
 
             scales = [
@@ -407,7 +405,7 @@ function optimize_ticks(
                         push!(ticks, ticks[end] + Week(1))
                     end
                     push!(ticks, next_month)
-                    if next_month >= x_max
+                    if next_month ≥ x_max
                         break
                     end
                 end
@@ -596,7 +594,7 @@ function optimize_datetime_ticks(a_min, a_max; k_min = 2, k_max = 4)
         Dates.Year,
     ]
     i = findfirst(period_hierarchy .== P)
-    showtype = i >= 5 ? Date : DateTime
+    showtype = i ≥ 5 ? Date : DateTime
     start = DateTime((PH(x_min) for PH ∈ period_hierarchy[end:-1:i])...) + P(1)
     ticks = collect(start:steplength:x_max)
     labels = string.(showtype.(ticks))
