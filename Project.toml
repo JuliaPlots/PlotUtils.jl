@@ -13,7 +13,7 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-ColorSchemes = "≥3.19"
+ColorSchemes = "3.19 - 4"
 Colors = "0.12"
 Dates = "<0.0.1, 1"
 Printf = "<0.0.1, 1"
