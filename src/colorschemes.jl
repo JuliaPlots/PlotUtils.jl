@@ -290,7 +290,7 @@ end
 
 ## Utils
 
-get_range(n::Int) = range(0, stop = 1, length = n)
+get_range(n::Int) = range(0, stop = n == 1 ? 0 : 1, length = n)
 get_range(cs) = get_range(length(cs))
 
 get_colorscheme(v::AbstractVector{<:Colorant}) = ColorScheme(v)

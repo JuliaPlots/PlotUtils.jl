@@ -1,4 +1,4 @@
-always_for_in = true
+always_for_in = false
 import_to_using = false
 align_pair_arrow = true
 align_assignment = true

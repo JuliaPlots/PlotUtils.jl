@@ -223,6 +223,10 @@ end
         end
     end
 
+    @testset "PlotUtils.jl/issues/155" begin
+        palette(:tab10, 1)
+    end
+
     @testset "PlotUtils.jl/issues/156" begin
         for c ∈ cgrad([:black, RGBA{Float64}(1,1,1,1)], 5; categorical=true)
             @test 0 ≤ alpha(c) ≤ 1
