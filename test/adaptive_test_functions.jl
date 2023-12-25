@@ -26,7 +26,7 @@ const test_funcs = [
 ]
 
 main() = begin
-    plots = [plot(func...) for func in test_funcs]
+    plots = [plot(func...) for func ∈ test_funcs]
 
     pitchfork = plot(x -> sqrt(x), 0, 10)
     plot!(pitchfork, x -> -sqrt(x), 0, 10)
@@ -38,7 +38,7 @@ main() = begin
     m = ceil(Int, √(np)) + 1
     n, r = divrem(np, m)
     r == 0 || (n += 1)
-    append!(plots, [plot() for _ in 1:(m * n - np)])
+    append!(plots, [plot() for _ ∈ 1:(m * n - np)])
 
     @assert length(plots) == m * n
 

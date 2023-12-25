@@ -36,7 +36,7 @@ function adapted_grid(
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
     rng = MersenneTwister(1337)
     rand_factor = 0.05
-    for i in 2:(length(xs) - 1)
+    for i ∈ 2:(length(xs) - 1)
         xs[i] += 2rand_factor * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
     end
 
@@ -67,7 +67,7 @@ function adapted_grid(
         # Guard against division by zero later
         (f_range == 0 || !isfinite(f_range)) && (f_range = one(f_range))
         # Skip first and last interval
-        for interval in 1:n_intervals
+        for interval ∈ 1:n_intervals
             p = 2interval
             if n_tot_refinements[interval] ≥ max_recursions
                 # Skip intervals that have been refined too much
@@ -77,7 +77,7 @@ function adapted_grid(
             else
                 tot_w = 0.0
                 # Do a small convolution
-                for (q, w) in ((-1, 0.25), (0, 0.5), (1, 0.25))
+                for (q, w) ∈ ((-1, 0.25), (0, 0.5), (1, 0.25))
                     interval == 1 && q == -1 && continue
                     interval == n_intervals && q == 1 && continue
                     tot_w += w
@@ -99,7 +99,7 @@ function adapted_grid(
             end
         end
         # Approximate end intervals as being the same curvature as those next to it.
-        # This avoids computing the function in the end points
+        # This avoids computing the function ∈ the end points
         curvatures[1] = curvatures[2]
         active[1] = active[2]
         curvatures[end] = curvatures[end - 1]
@@ -121,10 +121,10 @@ function adapted_grid(
         new_fs = zeros(eltype(fs), n_points + n_new_points)
         new_tot_refinements = zeros(Int, n_intervals + n_intervals_to_refine)
         k = kk = 0
-        for i in 1:n_points
-            if iseven(i) # This is a point in an interval
+        for i ∈ 1:n_points
+            if iseven(i) # This is a point ∈ an interval
                 interval = i ÷ 2
-                if interval in intervals_to_refine
+                if interval ∈ intervals_to_refine
                     kk += 1
                     new_tot_refinements[interval - 1 + kk] = n_tot_refinements[interval] + 1
                     new_tot_refinements[interval + kk] = n_tot_refinements[interval] + 1
@@ -170,10 +170,10 @@ Tries to call the callable `F` (which must accept one real argument)
 and determine when it executes without error.
 
 If `F` is an `AbstractArray`, it will find the first element of `vec`
-for which all callables in `F` execute.
+for which all callables ∈ `F` execute.
 """
 function tryrange(F, vec)
-    for v in vec
+    for v ∈ vec
         try
             tmp = F(v)
             return v
@@ -186,8 +186,8 @@ end
 # try some intervals over which the function may be defined
 
 function tryrange(F::AbstractArray, vec)
-    rets = [tryrange(f, vec) for f in F] # get the preferred for each
+    rets = [tryrange(f, vec) for f ∈ F] # get the preferred for each
     maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
-    rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
+    rets .= [tryrange(f, vec[maxind:maxind]) for f ∈ F] # ensure that all functions compute there
     rets[1]
 end

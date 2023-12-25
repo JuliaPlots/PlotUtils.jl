@@ -40,7 +40,7 @@ const _default_colorscheme = generate_colorscheme()
 
 if VERSION ≥ v"1.8.0"
     @compile_workload begin
-        for T in (Int, Float64)
+        for T ∈ (Int, Float64)
             optimize_ticks(-one(T), one(T))
             optimize_ticks(-one(T), one(T); k_min = 2, k_max = 10)
             adapted_grid(sin, (-one(T), one(T)))

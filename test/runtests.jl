@@ -1,9 +1,9 @@
-using PlotUtils
-using Test
 using Statistics: mean
-using Dates
-using Random
 using StableRNGs
+using PlotUtils
+using Random
+using Dates
+using Test
 
 rng = StableRNG(42)
 warn_ticks = :warn, "No strict ticks found"
@@ -27,7 +27,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
 
     grad = cgrad()
     @test typeof(grad) == PlotUtils.ContinuousColorGradient
-    @test plot_color(grad) === grad
+    @test plot_color(grad) ≡ grad
 
     # JuliaPlots/Plots.jl/issues/4270
     @test get(grad, BigFloat(1), (-0.0003354626279, 1.0)) isa RGBA{BigFloat}
@@ -44,6 +44,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test length(color_list(grad)) == 3
     @test grad.values == [0, 0.1, 1]
 
+    Random.seed!(rng, 42)
     cs = plot_color(rand(rng, 10))
     @test typeof(cs) == Vector{C}
     @test length(cs) == 10
@@ -56,7 +57,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     cs = plot_color(rand(rng, 10), 0.5)
     @test typeof(cs) == Vector{C}
     @test length(cs) == 10
-    for c in cs
+    for c ∈ cs
         @test alpha(c) == 0.5
     end
 
@@ -64,7 +65,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test typeof(cs) == Matrix{C}
     @test length(cs) == 16
     @test size(cs) == (4, 4)
-    for c in cs
+    for c ∈ cs
         @test alpha(c) == 0.5
     end
 end
@@ -108,9 +109,9 @@ end
 
 function test_ticks(x, y, ticks)
     @test issorted(ticks)
-    @test all(x .<= ticks .<= y)
+    @test all(x .≤ ticks .≤ y)
     if x < y
-        @test length(ticks) >= 2
+        @test length(ticks) ≥ 2
         @test is_uniformly_spaced(ticks)
     end
 end
@@ -127,33 +128,33 @@ end
     end
 
     @testset "small range" begin
-        @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
+        @testset "small range $x, $(i)ϵ" for x ∈ exp10.(-12:12), i ∈ -5:5
             y = x + i * eps(x)
             x, y = minmax(x, y)
             ticks, = optimize_ticks(x, y)
             @test issorted(ticks)
-            @test all(x .<= ticks .<= y)
+            @test all(x .≤ ticks .≤ y)
             # Fails:
             # @test allunique(ticks)
         end
     end
 
     @testset "fixed ranges" begin
-        @testset "fixed range $x..$y" for (x, y) in [(2, 14), (14, 25), (16, 36), (57, 69)]
+        @testset "fixed range $x..$y" for (x, y) ∈ [(2, 14), (14, 25), (16, 36), (57, 69)]
             test_ticks(+x, +y, optimize_ticks(+x, +y)[1])
             test_ticks(-y, -x, optimize_ticks(-y, -x)[1])
         end
     end
 
     @testset "random ranges" begin
-        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ in 1:10, i in -5:5]
-        @testset "random range $x..$y" for (x, y) in r
+        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ ∈ 1:10, i ∈ -5:5]
+        @testset "random range $x..$y" for (x, y) ∈ r
             test_ticks(x, y, optimize_ticks(x, y)[1])
         end
     end
 
     @testset "digits" begin
-        @testset "digits $((10^n) - 1)*10^$i" for n in 1:9, i in -9:9
+        @testset "digits $((10^n) - 1)*10^$i" for n ∈ 1:9, i ∈ -9:9
             y0 = 10^n
             x0 = y0 - 1
             x, y = (x0, y0) .* 10.0^i
@@ -163,7 +164,7 @@ end
     end
 
     @testset "types" begin
-        for T in (Int32, Int64, Float16, Float32, Float64)
+        for T ∈ (Int32, Int64, Float16, Float32, Float64)
             x, y = T(1), T(10)
             ticks, = optimize_ticks(x, y)
             @test eltype(ticks) <: AbstractFloat
@@ -185,7 +186,7 @@ end
         end
 
         @testset "PlotUtils.jl/issues/114" begin
-            let x = -0.1eps(), y = 0.1eps()
+            let x = -1.2eps(), y = 1.2eps()
                 test_ticks(x, y, optimize_ticks(x, y)[1])
             end
         end
@@ -207,19 +208,31 @@ end
             let x = NaN, y = 1.0
                 ticks, = @test_logs warn_ticks optimize_ticks(x, y)
                 @test isnan(ticks[1])
-                @test ticks[2] === y
+                @test ticks[2] ≡ y
                 ticks, = @test_logs warn_ticks optimize_ticks(x, y, k_min = 5)
                 @test isnan(ticks[1])
-                @test ticks[2] === y
+                @test ticks[2] ≡ y
             end
             let x = 0.0f0, y = Inf32
                 ticks, = @test_logs warn_ticks optimize_ticks(x, y)
-                @test ticks[1] === x
+                @test ticks[1] ≡ x
                 @test isinf(ticks[2])
                 ticks, = @test_logs warn_ticks optimize_ticks(x, y, k_min = 5)
-                @test ticks[1] === x
+                @test ticks[1] ≡ x
                 @test isinf(ticks[2])
             end
+        end
+    end
+
+    @testset "PlotUtils.jl/issues/155" begin
+        for n ∈ 1:10
+            @test length(palette(:tab10, n)) == n
+        end
+    end
+
+    @testset "PlotUtils.jl/issues/156" begin
+        for c ∈ cgrad([:black, RGBA{Float64}(1, 1, 1, 1)], 5; categorical = true)
+            @test 0 ≤ alpha(c) ≤ 1
         end
     end
 end
@@ -227,8 +240,8 @@ end
 @testset "adapted grid" begin
     let f = sin, int = (0, π)
         xs, fs = adapted_grid(f, int)
-        for i in 1:(length(xs) - 1)
-            for λ in 0:0.1:1
+        for i ∈ 1:(length(xs) - 1)
+            for λ ∈ 0:0.1:1
                 # test that `f` is well approximated by a line
                 # in the interval `(xs[i], xs[i+1])`
                 x = λ * xs[i] + (1 - λ) * xs[i + 1]
@@ -262,14 +275,15 @@ end
 end
 
 @testset "zscale" begin
-    bkg = 30 .* randn(rng, 8192) .+ 1000
-    data = bkg .+ 100 .* randn(rng, 8192) .+ 2500
+    Random.seed!(rng, 42)
+    bkg = 30 .* randn(rng, 4_096) .+ 1_000
+    data = bkg .+ 100 .* randn(rng, 4_096) .+ 2500
     defects = rand(rng, CartesianIndices(bkg), 500)
     data[defects] .= rand(rng, [0, 1e7], 500)
     cmin, cmax = zscale(data)
     # values calculated using IRAF
-    @test cmin ≈ 2841.586 atol = 1e-3
-    @test cmax ≈ 4171.648 atol = 1e-3
+    @test cmin ≈ 2_784.824 atol = 1e-3
+    @test cmax ≈ 4_211.375 atol = 1e-3
     @test cmin > minimum(data)
     @test cmax < maximum(data)
 
@@ -278,7 +292,7 @@ end
     @test cmin == 1
     @test cmax == 100
 
-    # Make sure output is finite
+    # make sure output is finite
     data = vcat(0:999, NaN)
     cmin, cmax = zscale(data)
     @test cmin == 0
@@ -287,19 +301,15 @@ end
 
 @testset "allocations" begin  # see PlotUtils.jl/pull/136
     stats = @timed optimize_ticks(0.1123, 100.132)
-    @test stats.bytes < 1_000  # ~ 736 (on 1.8)
-    @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
+    @test stats.bytes < 1_000  # ~ 736 (on 1.9)
+    @test stats.time < 1e-3  # ~ 0.22ms (on 1.9)
 end
 
-if Sys.islinux()
+if Sys.islinux() && VERSION ≥ v"1.9.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
     @testset "downstream" begin
-        withenv("GKSwstype" => "nul") do
-            include("downstream.jl")
-        end
-        @test true
+        include("downstream.jl")
     end
-
-    @testset "adaptive" begin
+    @testset "adaptive" begin  # NOTE: must be ran after downstream test (for Plots)
         withenv("GKSwstype" => "nul") do
             include("adaptive_test_functions.jl")
         end

@@ -25,7 +25,7 @@ abstract type ColorGradient <: AbstractColorList end
 Base.getindex(cg::ColorGradient, x::Union{AbstractFloat,AbstractVector{<:AbstractFloat}}) =
     get(cg, x)
 function Base.get(cg::ColorGradient, v::AbstractArray, rangescale = (0.0, 1.0))
-    rangescale === :extrema && (rangescale = extrema(v))
+    rangescale ≡ :extrema && (rangescale = extrema(v))
     map(x -> get(cg, x, rangescale), v)
 end
 
@@ -53,7 +53,7 @@ Base.show(io::IO, m::MIME"image/svg+xml", cg::ContinuousColorGradient) =
 
 function sample_color(cg::ContinuousColorGradient, x::AbstractFloat)
     c, v = cg.colors, cg.values
-    if (index = findfirst(==(x), v)) === nothing
+    if (index = findfirst(==(x), v)) ≡ nothing
         nm1 = length(v) - 1
         i = min(nm1, findlast(<(x), v))
         r = (x - v[i]) / (v[i + 1] - v[i])
@@ -81,7 +81,7 @@ function ColorSchemes.getinverse(cg::ContinuousColorGradient, c)
     alpha(c) == 0 && return NaN
     z = getinverse(to_rgb(get_colorscheme(cg)), to_rgb(c))
     cr = get_range(cg.colors)
-    if (index = findfirst(==(z), cr)) !== nothing
+    if (index = findfirst(==(z), cr)) ≢ nothing
         cg.values[index]
     else
         i = min(length(cr) - 1, findlast(<(z), cr))
@@ -91,15 +91,15 @@ end
 
 function prepare_continuous_cgrad_colors(c, v)
     v = sort(unique(clamp.(v, 0, 1)))
-    0 in v || pushfirst!(v, 0)
-    1 in v || push!(v, 1)
+    0 ∈ v || pushfirst!(v, 0)
+    1 ∈ v || push!(v, 1)
     nv = length(v)
     nc = length(c)
     c, v = if nc != nv
         value_range = get_range(nv)
         color_range = get_range(nc)
         values = [0.0]
-        for i in 2:nv
+        for i ∈ 2:nv
             inds = findall(x -> value_range[i - 1] < x < value_range[i], color_range)
             isempty(inds) || append!(
                 values,
@@ -161,10 +161,12 @@ end
 
 function prepare_categorical_cgrad_colors(c, v)
     v = sort(unique(clamp.(v, 0, 1)))
-    0 in v || pushfirst!(v, 0)
-    1 in v || push!(v, 1)
-    c = ColorScheme(plot_color(c[get_range(length(v) - 1)]))
-    c, v
+    0 ∈ v || pushfirst!(v, 0)
+    1 ∈ v || push!(v, 1)
+    colors = map(c[get_range(length(v) - 1)]) do col
+        RGBA(RGB(col), clamp(alpha(col), 0, 1))
+    end
+    ColorScheme(plot_color(colors)), v
 end
 
 ## cgrad
@@ -193,22 +195,22 @@ function cgrad(
     rev = false,
     alpha = nothing,
 )
-    if categorical !== nothing && categorical
+    if categorical ≢ nothing && categorical
         colors, values = prepare_categorical_cgrad_colors(colors, values)
     end
 
-    if alpha !== nothing
+    if alpha ≢ nothing
         rgbs = convert.(RGB, colors.colors)
         colors = ColorScheme(RGBA.(rgbs, alpha))
     end
     rev && (colors = reverse(colors))
-    values = if scale in (:log, :log10) || scale isa typeof(log10)
+    values = if scale ∈ (:log, :log10) || scale ≡ log10
         log10.(ColorSchemes.remap(values, 0, 1, 1, 10))
-    elseif scale === :log2 || scale isa typeof(log2)
+    elseif scale ≡ :log2 || scale ≡ log2
         log2.(ColorSchemes.remap(values, 0, 1, 1, 2))
-    elseif scale === :ln || scale isa typeof(log)
+    elseif scale ≡ :ln || scale ≡ log
         log.(ColorSchemes.remap(values, 0, 1, 1, ℯ))
-    elseif scale in (:exp, :exp10) || scale isa typeof(exp10) || scale isa typeof(exp)
+    elseif scale ∈ (:exp, :exp10) || scale ≡ exp10 || scale ≡ exp
         ColorSchemes.remap(exp10.(values), 1, 10, 0, 1)
     elseif scale isa Function
         v = scale.(values)
@@ -217,7 +219,7 @@ function cgrad(
         values
     end
 
-    if categorical !== nothing && categorical
+    if categorical ≢ nothing && categorical
         CategoricalColorGradient(colors, values)
     else
         ContinuousColorGradient(colors, values)
@@ -230,12 +232,12 @@ function cgrad(
     categorical = nothing,
     kwargs...,
 )
-    values = get_range(n + (categorical !== nothing))
+    values = get_range(n + (categorical ≢ nothing))
     cgrad(colors, values; categorical = categorical, kwargs...)
 end
 
 function cgrad(colors, args...; kwargs...)
-    colors === :default && (colors = :inferno)
+    colors ≡ :default && (colors = :inferno)
     cgrad(get_colorscheme(colors), args...; kwargs...)
 end
 
@@ -244,8 +246,8 @@ cgrad(; kw...) = cgrad(DEFAULT_COLOR_GRADIENT[]; kw...)
 default_cgrad(cg; kw...) = DEFAULT_COLOR_GRADIENT[] = cgrad(cg; kw...)
 
 function get_rangescale(rangescale)
-    rangescale === :clamp && return (0.0, 1.0)
-    rangescale === :extrema && return extrema(x)
+    rangescale ≡ :clamp && return (0.0, 1.0)
+    rangescale ≡ :extrema && return extrema(x)
     (rangescale isa NTuple{2,Number}) || error(
         "rangescale ($rangescale) not supported, should be :clamp, :extrema or tuple (minVal, maxVal).  Got $(rangescale).",
     )
@@ -272,7 +274,7 @@ If `rev` is `true` colors are reversed.
 """
 function palette(cs; rev = false, alpha = nothing)
     cs = get_colorscheme(cs)
-    if alpha !== nothing
+    if alpha ≢ nothing
         rgbs = convert.(RGB, cs.colors)
         cs = ColorScheme(RGBA.(rgbs, alpha))
     end
@@ -288,7 +290,7 @@ end
 
 ## Utils
 
-get_range(n::Int) = range(0, stop = 1, length = n)
+get_range(n::Int) = range(0, stop = n == 1 ? 0 : 1, length = n)
 get_range(cs) = get_range(length(cs))
 
 get_colorscheme(v::AbstractVector{<:Colorant}) = ColorScheme(v)
@@ -296,7 +298,7 @@ get_colorscheme(v::AbstractVector) = ColorScheme(parse.(Colorant, v))
 function get_colorscheme(sym::Symbol)
     haskey(MISC_COLORSCHEMES, sym) && return MISC_COLORSCHEMES[sym]
     sym = get(COLORSCHEME_ALIASES, sym, sym)
-    if sym === :default || sym === :auto
+    if sym ≡ :default || sym ≡ :auto
         _default_colorscheme
     elseif haskey(ColorSchemes.colorschemes, sym)
         ColorSchemes.colorschemes[sym]
@@ -310,7 +312,7 @@ get_colorscheme(cs::ColorScheme) = cs
 
 function cvec(cs, n = 10; kw...)
     cg = cgrad(cs; kw...)
-    RGBA{Float64}[cg[z] for z in get_range(n)]
+    RGBA{Float64}[cg[z] for z ∈ get_range(n)]
 end
 
 color_list(c) = get_colorscheme(c).colors
@@ -329,9 +331,9 @@ rgba_string(cg::T) where {T<:Union{ColorScheme,ColorGradient,ColorPalette}} =
     rgba_string(cg[1])
 
 is_colorscheme(sym) =
-    sym in keys(ColorSchemes.colorschemes) ||
-    sym in keys(COLORSCHEME_ALIASES) ||
-    sym in keys(MISC_COLORSCHEMES)
+    sym ∈ keys(ColorSchemes.colorschemes) ||
+    sym ∈ keys(COLORSCHEME_ALIASES) ||
+    sym ∈ keys(MISC_COLORSCHEMES)
 
 const DEFAULT_COLOR_GRADIENT = Ref(cgrad(ColorSchemes.colorschemes[:inferno]))
 

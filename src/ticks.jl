@@ -30,31 +30,33 @@ function bounding_order_of_magnitude(xspan::T, base::T) where {T}
 end
 
 function postdecimal_digits(x::T) where {T}
-    for i in floor(Int, log10(floatmin(T))):ceil(Int, log10(floatmax(T)))
+    for i ∈ floor(Int, log10(floatmin(T))):ceil(Int, log10(floatmax(T)))
         x == floor(x; digits = i) && return i
     end
     return 0
 end
 
-fallback_ticks(x_min::T, x_max::T, k_min, k_max) where {T} = (
+function fallback_ticks(x_min::T, x_max::T, k_min, k_max, strict_span) where {T}
+    if !strict_span && x_min ≈ x_max
+        x_min, x_max = prevfloat(x_min), nextfloat(x_max)
+    end
     if k_min != 2 && isfinite(x_min) && isfinite(x_max)
         collect(T, range(x_min, x_max; length = k_min)), x_min, x_max
     else
         T[x_min, x_max], x_min, x_max
     end
-)
+end
 
 # Empty catchall
 optimize_ticks() = Any[]
 
 """
-    optimize_ticks(xmin, xmax; extend_ticks::Bool=false,
-                           Q=[(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
-                           k_min::Int=2, k_max::Int=10, k_ideal::Int=5,
-                           granularity_weight::Float64=1/4, simplicity_weight::Float64=1/6,
-                           coverage_weight::Float64=1/3, niceness_weight::Float64=1/4,
-                           strict_span=true, span_buffer = nothing
-        )
+optimize_ticks(xmin, xmax; extend_ticks::Bool = false,
+               Q = [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
+               k_min = 2, k_max = 10, k_ideal = 5,
+               granularity_weight = 1/4, simplicity_weight = 1/6,
+               coverage_weight = 1/3, niceness_weight = 1/4,
+               strict_span = true, span_buffer = nothing)
 
 Find some reasonable values for tick marks.
 
@@ -133,7 +135,7 @@ These components are defined as follows:
 and the variables here are:
 
 *  `q`: element of `Q`.
-*  `i`: index of `q` in `Q`.
+*  `i`: index of `q` ∈ `Q`.
 *  `v`: 1 if label range includes 0, 0 otherwise.
 """
 function optimize_ticks(
@@ -152,19 +154,17 @@ function optimize_ticks(
     span_buffer = nothing,
     scale = nothing,
 ) where {T}
-    F = float(T)
-    if x_max - x_min < eps(F)
-        return fallback_ticks(x_min, x_max, k_min, k_max)
-    end
+    x_min ≈ x_max && return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
 
-    Qv = F[q[1] for q in Q]
-    Qs = F[q[2] for q in Q]
+    F = float(T)
+    Qv = F[q[1] for q ∈ Q]
+    Qs = F[q[2] for q ∈ Q]
 
     base_float = F(get(_logScaleBases, scale, 10.0))
     base = isinteger(base_float) ? Int(base_float) : 10
     is_log_scale = scale ∈ _logScales
 
-    for i in 1:2
+    for i ∈ 1:2
         sspan = i == 1 ? strict_span : false
         high_score, best, min_best, max_best = optimize_ticks_typed(
             F(x_min),
@@ -190,7 +190,7 @@ function optimize_ticks(
             if sspan
                 @warn "No strict ticks found"
             else
-                return fallback_ticks(x_min, x_max, k_min, k_max)
+                return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
             end
         else
             return best, min_best, max_best
@@ -226,7 +226,7 @@ function optimize_ticks_typed(
     # for q values specified in Qv
     num_digits = (
         bounding_order_of_magnitude(max(abs(x_min), abs(x_max)), base_float) +
-        maximum(postdecimal_digits(q) for q in Qv)
+        maximum(postdecimal_digits(q) for q ∈ Qv)
     )
 
     viewmin_best, viewmax_best = x_min, x_max
@@ -240,8 +240,8 @@ function optimize_ticks_typed(
     @inbounds begin
         while 2k_max * base_float^(z + 1) > xspan
             sigdigits = max(1, num_digits - z)
-            for k in k_min:(2k_max)
-                for (q, qscore) in zip(Qv, Qs)
+            for k ∈ k_min:(2k_max)
+                for (q, qscore) ∈ zip(Qv, Qs)
                     tickspan = q * base_float^z
                     tickspan < eps(F) && continue
                     span = (k - 1) * tickspan
@@ -254,16 +254,16 @@ function optimize_ticks_typed(
                     # try to favor integer exponents for log scales
                     (nice_scale = !is_log_scale || isinteger(tickspan)) || (qscore = F(0))
 
-                    while r * tickspan <= x_min
+                    while r * tickspan ≤ x_min
                         # Filter or expand ticks
                         if extend_ticks
-                            for i in 0:(3k - 1)
+                            for i ∈ 0:(3k - 1)
                                 S[i + 1] = (r + i - k) * tickspan
                             end
                             imin = k + 1
                             imax = 2k
                         else
-                            for i in 0:(k - 1)
+                            for i ∈ 0:(k - 1)
                                 S[i + 1] = (r + i) * tickspan
                             end
                             imin = 1
@@ -286,8 +286,8 @@ function optimize_ticks_typed(
 
                             # we do this because it saves allocations and leaves S type stable
                             counter = 0
-                            for i in 1:imax
-                                if (viewmin - buf) <= S[i] <= (viewmax + buf)
+                            for i ∈ 1:imax
+                                if (viewmin - buf) ≤ S[i] ≤ (viewmax + buf)
                                     counter += 1
                                     S[counter] = S[i]
                                 end
@@ -298,7 +298,7 @@ function optimize_ticks_typed(
                         end
 
                         # evaluate quality of ticks
-                        has_zero = r <= 0 && abs(r) < k
+                        has_zero = r ≤ 0 && abs(r) < k
 
                         # simplicity
                         s = has_zero && nice_scale ? 1 : 0
@@ -324,11 +324,11 @@ function optimize_ticks_typed(
                         if strict_span && span > xspan
                             score -= 10000
                         end
-                        if span >= 2xspan
+                        if span ≥ 2xspan
                             score -= 1000
                         end
 
-                        if score > high_score && (k_min <= len <= k_max)
+                        if score > high_score && (k_min ≤ len ≤ k_max)
                             viewmin_best, viewmax_best = viewmin, viewmax
                             high_score, len_S_best = score, len
                             copyto!(S_best, view(S, 1:len))
@@ -382,10 +382,8 @@ function optimize_ticks(
         x_max += Second(1)
     end
 
-    if year(x_max) - year(x_min) <= 1 && scale !== :year
-        if year(x_max) == year(x_min) &&
-           month(x_max) - month(x_min) <= 1 &&
-           scale !== :month
+    if year(x_max) - year(x_min) ≤ 1 && scale ≢ :year
+        if year(x_max) == year(x_min) && month(x_max) - month(x_min) ≤ 1 && scale ≢ :month
             ticks = DateTime[]
 
             scales = [
@@ -399,7 +397,7 @@ function optimize_ticks(
             ]
 
             # ticks on week boundries
-            if x_min + Day(7) < x_max || scale === :week
+            if x_min + Day(7) < x_max || scale ≡ :week
                 push!(ticks, x_min)
                 while true
                     next_month = Date(year(ticks[end]), month(ticks[end])) + Month(1)
@@ -407,18 +405,18 @@ function optimize_ticks(
                         push!(ticks, ticks[end] + Week(1))
                     end
                     push!(ticks, next_month)
-                    if next_month >= x_max
+                    if next_month ≥ x_max
                         break
                     end
                 end
             else
                 scale = nothing
-                if scale !== :auto
+                if scale ≢ :auto
                     # TODO: manually setting scale with :day, :minute, etc
                 end
 
-                if scale === nothing
-                    for proposed_scale in [
+                if scale ≡ nothing
+                    for proposed_scale ∈ [
                         Day(1),
                         Hour(1),
                         Minute(1),
@@ -434,18 +432,18 @@ function optimize_ticks(
                     end
                 end
 
-                if scale === nothing
+                if scale ≡ nothing
                     scale = Millisecond(1)
                 end
 
                 # round x_min down
-                first_tick = if scale === Day(1)
+                first_tick = if scale ≡ Day(1)
                     DateTime(year(x_min), month(x_min), day(x_min))
-                elseif scale === Hour(1)
+                elseif scale ≡ Hour(1)
                     DateTime(year(x_min), month(x_min), day(x_min), hour(x_min))
-                elseif scale === Minute(1)
+                elseif scale ≡ Minute(1)
                     DateTime(year(x_min), month(x_min), day(x_min), hour(x_min), minute(x_min))
-                elseif scale === Second(1)
+                elseif scale ≡ Second(1)
                     DateTime(
                         year(x_min),
                         month(x_min),
@@ -454,7 +452,7 @@ function optimize_ticks(
                         minute(x_min),
                         second(x_min),
                     )
-                elseif scale === Millisecond(100)
+                elseif scale ≡ Millisecond(100)
                     DateTime(
                         year(x_min),
                         month(x_min),
@@ -464,7 +462,7 @@ function optimize_ticks(
                         second(x_min),
                         millisecond(x_min) % 100,
                     )
-                elseif scale === Millisecond(10)
+                elseif scale ≡ Millisecond(10)
                     DateTime(
                         year(x_min),
                         month(x_min),
@@ -503,7 +501,7 @@ function optimize_ticks(
             extend_ticks = extend_ticks,
         )
 
-        return DateTime[DateTime(round(y)) for y in ticks],
+        return DateTime[DateTime(round(y)) for y ∈ ticks],
         DateTime(round(viewmin)),
         DateTime(round(viewmax))
     end
@@ -512,7 +510,7 @@ end
 # Generate ticks suitable for multiple scales.
 function multilevel_ticks(viewmin::T, viewmax::T; scales = [0.5, 5.0, 10.0]) where {T}
     ticks = Dict()
-    for scale in scales
+    for scale ∈ scales
         ticks[scale] = optimize_ticks(
             viewmin,
             viewmax,
@@ -539,10 +537,10 @@ function multilevel_ticks(
     # TODO: This needs to be improved for DateTime
     span = convert(Float64, Dates.toms(viewmax - viewmin))
     ticks = Dict()
-    for scale in scales
-        s = if scale === :year
+    for scale ∈ scales
+        s = if scale ≡ :year
             span / Dates.toms(Day(360))
-        elseif scale === :month
+        elseif scale ≡ :month
             span / Dates.toms(Day(90))
         else
             span / Dates.toms(Day(1))
@@ -596,8 +594,8 @@ function optimize_datetime_ticks(a_min, a_max; k_min = 2, k_max = 4)
         Dates.Year,
     ]
     i = findfirst(period_hierarchy .== P)
-    showtype = i >= 5 ? Date : DateTime
-    start = DateTime((PH(x_min) for PH in period_hierarchy[end:-1:i])...) + P(1)
+    showtype = i ≥ 5 ? Date : DateTime
+    start = DateTime((PH(x_min) for PH ∈ period_hierarchy[end:-1:i])...) + P(1)
     ticks = collect(start:steplength:x_max)
     labels = string.(showtype.(ticks))
 
