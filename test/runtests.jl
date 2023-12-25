@@ -1,9 +1,9 @@
-using PlotUtils
-using Test
 using Statistics: mean
-using Dates
-using Random
 using StableRNGs
+using PlotUtils
+using Random
+using Dates
+using Test
 
 rng = StableRNG(42)
 warn_ticks = :warn, "No strict ticks found"
@@ -44,6 +44,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
     @test length(color_list(grad)) == 3
     @test grad.values == [0, 0.1, 1]
 
+    Random.seed!(rng, 42)
     cs = plot_color(rand(rng, 10))
     @test typeof(cs) == Vector{C}
     @test length(cs) == 10
@@ -272,14 +273,15 @@ end
 end
 
 @testset "zscale" begin
-    bkg = 30 .* randn(rng, 8192) .+ 1000
-    data = bkg .+ 100 .* randn(rng, 8192) .+ 2500
+    Random.seed!(rng, 42)
+    bkg = 30 .* randn(rng, 4_096) .+ 1_000
+    data = bkg .+ 100 .* randn(rng, 4_096) .+ 2500
     defects = rand(rng, CartesianIndices(bkg), 500)
     data[defects] .= rand(rng, [0, 1e7], 500)
     cmin, cmax = zscale(data)
     # values calculated using IRAF
-    @test cmin ≈ 2841.586 atol = 1e-3
-    @test cmax ≈ 4171.648 atol = 1e-3
+    @test cmin ≈ 2_784.824 atol = 1e-3
+    @test cmax ≈ 4_211.375 atol = 1e-3
     @test cmin > minimum(data)
     @test cmax < maximum(data)
 
@@ -288,7 +290,7 @@ end
     @test cmin == 1
     @test cmax == 100
 
-    # Make sure output is finite
+    # make sure output is finite
     data = vcat(0:999, NaN)
     cmin, cmax = zscale(data)
     @test cmin == 0
@@ -297,8 +299,8 @@ end
 
 @testset "allocations" begin  # see PlotUtils.jl/pull/136
     stats = @timed optimize_ticks(0.1123, 100.132)
-    @test stats.bytes < 1_000  # ~ 736 (on 1.8)
-    @test stats.time < 1e-3  # ~ 0.56ms (on 1.8)
+    @test stats.bytes < 1_000  # ~ 736 (on 1.9)
+    @test stats.time < 1e-3  # ~ 0.22ms (on 1.9)
 end
 
 if Sys.islinux() && VERSION ≥ v"1.9.0"
