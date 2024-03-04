@@ -154,7 +154,9 @@ function optimize_ticks(
     span_buffer = nothing,
     scale = nothing,
 ) where {T}
-    x_min ≈ x_max && return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
+    if isapprox(x_min, x_max, rtol = 1000.0 * eps(T))
+        return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
+    end
 
     F = float(T)
     Qv = F[q[1] for q ∈ Q]
