@@ -155,7 +155,7 @@ function optimize_ticks(
     scale = nothing,
 ) where {T}
 
-    rtol = T isa AbstractFloat ? 1000.0 * eps(T) : Base.rtoldefault(x_min, x_max, 0)
+    rtol = T <: AbstractFloat ? 1000.0 * eps(T) : Base.rtoldefault(x_min, x_max, 0)
     if isapprox(x_min, x_max, rtol = rtol)
         return fallback_ticks(x_min, x_max, k_min, k_max, strict_span)
     end
