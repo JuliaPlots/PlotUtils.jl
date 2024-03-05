@@ -22,7 +22,7 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.julia-version }}
-
+      - uses: julia-actions/cache@latest
       - uses: actions/checkout@v2
       - name: Install JuliaFormatter and format
         run: |
