@@ -119,6 +119,9 @@ end
 @testset "ticks" begin
     @test optimize_ticks(-1, 2) == ([-1.0, 0.0, 1.0, 2.0], -1.0, 2.0)
 
+    # check if ticks still generate if max - min << abs(min) (i.e. for Float64 ranges)
+    @test optimize_ticks(1e11 - 1, 1e11 + 2) == (1e11 .+ (-1:2), 1e11 - 1.0, 1e11 + 2.0)
+
     @testset "dates" begin
         dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
         @test optimize_datetime_ticks(dt1, dt2) == (
