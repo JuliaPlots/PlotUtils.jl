@@ -19,13 +19,15 @@ jobs:
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch}}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.version == 'nightly' }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         version:
           - '1.6' # LTS (lowest supported `julia` version declared in `Project.toml`)
           - '1' # latest stable
+        experimental:
+          - false
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64, x86]
         exclude:
@@ -37,9 +39,10 @@ jobs:
         include:
           - version: 'nightly'
             os: ubuntu-latest
+            experimental: true
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
@@ -47,8 +50,10 @@ jobs:
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-processcoverage@latest
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
           file: lcov.info
 
   Skip:
