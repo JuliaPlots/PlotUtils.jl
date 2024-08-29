@@ -36,7 +36,7 @@ export optimize_ticks, optimize_datetime_ticks
 
 include("ticks.jl")
 
-const _default_colorscheme = ColorSchemes.colorscheme(:seaborn_colorblind)
+const _default_colorscheme = ColorSchemes.colorschemes[:seaborn_colorblind]
 
 if VERSION ≥ v"1.8.0"
     @compile_workload begin
