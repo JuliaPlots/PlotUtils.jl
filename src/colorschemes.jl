@@ -422,7 +422,7 @@ const TEST_COLORS = RGBA{Float64}[
 ]
 
 const MISC_COLORSCHEMES = Dict{Symbol,ColorScheme}(
-    :default => generate_colorscheme(),
+    :plots_v1 => generate_colorscheme(),
     :blues => ColorScheme(RGBA{Float64}[colorant"lightblue", colorant"darkblue"]),
     :reds => ColorScheme(RGBA{Float64}[colorant"lightpink", colorant"darkred"]),
     :greens => ColorScheme(RGBA{Float64}[colorant"lightgreen", colorant"darkgreen"]),
