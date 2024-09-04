@@ -8,7 +8,7 @@ where the second derivative is approximated to be large.
 When an interval becomes "straight enough" it is no longer divided.
 Functions are evaluated at the end points of the intervals.
 
-The parameter `max_recusions` computes how many times each interval is allowed to be refined
+The parameter `max_recursions` computes how many times each interval is allowed to be refined
 while `max_curvature` specifies below which value of the curvature an interval does not need to be refined further.
 """
 function adapted_grid(
