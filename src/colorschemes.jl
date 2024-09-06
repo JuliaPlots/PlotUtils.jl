@@ -237,7 +237,7 @@ function cgrad(
 end
 
 function cgrad(colors, args...; kwargs...)
-    colors ≡ :default && (colors = :inferno)
+    colors ≡ :default && (colors = DEFAULT_COLOR_GRADIENT[])
     cgrad(get_colorscheme(colors), args...; kwargs...)
 end
 
@@ -335,7 +335,7 @@ is_colorscheme(sym) =
     sym ∈ keys(COLORSCHEME_ALIASES) ||
     sym ∈ keys(MISC_COLORSCHEMES)
 
-const DEFAULT_COLOR_GRADIENT = Ref(cgrad(ColorSchemes.colorschemes[:inferno]))
+const DEFAULT_COLOR_GRADIENT = Ref(cgrad(ColorSchemes.colorschemes[:haline]))
 
 ## Compat
 
@@ -422,6 +422,7 @@ const TEST_COLORS = RGBA{Float64}[
 ]
 
 const MISC_COLORSCHEMES = Dict{Symbol,ColorScheme}(
+    :plots_v1 => generate_colorscheme(),
     :blues => ColorScheme(RGBA{Float64}[colorant"lightblue", colorant"darkblue"]),
     :reds => ColorScheme(RGBA{Float64}[colorant"lightpink", colorant"darkred"]),
     :greens => ColorScheme(RGBA{Float64}[colorant"lightgreen", colorant"darkgreen"]),

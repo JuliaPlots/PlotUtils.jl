@@ -3,7 +3,7 @@ using Pkg, PlotUtils, Test
 LibGit2 = Pkg.GitTools.LibGit2
 TOML = Pkg.TOML
 
-failsafe_clone_checkout(path, url) = begin
+failsafe_clone_checkout(path, url; version = :stable) = begin
     local repo
     for i ∈ 1:6
         try
@@ -27,10 +27,13 @@ failsafe_clone_checkout(path, url) = begin
     end
     @assert isfile(versions)
 
-    stable = maximum(VersionNumber.(keys(TOML.parse(read(versions, String)))))
-    tag = LibGit2.GitObject(repo, "v$stable")
-    hash = string(LibGit2.target(tag))
-    LibGit2.checkout!(repo, hash)
+    if version === :stable
+        stable = maximum(VersionNumber.(keys(TOML.parse(read(versions, String)))))
+        vrs = "v$stable"
+        tag = LibGit2.GitObject(repo, vrs)
+        hash = string(LibGit2.target(tag))
+        LibGit2.checkout!(repo, hash)
+    end
     nothing
 end
 
@@ -50,11 +53,27 @@ end
 develop_stable_Plots() = begin
     tmpd = mktempdir()
     Plots_jl = joinpath(tmpd, "Plots.jl")
+    PlotThemes_jl = joinpath(tmpd, "PlotThemes.jl")
+    PlotsBase_jl = joinpath(Plots_jl, "PlotsBase")
+    RecipesPipeline_jl = joinpath(Plots_jl, "RecipesPipeline")
 
-    failsafe_clone_checkout(Plots_jl, "https://github.com/JuliaPlots/Plots.jl")
-    fake_supported_version!(Plots_jl)
+    failsafe_clone_checkout(
+        Plots_jl,
+        "https://github.com/JuliaPlots/Plots.jl",
+        version = :default,
+    )
+    fake_supported_version!(RecipesPipeline_jl)
+    fake_supported_version!(PlotsBase_jl)
 
-    Pkg.develop(path = Plots_jl)
+    failsafe_clone_checkout(PlotThemes_jl, "https://github.com/JuliaPlots/PlotThemes.jl")
+    fake_supported_version!(PlotThemes_jl)
+
+    Pkg.develop([
+        PackageSpec(path = Plots_jl),
+        PackageSpec(path = RecipesPipeline_jl),
+        PackageSpec(path = PlotsBase_jl),
+        PackageSpec(path = PlotThemes_jl),
+    ])
     Pkg.status(["PlotUtils", "Plots"])
     nothing
 end
