@@ -35,6 +35,28 @@ function generate_colorscheme(
     ColorScheme(colors)
 end
 
+# --------------------------------------------------------------
+# Methods to save colorschemes to CSV
+function cgrad_to_csv(file::AbstractString, cgrad::ColorGradient)
+    values = cgrad.values
+    colors = cgrad.colors.colors
+
+    reds = Colors.red.(colors)
+    greens = Colors.green.(colors)
+    blues = Colors.blue.(colors)
+    alphas = Colors.alpha.(colors)
+    
+    csv_matrix = hcat(values, reds, greens, blues, alphas)
+    csv_matrix_with_headers = vcat(["Value" "Red" "Green" "Blue" "Alpha"], csv_matrix)
+
+    DelimitedFiles.writedlm(file, csv_matrix_with_headers, ',')
+end
+
+function csv_to_cgrad(file::AbstractString)
+    data_cells, header_cells = DelimitedFiles.readdlm(file, ',', Float64, '\n'; header = true)
+    return cgrad(RGBA{Float64}.(data_cells[:, 2], data_cells[:, 3], data_cells[:, 4], data_cells[:, 5]), data_cells[:, 1])
+end
+
 # ----------------------------------------------------------------------------------
 
 function getpctrange(n::Integer)
