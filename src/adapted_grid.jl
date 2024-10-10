@@ -1,6 +1,6 @@
 
 """
-    adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.01, n_points = 31, rng = MersenneTwister(1337))
+    adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.01, n_points = 31)
 
 Computes a grid `x` on the interval [minmax[1], minmax[2]] so that `plot(f, x)` gives a smooth "nice" plot.
 The method used is to create an uniform grid with `n_points` initial points and refine intervals
@@ -10,7 +10,6 @@ Functions are evaluated at the end points of the intervals.
 
 The parameter `max_recursions` computes how many times each interval is allowed to be refined
 while `max_curvature` specifies below which value of the curvature an interval does not need to be refined further.
-The `rng` is used to prevent aliasing and other degenerate cases.
 """
 function adapted_grid(
     @nospecialize(f),
