@@ -17,8 +17,7 @@ function adapted_grid(
     minmax::Tuple{Number,Number};
     max_recursions = 7,
     max_curvature = 0.01,
-    n_points = 31,
-    rng = MersenneTwister(1337)
+    n_points = 31
 )
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
@@ -36,6 +35,7 @@ function adapted_grid(
     xs[end - 1] = xs[end] - (xs[end] - xs[end - 1]) / 4
 
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
+    rng = StableRNG(1337)
     rand_factor = 0.05
     for i ∈ 2:(length(xs) - 1)
         xs[i] += 2rand_factor * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
