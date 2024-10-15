@@ -21,7 +21,7 @@ PrecompileTools = "1"
 Printf = "<0.0.1, 1"
 Random = "<0.0.1, 1"
 Reexport = "1"
-StableRNGs = "1.0.2"
+StableRNGs = "1"
 Statistics = "<0.0.1, 1"
 julia = "1.6"
 
