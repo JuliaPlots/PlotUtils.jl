@@ -8,7 +8,7 @@ using Dates
 
 @reexport using Colors
 import Base: getindex
-import Random: MersenneTwister
+import StableRNGs: StableRNG
 
 export ColorGradient,
     ColorPalette,
