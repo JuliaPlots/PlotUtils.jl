@@ -21,7 +21,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
 
     @test plot_color(:red) == parse(C, :red)
     @test plot_color("red") == parse(C, "red")
-    @test_throws ErrorException plot_color("notacolor")
+    @test_throws ArgumentError plot_color("notacolor")
 
     @test plot_color(colorant"red") == C(1, 0, 0, 1)
 
