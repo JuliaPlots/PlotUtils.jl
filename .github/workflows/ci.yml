@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6' # LTS (lowest supported `julia` version declared in `Project.toml`)
+          - '1.10' # LTS (lowest supported `julia` version declared in `Project.toml`)
           - '1' # latest stable
         experimental:
           - false
