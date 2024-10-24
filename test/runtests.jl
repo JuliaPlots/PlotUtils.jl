@@ -274,8 +274,9 @@ end
     let f = sinc, int = (-40, 40)  # JuliaPlots/Plots.jl/issues/3894
         xs, fs = adapted_grid(sinc, int)
         roots = vcat(int[1]:-1, 1:int[2])
-        count_per_extrema = map(1:length(roots)-1) do idx
-            left = roots[idx]; right = roots[idx+1]
+        count_per_extrema = map(1:(length(roots) - 1)) do idx
+            left = roots[idx]
+            right = roots[idx + 1]
             return count(x -> left < x < right, xs)
         end
         # check that we have at least 5 points for each extrema
