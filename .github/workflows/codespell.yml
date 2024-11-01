@@ -12,3 +12,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: codespell-project/actions-codespell@v2
+      with:
+        ignore_words_list: indexin
+        only_warn: 0
