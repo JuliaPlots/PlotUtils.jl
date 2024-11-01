@@ -91,7 +91,7 @@ end
 
 @testset "reverse" begin
     cmap = reverse(cgrad([:black, :white, :orange], [0, 0.2, 1]))
-    # sample oustide the given values
+    # sample outside the given values
     @test RGB(get(cmap, 0.15)) ≈ RGB(1.0, 0.71323529, 0.1875)
     @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
     @test RGB(get(cmap, 0.75)) ≈ RGB(1.0, 0.97794117, 0.9375)
