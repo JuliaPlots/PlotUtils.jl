@@ -17,6 +17,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
 bool_env(x, default::String = "0")::Bool = tryparse(Bool, get(ENV, x, default))
 
 is_ci() = bool_env("CI")
+is_64b() = Sys.WORD_SIZE == 64
 
 @testset "colors" begin
     @test plot_color(nothing) == C(0, 0, 0, 0)
@@ -124,7 +125,8 @@ end
     @test optimize_ticks(-1, 2) == ([-1.0, 0.0, 1.0, 2.0], -1.0, 2.0)
 
     # check if ticks still generate if max - min << abs(min) (i.e. for Float64 ranges)
-    @test optimize_ticks(1e11 - 1, 1e11 + 2) == (1e11 .+ (-1:2), 1e11 - 1.0, 1e11 + 2.0)
+    is_64b() &&
+        @test optimize_ticks(1e11 - 1, 1e11 + 2) == (1e11 .+ (-1:2), 1e11 - 1.0, 1e11 + 2.0)
 
     @testset "dates" begin
         dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
@@ -162,7 +164,7 @@ end
 
     @testset "digits" begin
         @testset "digits $((10^n) - 1)*10^$i" for n ∈ 1:9, i ∈ -9:9
-            (Sys.WORD_SIZE == 32 && n ≥ 9) && continue
+            (!is_64b() && n ≥ 9) && continue
             y0 = 10^n
             x0 = y0 - 1
             x, y = (x0, y0) .* 10.0^i
@@ -320,7 +322,7 @@ end
 end
 
 if Sys.islinux() && VERSION ≥ v"1.11.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
-    if Sys.WORD_SIZE == 64 && (
+    if is_64b() && (
         !is_ci() ||
         (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
     )
