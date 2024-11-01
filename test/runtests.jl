@@ -14,6 +14,10 @@ warn_ticks = :warn, "No strict ticks found"
 const C = RGBA{Float64}
 const C0 = RGBA{PlotUtils.Colors.N0f8}
 
+bool_env(x, default::String = "0")::Bool = tryparse(Bool, get(ENV, x, default))
+
+is_ci() = bool_env("CI")
+
 @testset "colors" begin
     @test plot_color(nothing) == C(0, 0, 0, 0)
     @test plot_color(false) == C(0, 0, 0, 0)
@@ -314,9 +318,12 @@ end
     @test stats.time < 1e-3  # ~ 0.22ms (on 1.9)
 end
 
-if Sys.islinux() && VERSION ≥ v"1.9.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
-    @testset "downstream" begin
-        include("downstream.jl")
+if Sys.islinux() && VERSION ≥ v"1.10.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
+    if !is_ci() ||
+       (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
+        @testset "downstream" begin
+            include("downstream.jl")
+        end
     end
     @testset "adaptive" begin  # NOTE: must be ran after downstream test (for Plots)
         withenv("GKSwstype" => "nul") do
