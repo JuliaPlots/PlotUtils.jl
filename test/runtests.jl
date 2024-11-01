@@ -83,7 +83,7 @@ end
 @testset "sampling" begin
     # github.com/MakieOrg/Makie.jl/issues/2635
     cmap = cgrad([:black, :white, :orange], [0, 0.2, 1])
-    # sample ouside the given values
+    # sample outside the given values
     @test RGB(get(cmap, 0.15)) ≈ RGB(0.75, 0.75, 0.75)
     @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
     @test RGB(get(cmap, 0.8)) ≈ RGB(1.0, 0.73529411, 0.25)
@@ -91,7 +91,7 @@ end
 
 @testset "reverse" begin
     cmap = reverse(cgrad([:black, :white, :orange], [0, 0.2, 1]))
-    # sample ouside the given values
+    # sample oustide the given values
     @test RGB(get(cmap, 0.15)) ≈ RGB(1.0, 0.71323529, 0.1875)
     @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
     @test RGB(get(cmap, 0.75)) ≈ RGB(1.0, 0.97794117, 0.9375)
