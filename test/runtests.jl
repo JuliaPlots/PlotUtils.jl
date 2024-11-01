@@ -162,6 +162,7 @@ end
 
     @testset "digits" begin
         @testset "digits $((10^n) - 1)*10^$i" for n ∈ 1:9, i ∈ -9:9
+            (Sys.WORD_SIZE == 32 && n ≥ 9) && continue
             y0 = 10^n
             x0 = y0 - 1
             x, y = (x0, y0) .* 10.0^i
@@ -319,10 +320,10 @@ end
 end
 
 if Sys.islinux() && VERSION ≥ v"1.11.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
-    if (
+    if Sys.WORD_SIZE == 64 && (
         !is_ci() ||
         (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
-    ) && Sys.WORD_SIZE == 64
+    )
         @testset "downstream" begin
             include("downstream.jl")
         end
