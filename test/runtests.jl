@@ -319,8 +319,10 @@ end
 end
 
 if Sys.islinux() && VERSION ≥ v"1.11.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
-    if !is_ci() ||
-       (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
+    if (
+        !is_ci() ||
+        (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
+    ) && Sys.WORD_SIZE == 64
         @testset "downstream" begin
             include("downstream.jl")
         end
