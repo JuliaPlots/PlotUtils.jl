@@ -41,8 +41,9 @@ jobs:
           - os: macos-latest
             version: '1.6'
         include:
-          - version: 'nightly'
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            version: 'nightly'
+            arch: x64
             experimental: true
 
     steps:
