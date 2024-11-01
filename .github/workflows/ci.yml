@@ -32,11 +32,14 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x64, x86]
         exclude:
-          # Test 32-bit only on Linux
+          # test 32-bit only on Linux
           - os: macos-latest
             arch: x86
           - os: windows-latest
             arch: x86
+          # https://discourse.julialang.org/t/how-to-fix-github-actions-ci-failures-with-julia-1-6-or-1-7-on-macos-latest-and-macos-14
+          - github-runner: macos-latest
+            julia-version: '1.6'
         include:
           - version: 'nightly'
             os: ubuntu-latest
