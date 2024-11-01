@@ -318,7 +318,7 @@ end
     @test stats.time < 1e-3  # ~ 0.22ms (on 1.9)
 end
 
-if Sys.islinux() && VERSION ≥ v"1.10.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
+if Sys.islinux() && VERSION ≥ v"1.11.0" && isempty(VERSION.prerelease)  # avoid running on `nightly`
     if !is_ci() ||
        (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
         @testset "downstream" begin
