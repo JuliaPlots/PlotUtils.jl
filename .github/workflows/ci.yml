@@ -41,8 +41,9 @@ jobs:
           - os: macos-latest
             version: '1.6'
         include:
-          - version: 'nightly'
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            version: 'nightly'
+            arch: x64
             experimental: true
 
     steps:
@@ -50,6 +51,7 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
