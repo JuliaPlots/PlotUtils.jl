@@ -399,7 +399,7 @@ function optimize_ticks(
                 Millisecond(1),
             ]
 
-            # ticks on week boundries
+            # ticks on week boundaries
             if x_min + Day(7) < x_max || scale ≡ :week
                 push!(ticks, x_min)
                 while true

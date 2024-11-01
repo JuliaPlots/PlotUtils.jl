@@ -16,7 +16,7 @@ function adapted_grid(
     minmax::Tuple{Number,Number};
     max_recursions = 7,
     max_curvature = 0.01,
-    n_points = 31
+    n_points = 31,
 )
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))

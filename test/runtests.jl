@@ -21,7 +21,7 @@ const C0 = RGBA{PlotUtils.Colors.N0f8}
 
     @test plot_color(:red) == parse(C, :red)
     @test plot_color("red") == parse(C, "red")
-    @test_throws ErrorException plot_color("notacolor")
+    @test_throws ArgumentError plot_color("notacolor")
 
     @test plot_color(colorant"red") == C(1, 0, 0, 1)
 
@@ -83,7 +83,7 @@ end
 @testset "sampling" begin
     # github.com/MakieOrg/Makie.jl/issues/2635
     cmap = cgrad([:black, :white, :orange], [0, 0.2, 1])
-    # sample ouside the given values
+    # sample outside the given values
     @test RGB(get(cmap, 0.15)) ≈ RGB(0.75, 0.75, 0.75)
     @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
     @test RGB(get(cmap, 0.8)) ≈ RGB(1.0, 0.73529411, 0.25)
@@ -91,7 +91,7 @@ end
 
 @testset "reverse" begin
     cmap = reverse(cgrad([:black, :white, :orange], [0, 0.2, 1]))
-    # sample ouside the given values
+    # sample outside the given values
     @test RGB(get(cmap, 0.15)) ≈ RGB(1.0, 0.71323529, 0.1875)
     @test RGB(get(cmap, 0.5)) ≈ RGB(1.0, 0.86764705, 0.625)
     @test RGB(get(cmap, 0.75)) ≈ RGB(1.0, 0.97794117, 0.9375)
@@ -274,8 +274,8 @@ end
     let f = sinc, int = (-40, 40)  # JuliaPlots/Plots.jl/issues/3894
         xs, fs = adapted_grid(sinc, int)
         roots = vcat(int[1]:-1, 1:int[2])
-        count_per_extrema = map(1:length(roots)-1) do idx
-            left = roots[idx]; right = roots[idx+1]
+        count_per_extrema = map(1:(length(roots) - 1)) do idx
+            left, right = roots[idx:(idx + 1)]
             return count(x -> left < x < right, xs)
         end
         # check that we have at least 5 points for each extrema
