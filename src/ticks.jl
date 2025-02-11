@@ -51,12 +51,12 @@ end
 optimize_ticks() = Any[]
 
 """
-optimize_ticks(xmin, xmax; extend_ticks::Bool = false,
-               Q = [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
-               k_min = 2, k_max = 10, k_ideal = 5,
-               granularity_weight = 1/4, simplicity_weight = 1/6,
-               coverage_weight = 1/3, niceness_weight = 1/4,
-               strict_span = true, span_buffer = nothing)
+    optimize_ticks(xmin, xmax; extend_ticks::Bool = false,
+                   Q = [(1.0,1.0), (5.0, 0.9), (2.0, 0.7), (2.5, 0.5), (3.0, 0.2)],
+                   k_min = 2, k_max = 10, k_ideal = 5,
+                   granularity_weight = 1/4, simplicity_weight = 1/6,
+                   coverage_weight = 1/3, niceness_weight = 1/4,
+                   strict_span = true, span_buffer = nothing)
 
 Find some reasonable values for tick marks.
 
