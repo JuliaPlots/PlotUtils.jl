@@ -69,11 +69,9 @@ develop_stable_Makie(extended = false) = begin
 
     Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ComputePipeline"))
     Pkg.develop(path = joinpath(tmpd, "Makie.jl", "Makie"))
-    if extended  # too costly ?
-        Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ReferenceTests"))
-        Pkg.develop(path = joinpath(tmpd, "Makie.jl", "CairoMakie"))
-        # Pkg.develop(path = joinpath(tmpd, "Makie.jl", "GLMakie"))
-    end
+    extended && Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ReferenceTests"))
+    Pkg.develop(path = joinpath(tmpd, "Makie.jl", "CairoMakie"))
+    # Pkg.develop(path = joinpath(tmpd, "Makie.jl", "GLMakie"))
     Pkg.status(["PlotUtils", "Makie"])
     nothing
 end
@@ -95,7 +93,28 @@ end
 extended = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
 
 develop_stable_Makie(extended)
+using CairoMakie
+
 @testset "downstream Makie" begin
     Pkg.test("Makie")
-    extended && Pkg.test("CairoMakie")
+    # taken from https://docs.makie.org/dev/reference/blocks/axis#yscale
+
+    f = Figure()
+
+    for (i, scale) in enumerate([identity, log10, log2, log, sqrt, Makie.logit])
+        row, col = fldmod1(i, 3)
+        Axis(
+            f[row, col], yscale = scale, title = string(scale),
+            yminorticksvisible = true, yminorgridvisible = true,
+            yminorticks = IntervalsBetween(5)
+        )
+        lines!(range(0.01, 0.99, length = 200))
+    end
+
+    fn = "$(tempname()).png"
+    save(fn, f)
+    @assert isfile(fn)
+    rm(fn)
+
+    # extended && Pkg.test("CairoMakie")
 end
