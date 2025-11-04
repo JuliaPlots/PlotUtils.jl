@@ -76,14 +76,14 @@ develop_stable_Makie(extended = false) = begin
     nothing
 end
 
-DEBUG = false
+const DEBUG = false
 
 @testset "downstream Plots" begin
     script = tempname()
     write(
         script,
         """
-        include(joinpath(@__DIR__, "downstream.jl))
+        include(joinpath(@__DIR__, "downstream.jl"))
         develop_stable_Plots()
         using Plots
 
@@ -103,19 +103,20 @@ DEBUG = false
     rm(script)
 end
 
-extended = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
+const EXTENDED = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
 
 @testset "downstream Makie" begin
-    Pkg.test("Makie")
-    # extended && Pkg.test("CairoMakie")
+    # EXTENDED && Pkg.test("CairoMakie")
 
     script = tempname()
     write(
         script,
         """
-        include(joinpath(@__DIR__, "downstream.jl))
-        develop_stable_Makie($extended)
+        include(joinpath(@__DIR__, "downstream.jl"))
+        develop_stable_Makie($EXTENDED)
         using CairoMakie
+
+        Pkg.test("Makie")
 
         let f = Figure()  # taken from https://docs.makie.org/dev/reference/blocks/axis#yscale
             for (i, scale) in enumerate([identity, log10, log2, log, sqrt, Makie.logit])
