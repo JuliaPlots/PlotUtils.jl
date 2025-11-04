@@ -3,7 +3,7 @@ using Pkg, PlotUtils, Test
 LibGit2 = Pkg.GitTools.LibGit2
 TOML = Pkg.TOML
 
-failsafe_clone_checkout(path, url) = begin
+failsafe_clone_checkout(path, toml, url) = begin
     local repo
     for i ∈ 1:6
         try
@@ -15,7 +15,7 @@ failsafe_clone_checkout(path, url) = begin
         end
     end
 
-    @assert isfile(joinpath(path, "Project.toml")) "spurious network error: clone failed, bailing out"
+    @assert isfile(toml) "spurious network error: clone failed, bailing out"
 
     name, _ = splitext(basename(url))
     registries = joinpath(first(DEPOT_PATH), "registries")
@@ -34,8 +34,7 @@ failsafe_clone_checkout(path, url) = begin
     nothing
 end
 
-fake_supported_version!(path) = begin
-    toml = joinpath(path, "Project.toml")
+fake_supported_version!(path, toml) = begin
     # fake the supported PlotUtils version for testing (for `Pkg.develop`)
     PlotUtils_version =
         Pkg.Types.read_package(normpath(@__DIR__, "..", "Project.toml")).version
@@ -50,9 +49,10 @@ end
 develop_stable_Plots() = begin
     tmpd = mktempdir()
     Plots_jl = joinpath(tmpd, "Plots.jl")
-
-    failsafe_clone_checkout(Plots_jl, "https://github.com/JuliaPlots/Plots.jl")
-    fake_supported_version!(Plots_jl)
+    toml = joinpath(Plots_jl, "Project.toml")
+    
+    failsafe_clone_checkout(Plots_jl, toml, "https://github.com/JuliaPlots/Plots.jl")
+    fake_supported_version!(Plots_jl, toml)
 
     Pkg.develop(path = Plots_jl)
     Pkg.status(["PlotUtils", "Plots"])
@@ -62,9 +62,10 @@ end
 develop_stable_Makie(extended = false) = begin
     tmpd = mktempdir()
     Makie_jl = joinpath(tmpd, "Makie.jl")
-
-    failsafe_clone_checkout(Makie_jl, "https://github.com/MakieOrg/Makie.jl")
-    fake_supported_version!(Makie_jl)
+    toml = joinpath(Makie_jl, "Makie", "Project.toml")
+    
+    failsafe_clone_checkout(Makie_jl, toml, "https://github.com/MakieOrg/Makie.jl")
+    fake_supported_version!(Makie_jl, toml)
 
     Pkg.develop(path = joinpath(tmpd, "Makie.jl", "MakieCore"))
     Pkg.develop(path = joinpath(tmpd, "Makie.jl"))
