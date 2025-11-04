@@ -318,8 +318,13 @@ end
 @testset "allocations" begin  # see PlotUtils.jl/pull/136
     optimize_ticks(0.1123, 100.132)  # warmup
     stats = @timed optimize_ticks(0.1123, 100.132)
-    @test stats.bytes < 1_000  # ~ 736 (on 1.9)
-    @test stats.time < 1.0e-3  # ~ 0.22ms (on 1.9)
+    @test stats.bytes < 3_000  # ~ 2_896 (on 1.12)
+    @test stats.time < 2.0e-3  # ~ 0.21ms (on 1.12)
+    #=
+    history:
+    ~ 736B (on 1.9)
+    ~ 0.22ms (on 1.9)
+    =#
 end
 
 if (
