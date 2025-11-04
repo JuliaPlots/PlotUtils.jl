@@ -5,7 +5,7 @@ TOML = Pkg.TOML
 
 failsafe_clone_checkout(path, toml, url) = begin
     local repo
-    for i ∈ 1:6
+    for i in 1:6
         try
             repo = Pkg.GitTools.ensure_clone(stdout, path, url)
             break
@@ -84,7 +84,7 @@ using Plots
 @testset "downstream Plots" begin
     # test basic plots creation & display (Plots tests are too long to run)
     withenv("GKSwstype" => "nul") do
-        @time for i ∈ 1:length(Plots._examples)
+        @time for i in 1:length(Plots._examples)
             i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
             Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
             show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic

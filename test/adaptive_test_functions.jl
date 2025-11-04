@@ -9,8 +9,8 @@ const test_funcs = [
     (x -> tan(x), 0, 4),
     (x -> -1 / x, 0, 1),
     (x -> 1 / abs(x), -1, 1),
-    (x -> 1e6x, -1, 1),
-    (x -> 1e50x, -1, 1),
+    (x -> 1.0e6x, -1, 1),
+    (x -> 1.0e50x, -1, 1),
     (x -> log(1 + sin(cos(x))), -6, 6),
     (x -> sin(x^3) + cos(x^3), 0, 6.28),
     (x -> sin(x), -5, 200),
@@ -26,7 +26,7 @@ const test_funcs = [
 ]
 
 main() = begin
-    plots = [plot(func...) for func ∈ test_funcs]
+    plots = [plot(func...) for func in test_funcs]
 
     pitchfork = plot(x -> sqrt(x), 0, 10)
     plot!(pitchfork, x -> -sqrt(x), 0, 10)
@@ -38,7 +38,7 @@ main() = begin
     m = ceil(Int, √(np)) + 1
     n, r = divrem(np, m)
     r == 0 || (n += 1)
-    append!(plots, [plot() for _ ∈ 1:(m * n - np)])
+    append!(plots, [plot() for _ in 1:(m * n - np)])
 
     @assert length(plots) == m * n
 

@@ -78,14 +78,14 @@ z2 = I(midpoint) + (slope / contrast) * (npoints - midpoint)
 ```
 """
 function zscale(
-    input::AbstractArray,
-    nsamples::Int = 1000;
-    contrast = 0.25,
-    max_reject = 0.5,
-    min_npixels = 5,
-    k_rej = 2.5,
-    max_iterations = 5,
-)
+        input::AbstractArray,
+        nsamples::Int = 1000;
+        contrast = 0.25,
+        max_reject = 0.5,
+        min_npixels = 5,
+        k_rej = 2.5,
+        max_iterations = 5,
+    )
 
     # get samples from finite values of input
     values = float(filter(isfinite, input))
@@ -112,7 +112,7 @@ function zscale(
 
     local β # line slope
     # iteratively fit samples and reject sigma-clipped outliers
-    for _ ∈ 1:max_iterations
+    for _ in 1:max_iterations
         (ngood ≥ last_good || ngood < min_pix) && break
 
         # linear fit using mask
@@ -156,7 +156,7 @@ function dilate_mask(mask, ngrow)
     idxs = CartesianIndices(mask)
     mindx = idxs[1].I[1]
     maxdx = idxs[end].I[1]
-    @inbounds for idx ∈ idxs
+    @inbounds for idx in idxs
         lower = max(mindx, idx.I[1] - ngrow)
         upper = min(maxdx, idx.I[1] + ngrow)
         # output will only be true if there are no falses in the input section

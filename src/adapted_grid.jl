@@ -1,4 +1,3 @@
-
 """
     adapted_grid(f, minmax::Tuple{Number, Number}; max_recursions = 7, max_curvature = 0.01, n_points = 31)
 
@@ -12,12 +11,12 @@ The parameter `max_recursions` computes how many times each interval is allowed 
 while `max_curvature` specifies below which value of the curvature an interval does not need to be refined further.
 """
 function adapted_grid(
-    @nospecialize(f),
-    minmax::Tuple{Number,Number};
-    max_recursions = 7,
-    max_curvature = 0.01,
-    n_points = 31,
-)
+        @nospecialize(f),
+        minmax::Tuple{Number, Number};
+        max_recursions = 7,
+        max_curvature = 0.01,
+        n_points = 31,
+    )
     if minmax[1] > minmax[2]
         throw(ArgumentError("interval must be given as (min, max)"))
     elseif minmax[1] == minmax[2]
@@ -36,7 +35,7 @@ function adapted_grid(
     # Wiggle interior points a bit to prevent aliasing and other degenerate cases
     rng = StableRNG(1337)
     rand_factor = 0.05
-    for i ∈ 2:(length(xs) - 1)
+    for i in 2:(length(xs) - 1)
         xs[i] += 2rand_factor * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
     end
 
@@ -67,7 +66,7 @@ function adapted_grid(
         # Guard against division by zero later
         (f_range == 0 || !isfinite(f_range)) && (f_range = one(f_range))
         # Skip first and last interval
-        for interval ∈ 1:n_intervals
+        for interval in 1:n_intervals
             p = 2interval
             if n_tot_refinements[interval] ≥ max_recursions
                 # Skip intervals that have been refined too much
@@ -77,7 +76,7 @@ function adapted_grid(
             else
                 tot_w = 0.0
                 # Do a small convolution
-                for (q, w) ∈ ((-1, 0.25), (0, 0.5), (1, 0.25))
+                for (q, w) in ((-1, 0.25), (0, 0.5), (1, 0.25))
                     interval == 1 && q == -1 && continue
                     interval == n_intervals && q == 1 && continue
                     tot_w += w
@@ -87,11 +86,11 @@ function adapted_grid(
                     δx = xs[i + 1] - xs[i - 1]
                     curvatures[interval] +=
                         abs(
-                            2(
-                                (fs[i + 1] - fs[i]) / ((xs[i + 1] - xs[i]) * δx) -
+                        2(
+                            (fs[i + 1] - fs[i]) / ((xs[i + 1] - xs[i]) * δx) -
                                 (fs[i] - fs[i - 1]) / ((xs[i] - xs[i - 1]) * δx)
-                            ) * δx^2,
-                        ) / f_range * w
+                        ) * δx^2,
+                    ) / f_range * w
                 end
                 curvatures[interval] /= tot_w
                 # Only consider intervals with a high enough curvature
@@ -121,7 +120,7 @@ function adapted_grid(
         new_fs = zeros(eltype(fs), n_points + n_new_points)
         new_tot_refinements = zeros(Int, n_intervals + n_intervals_to_refine)
         k = kk = 0
-        for i ∈ 1:n_points
+        for i in 1:n_points
             if iseven(i) # This is a point ∈ an interval
                 interval = i ÷ 2
                 if interval ∈ intervals_to_refine
@@ -173,7 +172,7 @@ If `F` is an `AbstractArray`, it will find the first element of `vec`
 for which all callables ∈ `F` execute.
 """
 function tryrange(F, vec)
-    for v ∈ vec
+    for v in vec
         try
             tmp = F(v)
             return v
@@ -186,8 +185,8 @@ end
 # try some intervals over which the function may be defined
 
 function tryrange(F::AbstractArray, vec)
-    rets = [tryrange(f, vec) for f ∈ F] # get the preferred for each
+    rets = [tryrange(f, vec) for f in F] # get the preferred for each
     maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
-    rets .= [tryrange(f, vec[maxind:maxind]) for f ∈ F] # ensure that all functions compute there
-    rets[1]
+    rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
+    return rets[1]
 end

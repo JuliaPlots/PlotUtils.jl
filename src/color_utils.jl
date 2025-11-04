@@ -1,4 +1,3 @@
-
 # --------------------------------------------------------------
 
 # Methods to automatically generate colorschemes for color selection based on
@@ -13,16 +12,16 @@ adjust_lch(color, l, c) = convert(RGBA{Float64}, LCHab(l, c, convert(LCHab, colo
 
 function lightness_from_background(bgcolor)
     bglight = convert(LCHab, bgcolor).l
-    bglight < 50.0 ? _lightness_darkbg[] : _lightness_lightbg[]
+    return bglight < 50.0 ? _lightness_darkbg[] : _lightness_lightbg[]
 end
 
 function generate_colorscheme(
-    bgcolor = plot_color(:white);
-    color_bases = plot_color([colorant"steelblue", colorant"orangered"]),
-    lightness = lightness_from_background(bgcolor),
-    chroma = _lch_c_const[],
-    n = 17,
-)
+        bgcolor = plot_color(:white);
+        color_bases = plot_color([colorant"steelblue", colorant"orangered"]),
+        lightness = lightness_from_background(bgcolor),
+        chroma = _lch_c_const[],
+        n = 17,
+    )
     seed_colors = vcat(bgcolor, map(c -> adjust_lch(c, lightness, chroma), color_bases))
     seed_colors = convert(Vector{RGB{Float64}}, seed_colors)
     colors = distinguishable_colors(
@@ -32,7 +31,7 @@ function generate_colorscheme(
         cchoices = Float64[chroma],
         hchoices = range(0; stop = 340, length = 20),
     )[2:end]
-    ColorScheme(colors)
+    return ColorScheme(colors)
 end
 
 # ----------------------------------------------------------------------------------
@@ -41,12 +40,12 @@ function getpctrange(n::Integer)
     n > 0 || error()
     n == 1 && return zeros(1)
     zs = [0.0, 1.0]
-    for i ∈ 3:n
+    for i in 3:n
         sorted = sort(zs)
         diffs = diff(sorted)
         widestj = 0
         widest = 0.0
-        for (j, d) ∈ enumerate(diffs)
+        for (j, d) in enumerate(diffs)
             if d > widest
                 widest = d
                 widestj = j
@@ -54,17 +53,17 @@ function getpctrange(n::Integer)
         end
         push!(zs, sorted[widestj] + 0.5diffs[widestj])
     end
-    zs
+    return zs
 end
 
 function get_zvalues(n::Integer)
     offsets = getpctrange(ceil(Int, n / 4) + 1) / 4
     offsets = vcat(offsets[1], offsets[3:end])
     zvalues = Float64[]
-    for offset ∈ offsets
+    for offset in offsets
         append!(zvalues, offset .+ [0.0, 0.5, 0.25, 0.75])
     end
-    vcat(zvalues[1], 1.0, zvalues[2:(n - 1)])
+    return vcat(zvalues[1], 1.0, zvalues[2:(n - 1)])
 end
 
 # ----------------------------------------------------------------------------------
@@ -74,7 +73,7 @@ function darken(c, v = 0.1)
     r = max(0, min(rgba.r - v, 1))
     g = max(0, min(rgba.g - v, 1))
     b = max(0, min(rgba.b - v, 1))
-    RGBA(r, g, b, rgba.alpha)
+    return RGBA(r, g, b, rgba.alpha)
 end
 lighten(c, v = 0.3) = darken(c, -v)
 
@@ -85,7 +84,7 @@ isdark(c::Colorant)::Bool = lightness_level(c) < 0.5
 islight(c::Colorant)::Bool = !isdark(c)
 
 Base.convert(::Type{RGB}, h::Unsigned) =
-    RGB([(x & 0x0000FF) / 0xFF for x ∈ (h >> 16, h >> 8, h)]...)
+    RGB([(x & 0x000000FF) / 0xFF for x in (h >> 16, h >> 8, h)]...)
 
 make255(x)::Int = round(Int, 255 * x)
 
