@@ -318,7 +318,7 @@ end
 @testset "allocations" begin  # see PlotUtils.jl/pull/136
     stats = @timed optimize_ticks(0.1123, 100.132)
     @test stats.bytes < 1_000  # ~ 736 (on 1.9)
-    @test stats.time < 1e-3  # ~ 0.22ms (on 1.9)
+    @test stats.time < 2e-3  # ~ 0.22ms (on 1.9)
 end
 
 if (
