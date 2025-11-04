@@ -316,19 +316,18 @@ end
 end
 
 @testset "allocations" begin  # see PlotUtils.jl/pull/136
+    optimize_ticks(0.1123, 100.132)  # warmup
     stats = @timed optimize_ticks(0.1123, 100.132)
     @test stats.bytes < 1_000  # ~ 736 (on 1.9)
-    @test stats.time < 2.0e-3  # ~ 0.22ms (on 1.9)
+    @test stats.time < 1.0e-3  # ~ 0.22ms (on 1.9)
 end
 
 if (
         Sys.islinux() &&
             VERSION ≥ v"1.11.0" &&
             isempty(VERSION.prerelease) &&  # avoid running on `nightly`
-            is_64b() &&
-            (
-            !is_ci() ||
-                (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
+            is_64b() && (
+            !is_ci() || (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
         )
     )
     @testset "downstream" begin
