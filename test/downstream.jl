@@ -67,7 +67,7 @@ develop_stable_Makie(extended = false) = begin
     failsafe_clone_checkout(Makie_jl, toml, "https://github.com/MakieOrg/Makie.jl")
     fake_supported_version!(Makie_jl, toml)
 
-    Pkg.develop(path = joinpath(tmpd, "Makie.jl", "MakieCore"))
+    Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ComputePipeline"))
     Pkg.develop(path = joinpath(tmpd, "Makie.jl"))
     if extended  # too costly ?
         Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ReferenceTests"))
