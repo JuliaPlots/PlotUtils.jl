@@ -50,7 +50,7 @@ develop_stable_Plots() = begin
     tmpd = mktempdir()
     Plots_jl = joinpath(tmpd, "Plots.jl")
     toml = joinpath(Plots_jl, "Project.toml")
-    
+
     failsafe_clone_checkout(Plots_jl, toml, "https://github.com/JuliaPlots/Plots.jl")
     fake_supported_version!(Plots_jl, toml)
 
@@ -63,7 +63,7 @@ develop_stable_Makie(extended = false) = begin
     tmpd = mktempdir()
     Makie_jl = joinpath(tmpd, "Makie.jl")
     toml = joinpath(Makie_jl, "Makie", "Project.toml")
-    
+
     failsafe_clone_checkout(Makie_jl, toml, "https://github.com/MakieOrg/Makie.jl")
     fake_supported_version!(Makie_jl, toml)
 
