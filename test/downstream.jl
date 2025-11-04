@@ -88,6 +88,7 @@ using Plots
             show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
         end
     end
+    @test true
 end
 
 extended = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
@@ -111,7 +112,7 @@ using CairoMakie
 
         fn = "$(tempname()).png"
         save(fn, f)
-        @assert isfile(fn)
+        @test isfile(fn)
         rm(fn)
     end
 
