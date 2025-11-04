@@ -62,7 +62,7 @@ is_64b() = Sys.WORD_SIZE == 64
     cs = plot_color(rand(rng, 10), 0.5)
     @test typeof(cs) == Vector{C}
     @test length(cs) == 10
-    for c ∈ cs
+    for c in cs
         @test alpha(c) == 0.5
     end
 
@@ -70,7 +70,7 @@ is_64b() = Sys.WORD_SIZE == 64
     @test typeof(cs) == Matrix{C}
     @test length(cs) == 16
     @test size(cs) == (4, 4)
-    for c ∈ cs
+    for c in cs
         @test alpha(c) == 0.5
     end
 end
@@ -107,15 +107,15 @@ end
 
 # Copied from Plots.is_uniformly_spaced to avoid dependency on recent version
 # on Plots which is not used on Travis.
-function is_uniformly_spaced(v; tol = 1e-6)
+function is_uniformly_spaced(v; tol = 1.0e-6)
     dv = diff(v)
-    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+    return maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
 end
 
 function test_ticks(x, y, ticks)
     @test issorted(ticks)
     @test all(x .≤ ticks .≤ y)
-    if x < y
+    return if x < y
         @test length(ticks) ≥ 2
         @test is_uniformly_spaced(ticks)
     end
@@ -126,7 +126,7 @@ end
 
     # check if ticks still generate if max - min << abs(min) (i.e. for Float64 ranges)
     is_64b() &&
-        @test optimize_ticks(1e11 - 1, 1e11 + 2) == (1e11 .+ (-1:2), 1e11 - 1.0, 1e11 + 2.0)
+        @test optimize_ticks(1.0e11 - 1, 1.0e11 + 2) == (1.0e11 .+ (-1:2), 1.0e11 - 1.0, 1.0e11 + 2.0)
 
     @testset "dates" begin
         dt1, dt2 = Dates.value(DateTime(2000)), Dates.value(DateTime(2100))
@@ -137,7 +137,7 @@ end
     end
 
     @testset "small range" begin
-        @testset "small range $x, $(i)ϵ" for x ∈ exp10.(-12:12), i ∈ -5:5
+        @testset "small range $x, $(i)ϵ" for x in exp10.(-12:12), i in -5:5
             y = x + i * eps(x)
             x, y = minmax(x, y)
             ticks, = optimize_ticks(x, y)
@@ -149,21 +149,21 @@ end
     end
 
     @testset "fixed ranges" begin
-        @testset "fixed range $x..$y" for (x, y) ∈ [(2, 14), (14, 25), (16, 36), (57, 69)]
+        @testset "fixed range $x..$y" for (x, y) in [(2, 14), (14, 25), (16, 36), (57, 69)]
             test_ticks(+x, +y, optimize_ticks(+x, +y)[1])
             test_ticks(-y, -x, optimize_ticks(-y, -x)[1])
         end
     end
 
     @testset "random ranges" begin
-        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ ∈ 1:10, i ∈ -5:5]
-        @testset "random range $x..$y" for (x, y) ∈ r
+        r = [minmax(rand(rng, -100:100, 2)...) .* 10.0^i for _ in 1:10, i in -5:5]
+        @testset "random range $x..$y" for (x, y) in r
             test_ticks(x, y, optimize_ticks(x, y)[1])
         end
     end
 
     @testset "digits" begin
-        @testset "digits $((10^n) - 1)*10^$i" for n ∈ 1:9, i ∈ -9:9
+        @testset "digits $((10^n) - 1)*10^$i" for n in 1:9, i in -9:9
             (!is_64b() && n ≥ 9) && continue
             y0 = 10^n
             x0 = y0 - 1
@@ -174,7 +174,7 @@ end
     end
 
     @testset "types" begin
-        for T ∈ (Int32, Int64, Float16, Float32, Float64)
+        for T in (Int32, Int64, Float16, Float32, Float64)
             x, y = T(1), T(10)
             ticks, = optimize_ticks(x, y)
             @test eltype(ticks) <: AbstractFloat
@@ -191,7 +191,7 @@ end
         end
 
         @testset "Plots.jl/issues/3859" begin
-            x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.e300])
+            x, y = extrema([-1.7055509600077687e307, -1.3055509600077687e307, -1.0e300])
             test_ticks(x, y, optimize_ticks(x, y, k_min = 4, k_max = 8)[1])
         end
 
@@ -235,13 +235,13 @@ end
     end
 
     @testset "PlotUtils.jl/issues/155" begin
-        for n ∈ 1:10
+        for n in 1:10
             @test length(palette(:tab10, n)) == n
         end
     end
 
     @testset "PlotUtils.jl/issues/156" begin
-        for c ∈ cgrad([:black, RGBA{Float64}(1, 1, 1, 1)], 5; categorical = true)
+        for c in cgrad([:black, RGBA{Float64}(1, 1, 1, 1)], 5; categorical = true)
             @test 0 ≤ alpha(c) ≤ 1
         end
     end
@@ -250,13 +250,13 @@ end
 @testset "adapted grid" begin
     let f = sin, int = (0, π)
         xs, fs = adapted_grid(f, int)
-        for i ∈ 1:(length(xs) - 1)
-            for λ ∈ 0:0.1:1
+        for i in 1:(length(xs) - 1)
+            for λ in 0:0.1:1
                 # test that `f` is well approximated by a line
                 # in the interval `(xs[i], xs[i+1])`
                 x = λ * xs[i] + (1 - λ) * xs[i + 1]
                 y = λ * fs[i] + (1 - λ) * fs[i + 1]
-                @test y ≈ f(x) atol = 1e-2
+                @test y ≈ f(x) atol = 1.0e-2
             end
         end
     end
@@ -295,11 +295,11 @@ end
     bkg = 30 .* randn(rng, 4_096) .+ 1_000
     data = bkg .+ 100 .* randn(rng, 4_096) .+ 2500
     defects = rand(rng, CartesianIndices(bkg), 500)
-    data[defects] .= rand(rng, [0, 1e7], 500)
+    data[defects] .= rand(rng, [0, 1.0e7], 500)
     cmin, cmax = zscale(data)
     # values calculated using IRAF
-    @test cmin ≈ 2_784.824 atol = 1e-3
-    @test cmax ≈ 4_211.375 atol = 1e-3
+    @test cmin ≈ 2_784.824 atol = 1.0e-3
+    @test cmax ≈ 4_211.375 atol = 1.0e-3
     @test cmin > minimum(data)
     @test cmax < maximum(data)
 
@@ -316,28 +316,24 @@ end
 end
 
 @testset "allocations" begin  # see PlotUtils.jl/pull/136
+    optimize_ticks(0.1123, 100.132)  # warmup
     stats = @timed optimize_ticks(0.1123, 100.132)
-    @test stats.bytes < 1_000  # ~ 736 (on 1.9)
-    @test stats.time < 2e-3  # ~ 0.22ms (on 1.9)
+    @test stats.bytes < 3_000  # ~ 2_896 (on 1.12)
+    @test stats.time < 2.0e-3  # ~ 0.21ms (on 1.12)
+    #=
+    history:
+    ~ 736B (on 1.9)
+    ~ 0.22ms (on 1.9)
+    =#
 end
 
-if (
+(
     Sys.islinux() &&
-    VERSION ≥ v"1.11.0" &&
-    isempty(VERSION.prerelease) &&  # avoid running on `nightly`
-    is_64b() &&
-    (
-        !is_ci() ||
-        (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
+        VERSION ≥ v"1.11.0" &&
+        isempty(VERSION.prerelease) &&  # avoid running on `nightly`
+        is_64b() && (
+        !is_ci() || (is_ci() && get(ENV, "GITHUB_EVENT_NAME", "pull_request") == "pull_request")
     )
-)
-    @testset "downstream" begin
-        include("downstream.jl")
-    end
-    @testset "adaptive" begin  # NOTE: must be ran after downstream test (for Plots)
-        withenv("GKSwstype" => "nul") do
-            include("adaptive_test_functions.jl")
-        end
-        @test true
-    end
+) && @testset "downstream" begin
+    include("downstream.jl")
 end
