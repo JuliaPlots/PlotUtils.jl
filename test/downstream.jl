@@ -76,45 +76,68 @@ develop_stable_Makie(extended = false) = begin
     nothing
 end
 
-develop_stable_Plots()
-using Plots
+DEBUG = false
 
 @testset "downstream Plots" begin
-    # test basic plots creation & display (Plots tests are too long to run)
-    withenv("GKSwstype" => "nul") do
-        @time for i in 1:length(Plots._examples)
-            i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
-            Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
-            show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
+    script = tempname()
+    write(
+        script,
+        """
+        include(joinpath(@__DIR__, "downstream.jl))
+        develop_stable_Plots()
+        using Plots
+
+        # test basic plots creation & display (Plots tests are too long to run)
+        withenv("GKSwstype" => "nul") do
+            @time for i in 1:length(Plots._examples)
+                i ∈ Plots._backend_skips[:gr] && continue  # skip unsupported examples
+                Plots._examples[i].imports ≡ nothing || continue  # skip examples requiring optional test deps
+                show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
+            end
         end
-    end
-    @test true
+        exit()
+        """,
+    )
+    DEBUG && print(read(script, String))
+    @test run(```$(Base.julia_cmd()) $script```) |> success
+    rm(script)
 end
 
 extended = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
 
-develop_stable_Makie(extended)
-using CairoMakie
-
 @testset "downstream Makie" begin
     Pkg.test("Makie")
+    # extended && Pkg.test("CairoMakie")
 
-    let f = Figure()  # taken from https://docs.makie.org/dev/reference/blocks/axis#yscale
-        for (i, scale) in enumerate([identity, log10, log2, log, sqrt, Makie.logit])
-            row, col = fldmod1(i, 3)
-            Axis(
-                f[row, col], yscale = scale, title = string(scale),
-                yminorticksvisible = true, yminorgridvisible = true,
-                yminorticks = IntervalsBetween(5)
-            )
-            lines!(range(0.01, 0.99, length = 200))
+    script = tempname()
+    write(
+        script,
+        """
+        include(joinpath(@__DIR__, "downstream.jl))
+        develop_stable_Makie($extended)
+        using CairoMakie
+
+        let f = Figure()  # taken from https://docs.makie.org/dev/reference/blocks/axis#yscale
+            for (i, scale) in enumerate([identity, log10, log2, log, sqrt, Makie.logit])
+                row, col = fldmod1(i, 3)
+                Axis(
+                    f[row, col], yscale = scale, title = string(scale),
+                    yminorticksvisible = true, yminorgridvisible = true,
+                    yminorticks = IntervalsBetween(5)
+                )
+                lines!(range(0.01, 0.99, length = 200))
+            end
+
+            fn = tempname() * ".png"
+            save(fn, f)
+            @assert isfile(fn)
+            rm(fn)
         end
 
-        fn = "$(tempname()).png"
-        save(fn, f)
-        @test isfile(fn)
-        rm(fn)
-    end
-
-    # extended && Pkg.test("CairoMakie")
+        exit()
+        """,
+    )
+    DEBUG && print(read(script, String))
+    @test run(```$(Base.julia_cmd()) $script```) |> success
+    rm(script)
 end
