@@ -68,13 +68,13 @@ develop_stable_Makie(extended = false) = begin
     fake_supported_version!(Makie_jl, toml)
 
     Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ComputePipeline"))
-    Pkg.develop(path = joinpath(tmpd, "Makie.jl"))
+    Pkg.develop(path = joinpath(tmpd, "Makie.jl", "Makie"))
     if extended  # too costly ?
         Pkg.develop(path = joinpath(tmpd, "Makie.jl", "ReferenceTests"))
         Pkg.develop(path = joinpath(tmpd, "Makie.jl", "CairoMakie"))
         # Pkg.develop(path = joinpath(tmpd, "Makie.jl", "GLMakie"))
     end
-    Pkg.status(["PlotUtils", "MakieCore", "Makie"])
+    Pkg.status(["PlotUtils", "Makie"])
     nothing
 end
 
