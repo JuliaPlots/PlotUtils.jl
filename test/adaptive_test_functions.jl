@@ -26,23 +26,23 @@ const test_funcs = [
 ]
 
 main() = begin
-    plots = [plot(func...) for func in test_funcs]
+    plots = [Plots.plot(func...) for func in test_funcs]
 
-    pitchfork = plot(x -> sqrt(x), 0, 10)
-    plot!(pitchfork, x -> -sqrt(x), 0, 10)
-    plot!(pitchfork, x -> 0, -10, 0)
-    plot!(pitchfork, x -> 0, 0, 10, linestyle = :dash)
+    pitchfork = Plots.plot(x -> sqrt(x), 0, 10)
+    Plots.plot!(pitchfork, x -> -sqrt(x), 0, 10)
+    Plots.plot!(pitchfork, x -> 0, -10, 0)
+    Plots.plot!(pitchfork, x -> 0, 0, 10, linestyle = :dash)
     push!(plots, pitchfork)
 
     np = length(plots)
     m = ceil(Int, √(np)) + 1
     n, r = divrem(np, m)
     r == 0 || (n += 1)
-    append!(plots, [plot() for _ in 1:(m * n - np)])
+    append!(plots, [Plots.plot() for _ in 1:(m * n - np)])
 
     @assert length(plots) == m * n
 
-    png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "grid")
+    png(Plots.plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "grid")
     return
 end
 

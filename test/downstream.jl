@@ -97,24 +97,23 @@ using CairoMakie
 
 @testset "downstream Makie" begin
     Pkg.test("Makie")
-    # taken from https://docs.makie.org/dev/reference/blocks/axis#yscale
 
-    f = Figure()
+    let f = Figure()  # taken from https://docs.makie.org/dev/reference/blocks/axis#yscale
+        for (i, scale) in enumerate([identity, log10, log2, log, sqrt, Makie.logit])
+            row, col = fldmod1(i, 3)
+            Axis(
+                f[row, col], yscale = scale, title = string(scale),
+                yminorticksvisible = true, yminorgridvisible = true,
+                yminorticks = IntervalsBetween(5)
+            )
+            lines!(range(0.01, 0.99, length = 200))
+        end
 
-    for (i, scale) in enumerate([identity, log10, log2, log, sqrt, Makie.logit])
-        row, col = fldmod1(i, 3)
-        Axis(
-            f[row, col], yscale = scale, title = string(scale),
-            yminorticksvisible = true, yminorgridvisible = true,
-            yminorticks = IntervalsBetween(5)
-        )
-        lines!(range(0.01, 0.99, length = 200))
+        fn = "$(tempname()).png"
+        save(fn, f)
+        @assert isfile(fn)
+        rm(fn)
     end
-
-    fn = "$(tempname()).png"
-    save(fn, f)
-    @assert isfile(fn)
-    rm(fn)
 
     # extended && Pkg.test("CairoMakie")
 end
