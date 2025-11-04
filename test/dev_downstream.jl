@@ -46,7 +46,14 @@ fake_supported_version!(path, toml) = begin
     nothing
 end
 
+scratch_env() = begin
+    Pkg.activate(; temp = true)
+    Pkg.develop(path = normpath(@__DIR__, ".."))  # PlotUtils
+    nothing
+end
+
 develop_stable_Plots() = begin
+    scratch_env()
     tmpd = mktempdir()
     Plots_jl = joinpath(tmpd, "Plots.jl")
     toml = joinpath(Plots_jl, "Project.toml")
@@ -60,6 +67,7 @@ develop_stable_Plots() = begin
 end
 
 develop_stable_Makie(extended = false) = begin
+    scratch_env()
     tmpd = mktempdir()
     Makie_jl = joinpath(tmpd, "Makie.jl")
     toml = joinpath(Makie_jl, "Makie", "Project.toml")

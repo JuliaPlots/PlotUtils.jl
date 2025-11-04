@@ -30,7 +30,6 @@ end
 const EXTENDED = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended test in CI
 
 @testset "downstream Makie" begin
-
     script = tempname()
     write(
         script,
@@ -76,7 +75,7 @@ end
         develop_stable_Plots()
         using Plots
 
-        let test_funcs = [
+        let test_funcs = (
             (x -> 2, 0, 1),
             (x -> x, -1, 1),
             (x -> 5x, -1, 1),
@@ -99,25 +98,25 @@ end
             (x -> 1 / sin(x), -10, 10),
             (x -> sin(x) / x, -6, 6),
             (x -> tan(x^3 - x + 1) + 1 / (x + 3exp(x)), -2, 2),
-        ]
+        )
+            plots = [plot(func...) for func in test_funcs]
 
-        plots = [plot(func...) for func in test_funcs]
+            pitchfork = plot(x -> sqrt(x), 0, 10)
+            plot!(pitchfork, x -> -sqrt(x), 0, 10)
+            plot!(pitchfork, x -> 0, -10, 0)
+            plot!(pitchfork, x -> 0, 0, 10, linestyle = :dash)
+            push!(plots, pitchfork)
 
-        pitchfork = plot(x -> sqrt(x), 0, 10)
-        plot!(pitchfork, x -> -sqrt(x), 0, 10)
-        plot!(pitchfork, x -> 0, -10, 0)
-        plot!(pitchfork, x -> 0, 0, 10, linestyle = :dash)
-        push!(plots, pitchfork)
+            np = length(plots)
+            m = ceil(Int, √(np)) + 1
+            n, r = divrem(np, m)
+            r == 0 || (n += 1)
+            append!(plots, [plot() for _ in 1:(m * n - np)])
 
-        np = length(plots)
-        m = ceil(Int, √(np)) + 1
-        n, r = divrem(np, m)
-        r == 0 || (n += 1)
-        append!(plots, [plot() for _ in 1:(m * n - np)])
+            @assert length(plots) == m * n
 
-        @assert length(plots) == m * n
-
-        png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "grid")
+            png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "grid")
+        end
         """,
     )
     DEBUG && print(read(script, String))
