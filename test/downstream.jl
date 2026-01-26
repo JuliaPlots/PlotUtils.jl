@@ -67,6 +67,7 @@ const EXTENDED = tryparse(Bool, get(ENV, "CI", "false")) === true  # extended te
 end
 
 @testset "adaptative test Plots" begin
+    png_grid = tempname() * ".png"
     script = tempname()
     write(
         script,
@@ -115,11 +116,15 @@ end
 
             @assert length(plots) == m * n
 
-            png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "grid")
+            png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "$png_grid")
         end
         """,
     )
-    DEBUG && print(read(script, String))
+    if DEBUG
+        print(read(script, String))
+    else
+        rm(png_grid)
+    end
     @test run(```$(Base.julia_cmd()) $script```) |> success
     rm(script)
 end

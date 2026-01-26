@@ -15,8 +15,6 @@ failsafe_clone_checkout(path, toml, url) = begin
         end
     end
 
-    @assert isfile(toml) "spurious network error: clone failed, bailing out"
-
     name, _ = splitext(basename(url))
     registries = joinpath(first(DEPOT_PATH), "registries")
     general = joinpath(registries, "General")
@@ -28,9 +26,15 @@ failsafe_clone_checkout(path, toml, url) = begin
     @assert isfile(versions)
 
     stable = maximum(VersionNumber.(keys(TOML.parse(read(versions, String)))))
-    tag = LibGit2.GitObject(repo, "v$stable")
-    hash = string(LibGit2.target(tag))
+    obj = LibGit2.GitObject(repo, "v$stable")
+    hash = if isa(obj, LibGit2.GitTag)
+        LibGit2.target(obj)
+    else
+        LibGit2.GitHash(obj)
+    end |> string
     LibGit2.checkout!(repo, hash)
+
+    @assert isfile(toml) "spurious network error: clone failed, bailing out"
     nothing
 end
 
