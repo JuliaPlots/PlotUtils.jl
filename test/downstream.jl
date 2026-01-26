@@ -3,7 +3,7 @@ using PlotUtils, Test
 const DEBUG = tryparse(Bool, get(ENV, "DEBUG", "false")) === true
 
 @testset "adaptative test Plots" begin
-    png_grid = tempname() * ".png"
+    png_grid = (DEBUG ? "grid" : tempname()) * ".png"
     script = tempname()
     write(
         script,
@@ -59,13 +59,9 @@ const DEBUG = tryparse(Bool, get(ENV, "DEBUG", "false")) === true
         exit()
         """,
     )
-    println(png_grid)
-    if DEBUG
-        print(read(script, String))
-    else
-        rm(png_grid)
-    end
+    DEBUG && print(read(script, String))
     @test run(```$(Base.julia_cmd()) $script```) |> success
+    DEBUG || rm(png_grid)
     rm(script)
 end
 
