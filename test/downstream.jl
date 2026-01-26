@@ -52,7 +52,7 @@ const DEBUG = tryparse(Bool, get(ENV, "DEBUG", "false")) === true
 
             @assert length(plots) == m * n
 
-            png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "$png_grid")
+            savefig(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "$png_grid")
             @assert isfile("$png_grid")
         end
 
