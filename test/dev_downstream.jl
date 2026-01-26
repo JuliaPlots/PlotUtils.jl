@@ -34,7 +34,7 @@ failsafe_clone_checkout(path, url, pkg = nothing) = begin
     end |> string
     LibGit2.checkout!(repo, hash)
 
-    toml = if pkg ≠ nothing && (fn = joinpath(path, pkg, "Project.toml")) |> isfile  # monorepo layout
+    toml = if pkg ≢ nothing && (fn = joinpath(path, pkg, "Project.toml")) |> isfile  # monorepo layout
         fn
     elseif (fn = joinpath(path, "Project.toml")) |> isfile  # single package toplevel
         fn
