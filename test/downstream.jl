@@ -53,9 +53,13 @@ const DEBUG = tryparse(Bool, get(ENV, "DEBUG", "false")) === true
             @assert length(plots) == m * n
 
             png(plot(plots...; layout = (m, n), size = (m * 600, n * 400)), "$png_grid")
+            @assert isfile("$png_grid")
         end
+
+        exit()
         """,
     )
+    println(png_grid)
     if DEBUG
         print(read(script, String))
     else
@@ -82,6 +86,7 @@ end
                 show(devnull, Plots.test_examples(:gr, i; disp = false))  # trigger display logic
             end
         end
+
         exit()
         """,
     )
