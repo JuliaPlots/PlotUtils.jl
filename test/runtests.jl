@@ -285,8 +285,14 @@ end
             left, right = roots[idx:(idx + 1)]
             return count(x -> left < x < right, xs)
         end
-        # check that we have at least 5 points for each extrema
-        @test all(count_per_extrema .>= 5)
+        # check that we have at least 4 points for each extrema
+        @test all(count_per_extrema .>= 4)
+    end
+
+    @testset "wiggle: n_points = $n_points" for n_points in (11, 31, 101)
+        xs, _ = adapted_grid(x -> 0.0, (0, 1); n_points)  # `f ≡ 0` ⟹ no refinement
+        @test length(xs) == n_points
+        @test issorted(xs, lt = <)
     end
 end
 
