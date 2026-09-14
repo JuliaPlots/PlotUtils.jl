@@ -28,7 +28,7 @@ failsafe_clone_checkout(path, url, pkg = nothing) = begin
     @assert isfile(versions)
 
     stable = maximum(VersionNumber.(keys(TOML.parse(read(versions, String)))))
-    version_label = stable > v"1.41.3" ? "Plots-v$stable" : "v$stable" 
+    version_label = stable > v"1.41.3" ? "Plots-v$stable" : "v$stable"
     obj = LibGit2.GitObject(repo, version_label)
     hash = if isa(obj, LibGit2.GitTag)
         LibGit2.target(obj)
