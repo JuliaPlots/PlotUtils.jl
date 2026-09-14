@@ -22,7 +22,8 @@ failsafe_clone_checkout(path, url, pkg = nothing) = begin
     versions = joinpath(general, name[1:1], name, "Versions.toml")
     if !isfile(versions)
         mkpath(general)
-        run(setenv(`tar xf $general.tar.gz`; dir = general))
+        general_archive = joinpath(registries, TOML.parse(read(joinpath(registries, "General.toml"), String))["path"])
+        run(setenv(`tar xf $general_archive`; dir = general))
     end
     @assert isfile(versions)
 
