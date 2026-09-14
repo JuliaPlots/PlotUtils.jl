@@ -17,6 +17,7 @@ failsafe_clone_checkout(path, url, pkg = nothing) = begin
 
     name, _ = splitext(basename(url))
     registries = joinpath(first(DEPOT_PATH), "registries")
+    @info readdir(registries)
     general = joinpath(registries, "General")
     versions = joinpath(general, name[1:1], name, "Versions.toml")
     if !isfile(versions)
