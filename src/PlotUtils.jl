@@ -8,7 +8,6 @@ using Dates
 
 @reexport using Colors
 import Base: getindex
-import StableRNGs: StableRNG
 
 export ColorGradient,
     ColorPalette,

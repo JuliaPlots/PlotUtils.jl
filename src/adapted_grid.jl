@@ -32,11 +32,15 @@ function adapted_grid(
     xs[2] = xs[1] + (xs[2] - xs[1]) / 4
     xs[end - 1] = xs[end] - (xs[end] - xs[end - 1]) / 4
 
-    # Wiggle interior points a bit to prevent aliasing and other degenerate cases
-    rng = StableRNG(1337)
+    # Wiggle interior points a bit to prevent aliasing and other degenerate cases.
+    # A golden-ratio (Kronecker) sequence is irrational, so it shares no period
+    # with the sampling lattice, and in 64-bit fixed point it is exact integer
+    # arithmetic: the wrapping multiply is the `mod 1`, and reading the fraction
+    # back as `Int64` recentres it on zero. 0x9e3779b97f4a7c15 / 2^64 == 1 / φ.
     rand_factor = 0.05
     for i in 2:(length(xs) - 1)
-        xs[i] += 2rand_factor * (rand(rng) - 0.5) * (xs[i + 1] - xs[i - 1])
+        δ = ((i * 0x9e3779b97f4a7c15) % Int64) / 0x1p64  # in [-0.5, 0.5)
+        xs[i] += 2rand_factor * δ * (xs[i + 1] - xs[i - 1])
     end
 
     n_tot_refinements = zeros(Int, n_intervals)
