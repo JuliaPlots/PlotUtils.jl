@@ -213,6 +213,17 @@ end
             end
         end
 
+        @testset "PlotUtils.jl/issues/164" begin
+            # limits far below eps(Float64), e.g. gravitational-wave strain (~1e-21)
+            @testset "scale $s" for s in exp10.(-30:-15)
+                let x = -1.3s, y = 1.7s
+                    ticks, = @test_logs optimize_ticks(x, y)
+                    test_ticks(x, y, ticks)
+                    @test length(ticks) ≥ 3
+                end
+            end
+        end
+
         @testset "PlotUtils.jl/issues/129" begin
             # invalid float input
             let x = NaN, y = 1.0

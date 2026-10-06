@@ -247,7 +247,9 @@ function optimize_ticks_typed(
             for k in k_min:(2k_max)
                 for (q, qscore) in zip(Qv, Qs)
                     tickspan = q * base_float^z
-                    tickspan < eps(F) && continue
+                    # skip spacings below the floating-point resolution of the limits
+                    # themselves (relative, so that limits far below eps(F) still work)
+                    tickspan < eps(F) * max(abs(x_min), abs(x_max)) && continue
                     span = (k - 1) * tickspan
                     span < xspan && continue
 
